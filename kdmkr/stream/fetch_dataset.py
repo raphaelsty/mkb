@@ -1,7 +1,7 @@
 from torch.utils import data
 
-from .train_dataset import TrainDataset
-from .test_dataset import TestDataset
+from .base import TrainDataset
+from .base import TestDataset
 
 
 __all__ = ['FetchDataset']
