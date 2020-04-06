@@ -2,4 +2,4 @@
 *.pyc
 *__pycache__
 *.egg
-*build
+build/
