@@ -1,9 +1,9 @@
-from .iterator import Iterator
-from .test_loader import TestLoader
-from .train_loader import TrainLoader
+from .fetch_dataset import FetchDataset
+from .test_dataset import TestDataset
+from .train_dataset import TrainDataset
 
 __all__ = [
-    'Iterator',
-    'TestLoader',
-    'TrainLoader',
+    'FetchDataset',
+    'TestDataset',
+    'TrainDataset',
 ]

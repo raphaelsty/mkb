@@ -6,10 +6,10 @@ import torch
 from torch.utils.data import Dataset
 
 
-__all__ = ['TrainLoader']
+__all__ = ['TrainDataset']
 
 
-class TrainLoader(Dataset):
+class TrainDataset(Dataset):
     """Loader for training set."""
     def __init__(self, triples, n_entity, n_relation, negative_sample_size, mode):
         self.len = len(triples)
@@ -111,9 +111,9 @@ class TrainLoader(Dataset):
                 true_head[(relation, tail)] = []
             true_head[(relation, tail)].append(head)
 
-        for relation, tail in true_head:
+        for relation, tail in true_head: # pylint: disable=E1141
             true_head[(relation, tail)] = np.array(list(set(true_head[(relation, tail)])))
-        for head, relation in true_tail:
+        for head, relation in true_tail: # pylint: disable=E1141
             true_tail[(head, relation)] = np.array(list(set(true_tail[(head, relation)])))
 
         return true_head, true_tail

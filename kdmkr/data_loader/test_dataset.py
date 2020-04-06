@@ -6,10 +6,10 @@ import torch
 from torch.utils.data import Dataset
 
 
-__all__ = ['TestLoader']
+__all__ = ['TestDataset']
 
 
-class TestLoader(Dataset):
+class TestDataset(Dataset):
     def __init__(self, triples, all_true_triples, n_entity, n_relation, mode):
         self.len = len(triples)
         self.triple_set = set(all_true_triples)
