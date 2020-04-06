@@ -11,7 +11,7 @@ __all__ = ['TestDataset', 'TrainDataset']
 
 class TrainDataset(Dataset):
     """Loader for training set."""
-    def __init__(self, triples, n_entity, n_relation, negative_sample_size, mode):
+    def __init__(self, triples, n_entity, n_relation, negative_sample_size, mode, seed):
         self.len = len(triples)
         self.triples = triples
         self.triple_set = set(triples)
@@ -19,8 +19,12 @@ class TrainDataset(Dataset):
         self.n_relation = n_relation
         self.negative_sample_size = negative_sample_size
         self.mode = mode
+        self.seed = seed
         self.count = self.count_frequency(triples)
         self.true_head, self.true_tail = self.get_true_head_and_tail(self.triples)
+
+        if self.seed:
+            self._rng = np.random.RandomState(self.seed)
 
     def __len__(self):
         return self.len
@@ -37,7 +41,7 @@ class TrainDataset(Dataset):
         negative_sample_size = 0
 
         while negative_sample_size < self.negative_sample_size:
-            negative_sample = np.random.randint(self.n_entity, size=self.negative_sample_size*2)
+            negative_sample = self._rng.randint(self.n_entity, size=self.negative_sample_size*2)
             if self.mode == 'head-batch':
                 mask = np.in1d(
                     negative_sample,
