@@ -1,12 +1,13 @@
 Metadata-Version: 2.1
-Name: KDMKR
+Name: kdmkr
 Version: 0.0.1
-Summary: KDMKR
-Home-page: https://github.com/raphaelsty/KDMKR
+Summary: kdmkr
+Home-page: https://github.com/raphaelsty/kdmkr
 Author: Raphael Sourty
 Author-email: raphael.sourty@gmail.com
 License: UNKNOWN
-Description: # KD-MKDR
+Description: # kdmkr
+        
 Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
 Classifier: Operating System :: OS Independent

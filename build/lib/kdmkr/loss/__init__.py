@@ -1,7 +1,7 @@
 from .adversarial import Adversarial
-from .distillation import Distillation
+from .kl_divergence import KlDivergence
 
 __all__ = [
     'Adversarial',
-    'Distillation',
+    'KlDivergence',
 ]

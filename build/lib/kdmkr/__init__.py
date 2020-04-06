@@ -1,8 +1,8 @@
 from .__version__ import __version__
 
 __all__ = [
-    'data',
-    'evalaution',
+    'data_loader',
+    'evaluation',
     'loss',
     'model',
 ]
