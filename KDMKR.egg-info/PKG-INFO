@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: KDMKR
+Version: 0.0.1
+Summary: KDMKR
+Home-page: https://github.com/raphaelsty/KDMKR
+Author: Raphael Sourty
+Author-email: raphael.sourty@gmail.com
+License: UNKNOWN
+Description: # KD-MKDR
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
