@@ -1,3 +1,5 @@
+import csv
+import json
 import os
 import zipfile
 
@@ -19,34 +21,27 @@ class WN18RR(fetch_dataset.FetchDataset):
 
             >>> wn18rr = datasets.WN18RR(batch_size=1, negative_sample_size=1, seed=42)
 
-            >>> file_path = f'{os.path.dirname(os.path.abspath(__file__))}/wn18rr.zip'
-            >>> file = utils.open_filepath(file_path, compression='zip')
-
-            >>> for row in file:
-            ...     print(row)
-            ...     break
+            >>> for _ in range(3):
+            ...     positive_sample, negative_sample, weight, mode = next(wn18rr)
+            ...     print(positive_sample, negative_sample, weight, mode)
+            tensor([[    0,     0, 10211]]) tensor([[15795]]) tensor([0.3536]) tail-batch
+            tensor([[    0,     0, 10211]]) tensor([[15795]]) tensor([0.3536]) head-batch
+            tensor([[   1,    1, 8949]]) tensor([[38158]]) tensor([0.3162]) tail-batch
 
     """
     def __init__(self, batch_size, negative_sample_size=1024, shuffle=False, num_workers=1,
         seed=None):
 
-        # TODO: READ number of entities, relations across test, train and valid sets.
+        self.directory = os.path.dirname(os.path.realpath(__file__))
+        self.entities = json.loads(open(f'{self.directory}/wn18rr/entities.json').read())
+        self.relations = json.loads(open(f'{self.directory}/wn18rr/relations.json').read())
 
-        super().__init__(triples=self.read_dataset('train.txt'), batch_size=batch_size,
-            negative_sample_size=negative_sample_size, shuffle=shuffle, num_workers=num_workers,
-            seed=seed)
+        super().__init__(train=self.read_csv(file='train.csv'),
+            valid=self.read_csv(file='valid.csv'), test=self.read_csv(file='test.csv'),
+            batch_size=batch_size, negative_sample_size=negative_sample_size, shuffle=shuffle,
+            num_workers=num_workers, seed=seed)
 
-    @property
-    def n_entity(self):
-        return self.n_entity
-
-    @property
-    def n_relation(self):
-        return self.n_relation
-
-    def read_dataset(self, dataset):
-        file = zipfile.ZipFile('wn18rr.zip')
-        dataset = file.open(f'wn18rr/{dataset}')
-        dataset = dataset.readlines()
-        dataset = [tuple(_.decode('utf-8').split('\n')[0].split('\t')) for _ in dataset]
-        return dataset
+    def read_csv(self, file):
+        with open(f'{self.directory}/wn18rr/{file}', 'r') as csv_file:
+            return [(int(head), int(relation), int(tail))
+                for head, relation, tail in csv.reader(csv_file)]

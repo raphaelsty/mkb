@@ -17,56 +17,68 @@ class FetchDataset:
         :
             >>> from kdmkr import stream
 
-            >>> triples = [
+            >>> train = [
             ...     (1, 1, 2),
             ...     (2, 2, 3),
             ... ]
 
-            >>> n_entity = 3
-            >>> n_relation = 2
+            >>> test = [
+            ...    (1, 2, 2),
+            ...    (4, 3, 5),
+            ... ]
 
-            >>> dataset = stream.FetchDataset(triples=triples, n_entity=n_entity,
-            ...     n_relation=n_relation, batch_size=1, negative_sample_size=1, seed=42)
+            >>> dataset = stream.FetchDataset(train=train, test=test, negative_sample_size=1,
+            ...    batch_size=1, seed=42)
 
+            # Iterate over the first three samples of the input training set:
             >>> for _ in range(3):
             ...     positive_sample, negative_sample, weight, mode = next(dataset)
             ...     print(positive_sample, negative_sample, weight, mode)
-            tensor([[1, 1, 2]]) tensor([[0]]) tensor([0.3536]) tail-batch
-            tensor([[1, 1, 2]]) tensor([[2]]) tensor([0.3536]) head-batch
+            tensor([[1, 1, 2]]) tensor([[3]]) tensor([0.3536]) tail-batch
+            tensor([[1, 1, 2]]) tensor([[3]]) tensor([0.3536]) head-batch
             tensor([[2, 2, 3]]) tensor([[2]]) tensor([0.3536]) tail-batch
 
+            >>> assert dataset.n_entity == 5
+
+            >>> assert dataset.n_relation == 3
+
     """
-    def __init__(self, triples, negative_sample_size, batch_size=1, shuffle=False, num_workers=1,
-        seed=None):
+    def __init__(self, train, negative_sample_size, valid=[], test=[], batch_size=1,
+        shuffle=False, num_workers=1, seed=None):
+        self.train = train
+        self.valid = valid
+        self.test = test
 
-        # TODO update: do not take account of entities and relations in test and validation set.
-        n_entity = len(set(itertools.chain.from_iterable(
-            [[head, tail] for head, _, tail in triples])))
+        # Number of entities across train, valid and test dataset:
+        self.n_entity = len(set(itertools.chain.from_iterable([
+            [head, tail] for head, _, tail in itertools.chain(train, valid, test)])))
 
-        n_relation = len(set([relation for _, relation, _ in triples]))
+        # Number of relations across train, valid and test dataset:
+        self.n_relation = len(set([relation for _, relation, _ in itertools.chain(train, valid, test)]))
 
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.num_workers = num_workers
 
-        self.head_dataset = TrainDataset(triples=triples, n_entity=n_entity, n_relation=n_relation,
+        head_dataset = TrainDataset(triples=train, n_entity=self.n_entity, n_relation=self.n_relation,
             negative_sample_size=negative_sample_size, mode='head-batch', seed=seed)
 
-        self.tail_dataset = TrainDataset(triples=triples, n_entity=n_entity, n_relation=n_relation,
+        tail_dataset = TrainDataset(triples=train, n_entity=self.n_entity, n_relation=self.n_relation,
             negative_sample_size=negative_sample_size, mode='tail-batch', seed=seed)
 
-        self.head_loader = data.DataLoader(dataset=self.head_dataset,
+        self.head_loader = data.DataLoader(dataset=head_dataset,
             batch_size=self.batch_size, shuffle=self.shuffle, num_workers=self.num_workers,
-            collate_fn=self.head_dataset.collate_fn)
+            collate_fn=head_dataset.collate_fn)
 
-        self.tail_loader = data.DataLoader(dataset=self.tail_dataset,
+        self.tail_loader = data.DataLoader(dataset=tail_dataset,
             batch_size=self.batch_size, shuffle=self.shuffle, num_workers=self.num_workers,
-            collate_fn=self.tail_dataset.collate_fn)
-
-        self.step = 0
+            collate_fn=tail_dataset.collate_fn)
 
         self.fetch_head = self.fetch(self.head_loader)
         self.fetch_tail = self.fetch(self.tail_loader)
+
+        self.step = 0
+
 
     def __next__(self):
         self.step += 1
