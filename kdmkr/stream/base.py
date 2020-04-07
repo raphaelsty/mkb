@@ -24,7 +24,7 @@ class TrainDataset(Dataset):
         self.true_head, self.true_tail = self.get_true_head_and_tail(self.triples)
 
         if self.seed:
-            self._rng = np.random.RandomState(self.seed)
+            self._rng = np.random.RandomState(self.seed) # pylint: disable=no-member
 
     def __len__(self):
         return self.len

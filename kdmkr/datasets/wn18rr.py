@@ -17,7 +17,6 @@ class WN18RR(fetch_dataset.FetchDataset):
 
         :
             >>> from kdmkr import datasets
-            >>> import os
 
             >>> wn18rr = datasets.WN18RR(batch_size=1, negative_sample_size=1, seed=42)
 

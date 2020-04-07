@@ -57,6 +57,7 @@ class Teacher(nn.Module):
 
         elif mode == 'head-batch':
             head, relation, tail = self.head_batch(sample)
+
         return head, relation, tail
 
 

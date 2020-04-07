@@ -48,37 +48,23 @@ class FetchDataset:
         self.train = train
         self.valid = valid
         self.test = test
+        self.negative_sample_size = negative_sample_size
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.num_workers = num_workers
+        self.seed = seed
+        self.step = 0
 
         # Number of entities across train, valid and test dataset:
         self.n_entity = len(set(itertools.chain.from_iterable([
             [head, tail] for head, _, tail in itertools.chain(train, valid, test)])))
 
         # Number of relations across train, valid and test dataset:
-        self.n_relation = len(set([relation for _, relation, _ in itertools.chain(train, valid, test)]))
+        self.n_relation = len(set(
+            [relation for _, relation, _ in itertools.chain(train, valid, test)]))
 
-        self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.num_workers = num_workers
-
-        head_dataset = TrainDataset(triples=train, n_entity=self.n_entity, n_relation=self.n_relation,
-            negative_sample_size=negative_sample_size, mode='head-batch', seed=seed)
-
-        tail_dataset = TrainDataset(triples=train, n_entity=self.n_entity, n_relation=self.n_relation,
-            negative_sample_size=negative_sample_size, mode='tail-batch', seed=seed)
-
-        self.head_loader = data.DataLoader(dataset=head_dataset,
-            batch_size=self.batch_size, shuffle=self.shuffle, num_workers=self.num_workers,
-            collate_fn=head_dataset.collate_fn)
-
-        self.tail_loader = data.DataLoader(dataset=tail_dataset,
-            batch_size=self.batch_size, shuffle=self.shuffle, num_workers=self.num_workers,
-            collate_fn=tail_dataset.collate_fn)
-
-        self.fetch_head = self.fetch(self.head_loader)
-        self.fetch_tail = self.fetch(self.tail_loader)
-
-        self.step = 0
-
+        self.fetch_head = self.fetch(self.get_train_loader(mode='head-batch'))
+        self.fetch_tail = self.fetch(self.get_train_loader(mode='tail-batch'))
 
     def __next__(self):
         self.step += 1
@@ -88,10 +74,38 @@ class FetchDataset:
             data = next(self.fetch_tail)
         return data
 
+    def test_dataset(self, batch_size):
+        return self.test_stream(triples=self.test, batch_size=batch_size)
+
+    def validation_dataset(self, batch_size):
+        return self.test_stream(triples=self.valid, batch_size=batch_size)
+
     @staticmethod
     def fetch(dataloader):
-        '''
-        Transform a PyTorch Dataloader into python iterator
-        '''
+        """
+        Transform a PyTorch Dataloader into generator.
+        """
         while True:
             yield from dataloader
+
+    def get_train_loader(self, mode):
+        dataset = TrainDataset(triples=self.train, n_entity=self.n_entity,
+            n_relation=self.n_relation, negative_sample_size=self.negative_sample_size, mode=mode,
+            seed=self.seed)
+
+        return data.DataLoader(dataset=dataset, batch_size=self.batch_size,
+            shuffle=self.shuffle, num_workers=self.num_workers, collate_fn=TrainDataset.collate_fn)
+
+    def test_stream(self, triples, batch_size):
+        head_loader = self._get_test_loader(triples=triples, batch_size=batch_size,
+            mode='head-batch')
+        tail_loader = self._get_test_loader(triples=triples, batch_size=batch_size,
+            mode='tail-batch')
+        return [head_loader, tail_loader]
+
+    def _get_test_loader(self, triples, batch_size, mode):
+        test_dataset = TestDataset(triples=triples,
+            all_true_triples=self.train + self.test + self.valid, n_entity = self.n_entity,
+            n_relation=self.n_relation, mode=mode)
+        return data.DataLoader(dataset=test_dataset, batch_size=batch_size,
+            num_workers=self.num_workers, collate_fn=TestDataset.collate_fn)

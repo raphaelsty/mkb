@@ -12,7 +12,7 @@ class TransE(base.Teacher):
             n_entity=n_entity, n_relation=n_relation, gamma=gamma)
 
     def forward(self, sample, mode='default'):
-        head, relation, tail = self.head_relation_tail(sample)
+        head, relation, tail = self.head_relation_tail(sample=sample, mode=mode)
         if mode == 'head-batch':
             score = head + (relation - tail)
         else:
