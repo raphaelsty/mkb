@@ -1,8 +1,10 @@
 from .__version__ import __version__
 
+
 __all__ = [
-    'stream',
+    'distillation',
     'evaluation',
     'loss',
     'model',
+    'stream',
 ]

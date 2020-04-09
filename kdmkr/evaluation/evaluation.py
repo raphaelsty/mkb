@@ -33,8 +33,21 @@ class Evaluation:
             ...     (2, 1, 3),
             ... ]
 
-            >>> dataset = stream.FetchDataset(train=train, test=test, negative_sample_size=2,
-            ...    batch_size=1, seed=42)
+
+            >>> entities = {
+            ... 'e0': 0,
+            ... 'e1': 1,
+            ... 'e2': 2,
+            ... 'e3': 3,
+            ... }
+
+            >>> relations = {
+            ... 'r0': 0,
+            ... 'r1': 1,
+            ... }
+
+            >>> dataset = stream.FetchDataset(train=train, test=test, entities=entities,
+            ...    relations=relations, negative_sample_size=2, batch_size=1, seed=42)
 
             >>> rotate = model.RotatE(hidden_dim=3, n_entity=dataset.n_entity,
             ...    n_relation=dataset.n_relation, gamma=1)

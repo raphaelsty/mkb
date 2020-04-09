@@ -4,7 +4,6 @@ import os
 import zipfile
 
 from ..stream import fetch_dataset
-from ..stream import utils
 
 
 __all__ = ['WN18RR']
@@ -32,13 +31,14 @@ class WN18RR(fetch_dataset.FetchDataset):
         seed=None):
 
         self.directory = os.path.dirname(os.path.realpath(__file__))
-        self.entities = json.loads(open(f'{self.directory}/wn18rr/entities.json').read())
-        self.relations = json.loads(open(f'{self.directory}/wn18rr/relations.json').read())
 
         super().__init__(train=self.read_csv(file='train.csv'),
             valid=self.read_csv(file='valid.csv'), test=self.read_csv(file='test.csv'),
             batch_size=batch_size, negative_sample_size=negative_sample_size, shuffle=shuffle,
-            num_workers=num_workers, seed=seed)
+            num_workers=num_workers, seed=seed,
+            entities=json.loads(open(f'{self.directory}/wn18rr/entities.json').read()),
+            relations = json.loads(open(f'{self.directory}/wn18rr/relations.json').read()),
+        )
 
     def read_csv(self, file):
         with open(f'{self.directory}/wn18rr/{file}', 'r') as csv_file:

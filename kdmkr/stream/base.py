@@ -11,16 +11,25 @@ __all__ = ['TestDataset', 'TrainDataset']
 
 class TrainDataset(Dataset):
     """Loader for training set."""
-    def __init__(self, triples, n_entity, n_relation, negative_sample_size, mode, seed):
+    def __init__(self, triples, entities, relations, negative_sample_size, mode, seed):
         self.len = len(triples)
+
         self.triples = triples
         self.triple_set = set(triples)
-        self.n_entity = n_entity
-        self.n_relation = n_relation
+
+        self.entities = entities
+        self.relations = relations
+
         self.negative_sample_size = negative_sample_size
+
         self.mode = mode
         self.seed = seed
+
+        self.n_entity = len(self.entities.keys())
+        self.n_relation = len(self.relations.keys())
+
         self.count = self.count_frequency(triples)
+
         self.true_head, self.true_tail = self.get_true_head_and_tail(self.triples)
 
         if self.seed:
@@ -124,12 +133,12 @@ class TrainDataset(Dataset):
 
 
 class TestDataset(Dataset):
-    def __init__(self, triples, all_true_triples, n_entity, n_relation, mode):
+    def __init__(self, triples, all_true_triples, entities, relations, mode):
         self.len = len(triples)
         self.triple_set = set(all_true_triples)
         self.triples = triples
-        self.n_entity = n_entity
-        self.n_relation = n_relation
+        self.n_entity = len(entities.keys())
+        self.n_relation = len(relations.keys())
         self.mode = mode
 
     def __len__(self):
