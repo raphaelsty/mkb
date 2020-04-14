@@ -18,7 +18,6 @@ class Distillation:
             :
 
             >>> from kdmkr import distillation
-            >>> from kdmkr import stream
 
             >>> import torch
 
@@ -61,12 +60,6 @@ class Distillation:
             ...     (3, 1, 4),
             ...     (3, 2, 4),
             ... ]
-
-            >>> dataset_teacher = stream.FetchDataset(train=train_teacher, entities=entities_teacher,
-            ...    relations=relations_teacher, negative_sample_size=1, batch_size=1, seed=42)
-
-            >>> dataset_student = stream.FetchDataset(train=train_student,  entities=entities_student,
-            ...    relations=relations_student, negative_sample_size=1, batch_size=1, seed=42)
 
             >>> distillation = distillation.Distillation(teacher_entities=entities_teacher,
             ...     student_entities=entities_student, teacher_relations=relations_teacher,
