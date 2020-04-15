@@ -27,5 +27,5 @@ class Adversarial(nn.Module):
             F.logsigmoid(-negative_score)).sum(dim = 1)
 
         positive_loss = - (weight * positive_score).sum()/weight.sum()
-        negative_loss = - (weight * positive_score).sum()/weight.sum()
+        negative_loss = - (weight * negative_score).sum()/weight.sum()
         return (positive_loss + negative_loss) / 2
