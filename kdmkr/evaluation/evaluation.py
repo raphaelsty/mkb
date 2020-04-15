@@ -70,30 +70,37 @@ class Evaluation:
 
             >>> score = evaluation.Evaluation()
 
-            >>> score(model=rotate, dataset=dataset.test_dataset(batch_size=1), print_every=2,
-            ...    device='cpu')
-            HITS@10: 1.000000, HITS@1: 1.000000, HITS@3: 1.000000, MR: 1.000000, MRR: 1.000000
-            HITS@10: 1.000000, HITS@1: 0.333333, HITS@3: 1.000000, MR: 1.666667, MRR: 0.666667
+            >>> print(score(model=rotate, dataset=dataset.test_dataset(batch_size=1), device='cpu'))
+            HITS@10: 1.000000, HITS@1: 0.250000, HITS@3: 1.000000, MR: 2.000000, MRR: 0.583333
 
     """
     def __init__(self):
         pass
 
-    def __call__(self, model, dataset, print_every, device='cpu'):
+    def __call__(self, model, dataset, device='cpu'):
         """Evaluate selected model with the metrics: MRR, MR, HITS@1, HITS@3, HITS@10"""
         metrics = {metric: stats.Mean() for metric in ['MRR', 'MR', 'HITS@1', 'HITS@3', 'HITS@10']}
         with torch.no_grad():
+
             for test_set in dataset:
+
                 for step, (positive_sample, negative_sample, filter_bias, mode) in enumerate(test_set):
+
                     positive_sample = positive_sample.to(device)
+
                     negative_sample = negative_sample.to(device)
+
                     filter_bias = filter_bias.to(device)
-                    score = model(sample = (positive_sample, negative_sample), mode = mode)
+
+                    score = model(sample=(positive_sample, negative_sample), mode=mode)
+
                     score += filter_bias
+
                     argsort = torch.argsort(score, dim = 1, descending=True)
 
                     if mode == 'head-batch':
                         positive_arg = positive_sample[:, 0]
+
                     elif mode == 'tail-batch':
                         positive_arg = positive_sample[:, 2]
 
@@ -112,7 +119,6 @@ class Evaluation:
                         metrics['HITS@3'].update(1.0 if ranking <= 3 else 0.0)
                         metrics['HITS@10'].update(1.0 if ranking <= 10 else 0.0)
 
-                        score = {f'{name}: {metric.get():4f}' for name, metric in metrics.items()}
+        score = {f'{name}: {metric.get():4f}' for name, metric in metrics.items()}
 
-                        if step % print_every == 0:
-                            print(', '.join(sorted(score)))
+        return ', '.join(sorted(score))

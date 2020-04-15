@@ -1,6 +1,7 @@
 import torch
 
 import collections
+import copy
 import itertools
 
 
@@ -211,7 +212,8 @@ class Distillation:
             self.distinct_head_batch_teacher[:,:,1] = relation
             self.distinct_head_batch_teacher[:,:,2] = tail
 
-        return self.common_head_batch_teacher, self.distinct_head_batch_teacher
+        return (copy.deepcopy(self.common_head_batch_teacher),
+            copy.deepcopy(self.distinct_head_batch_teacher))
 
     def mini_batch_teacher_relation(self, head, tail):
         self.common_relation_batch_teacher[:,:,0] = head
@@ -221,7 +223,8 @@ class Distillation:
             self.distinct_relation_batch_teacher[:,:,0] = head
             self.distinct_relation_batch_teacher[:,:,2] = tail
 
-        return self.common_relation_batch_teacher, self.distinct_relation_batch_teacher
+        return (copy.deepcopy(self.common_relation_batch_teacher),
+            copy.deepcopy(self.distinct_relation_batch_teacher))
 
     def mini_batch_teacher_tail(self, head, relation):
         self.common_tail_batch_teacher[:,:,0] = head
@@ -231,7 +234,8 @@ class Distillation:
             self.distinct_tail_batch_teacher[:,:,0] = head
             self.distinct_tail_batch_teacher[:,:,1] = relation
 
-        return self.common_tail_batch_teacher, self.distinct_tail_batch_teacher
+        return (copy.deepcopy(self.common_tail_batch_teacher),
+            copy.deepcopy(self.distinct_tail_batch_teacher))
 
     def mini_batch_student_head(self, teacher_relation, teacher_tail):
         relation = self.mapping_relations[teacher_relation]
@@ -244,7 +248,8 @@ class Distillation:
             self.distinct_head_batch_student[:,:,1] = relation
             self.distinct_head_batch_student[:,:,2] = tail
 
-        return self.common_head_batch_student, self.distinct_head_batch_student
+        return (copy.deepcopy(self.common_head_batch_student),
+            copy.deepcopy(self.distinct_head_batch_student))
 
     def mini_batch_student_relation(self, teacher_head, teacher_tail):
         head = self.mapping_entities[teacher_head]
@@ -257,7 +262,8 @@ class Distillation:
             self.distinct_relation_batch_student[:,:,0] = head
             self.distinct_relation_batch_student[:,:,2] = tail
 
-        return self.common_relation_batch_student, self.distinct_relation_batch_student
+        return (copy.deepcopy(self.common_relation_batch_student),
+            copy.deepcopy(self.distinct_relation_batch_student))
 
     def mini_batch_student_tail(self, teacher_head, teacher_relation):
         head = self.mapping_entities[teacher_head]
@@ -270,7 +276,8 @@ class Distillation:
             self.distinct_tail_batch_student[:,:,0] = head
             self.distinct_tail_batch_student[:,:,1] = relation
 
-        return self.common_tail_batch_student, self.distinct_tail_batch_student
+        return (copy.deepcopy(self.common_tail_batch_student),
+            copy.deepcopy(self.distinct_tail_batch_student))
 
     def pre_compute_matrix(self, batch, dim):
         if dim[1] > 0:

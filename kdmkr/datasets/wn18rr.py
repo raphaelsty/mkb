@@ -16,15 +16,19 @@ class WN18RR(fetch_dataset.FetchDataset):
 
         :
             >>> from kdmkr import datasets
+            >>> import torch
 
-            >>> wn18rr = datasets.WN18RR(batch_size=1, negative_sample_size=1, seed=42)
+            >>> wn18rr = datasets.WN18RR(batch_size=1, negative_sample_size=1, shuffle=True,
+            ... seed=42)
+
+            >>> _ = torch.manual_seed(42)
 
             >>> for _ in range(3):
             ...     positive_sample, negative_sample, weight, mode = next(wn18rr)
             ...     print(positive_sample, negative_sample, weight, mode)
-            tensor([[    0,     0, 10211]]) tensor([[15795]]) tensor([0.3536]) tail-batch
-            tensor([[    0,     0, 10211]]) tensor([[15795]]) tensor([0.3536]) head-batch
-            tensor([[   1,    1, 8949]]) tensor([[38158]]) tensor([0.3162]) tail-batch
+            tensor([[2699,    4, 2010]]) tensor([[15795]]) tensor([0.1622]) tail-batch
+            tensor([[ 9667,     5, 15434]]) tensor([[15795]]) tensor([0.1302]) head-batch
+            tensor([[ 9023,     0, 25815]]) tensor([[38158]]) tensor([0.2357]) tail-batch
 
     """
     def __init__(self, batch_size, negative_sample_size=1024, shuffle=False, num_workers=1,
