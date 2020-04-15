@@ -68,7 +68,7 @@ class FetchDataset:
         self.step = 0
 
         self.n_entity = len(entities)
-        self.n_relation = len(entities)
+        self.n_relation = len(relations)
 
         self.fetch_head = self.fetch(self.get_train_loader(mode='head-batch'))
         self.fetch_tail = self.fetch(self.get_train_loader(mode='tail-batch'))
