@@ -26,9 +26,9 @@ class FB15K237(fetch_dataset.FetchDataset):
             >>> for _ in range(3):
             ...     positive_sample, negative_sample, weight, mode = next(fb15k237)
             ...     print(positive_sample, negative_sample, weight, mode)
-            tensor([[11775,    30, 11576]]) tensor([[7270]]) tensor([0.2887]) tail-batch
-            tensor([[ 203,   21, 5251]]) tensor([[7270]]) tensor([0.3333]) head-batch
-            tensor([[4994,   31, 8256]]) tensor([[13418]]) tensor([0.0343]) tail-batch
+            tensor([[5196,   24, 1164]]) tensor([[7270]]) tensor([0.2887]) tail-batch
+            tensor([[8539,   12, 2343]]) tensor([[7270]]) tensor([0.3333]) head-batch
+            tensor([[  16,   15, 4709]]) tensor([[5390]]) tensor([0.0343]) tail-batch
 
     """
     def __init__(self, batch_size, negative_sample_size=1024, shuffle=False, num_workers=1,
