@@ -44,8 +44,6 @@ class KDMKRFB15K237(fetch_dataset.FetchDataset):
             relations = json.loads(open(f'{self.directory}/kdmkr_fb15k237/relations.json').read()),
         )
 
-        self.n_relation = 237
-
     def read_csv(self, file):
         with open(f'{self.directory}/kdmkr_fb15k237/{file}', 'r') as csv_file:
             return [(int(head), int(relation), int(tail))
