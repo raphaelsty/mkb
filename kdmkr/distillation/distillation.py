@@ -342,7 +342,7 @@ class Distillation:
 
     @classmethod
     def _stack_sample(cls, batch, batch_size, device):
-        return torch.stack(batch).reshape(len(batch), batch, 3).to(device=device, dtype=int)
+        return torch.stack(batch).reshape(len(batch), batch_size, 3).to(device=device, dtype=int)
 
     def stack_entity(self, batch, device):
         """Convert a list of sample to 3 dimensionnal tensor"""
