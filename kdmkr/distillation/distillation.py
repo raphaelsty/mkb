@@ -341,5 +341,13 @@ class Distillation:
         return tensor_tail_teacher, tensor_tail_student
 
     @classmethod
-    def stack_sample(cls, batch, batch_size, device):
+    def _stack_sample(cls, batch, batch_size, device):
         return torch.stack(batch).reshape(len(batch), batch, 3).to(device=device, dtype=int)
+
+    def stack_entity(self, batch, device):
+        """Convert a list of sample to 3 dimensionnal tensor"""
+        return self._stack_sample(batch=batch, batch_size=self.batch_size_entity, device=device)
+
+    def stack_relations(self, batch, device):
+        """Convert a list of sample to 3 dimensionnal tensor"""
+        return self._stack_sample(batch=batch, batch_size=self.batch_size_relation, device=device)
