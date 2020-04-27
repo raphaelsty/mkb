@@ -4,6 +4,8 @@ import collections
 import copy
 import itertools
 
+import numpy as np
+
 
 __all__ = [
     'Distillation'
@@ -12,17 +14,12 @@ __all__ = [
 
 class Distillation:
     """
-    Process sample of inputs datasets to distill knowledge from 1 to n knowledges bases.
+    Process sample of inputs datasets to distill knowledge from 1 to n knowledges bases with
+    uniform subsampling.
 
     Example:
 
-            :
-
             >>> from kdmkr import distillation
-
-            >>> import torch
-
-            >>> _ = torch.manual_seed(42)
 
             >>> entities_teacher = {
             ...    'e0': 0,
@@ -64,56 +61,125 @@ class Distillation:
 
             >>> distillation = distillation.Distillation(teacher_entities=entities_teacher,
             ...     student_entities=entities_student, teacher_relations=relations_teacher,
-            ...     student_relations=relations_student)
+            ...     student_relations=relations_student, batch_size_entity=3, batch_size_relation=3,
+            ...     seed=42)
 
-            # Which distillation method is available for a given triplet (h=1, r=1, t=1) from the
-            # teacher knowledge resource?
+            >>> print(distillation.available(head=1, relation=1, tail=1))
+            True
 
-            >>> print(distillation.distillation_mode(head=1, relation=1, tail=1))
-            {'head': True, 'relation': True, 'tail': True}
+            >>> print(distillation.available(head=0, relation=1, tail=1))
+            False
 
-            # Entity 0 of teacher is not in the KG of the student. We are only able to distill
-            # on the head.
-            >>> print(distillation.distillation_mode(head=0, relation=1, tail=1))
-            {'head': True, 'relation': False, 'tail': False}
+            >>> print(distillation.uniform_subsampling())
+            (tensor([[3, 1, 3]]), tensor([[3, 1, 1]]), tensor([[2, 0, 2]]), tensor([[2, 0, 0]]))
 
-            >>> print(distillation.mini_batch_teacher_head(relation=1, tail=1))
-            (tensor([[[1, 1, 1],
-                      [2, 1, 1],
-                      [3, 1, 1]]]), tensor([[[0, 1, 1]]]))
+            # Training sample from teacher KG:
+            >>> head     = 1
+            >>> relation = 1
+            >>> tail     = 2
 
-            >>> print(distillation.mini_batch_teacher_relation(head=1, tail=1))
-            (tensor([[[1, 1, 1],
-                      [1, 2, 1],
-                      [1, 3, 1]]]), tensor([[[1, 0, 1]]]))
+            >>> (
+            ...    entity_distribution_teacher,
+            ...    relation_distribution_teacher,
+            ...    entity_distribution_student,
+            ...    relation_distribution_student
+            ... ) = distillation.uniform_subsampling()
 
-            >>> print(distillation.mini_batch_teacher_tail(head=1, relation=1))
-            (tensor([[[1, 1, 1],
-                      [1, 1, 2],
-                      [1, 1, 3]]]), tensor([[[1, 1, 0]]]))
+            >>> distillation_available = distillation.available(
+            ...    head=head, relation=relation, tail=tail)
 
-            >>> print(distillation.mini_batch_student_head(teacher_relation=1, teacher_tail=1))
-            (tensor([[[0, 0, 0],
-                      [1, 0, 0],
-                      [2, 0, 0]]]), tensor([[[3, 0, 0]]]))
+            >>> print(distillation_available)
+            True
 
-            >>> print(distillation.mini_batch_student_relation(teacher_head=1, teacher_tail=1))
-            (tensor([[[0, 0, 0],
-                      [0, 1, 0],
-                      [0, 2, 0]]]), tensor([[[0, 3, 0]]]))
+            >>> if distillation_available:
+            ...    teacher_head_tensor, student_head_tensor = distillation.get_distillation_sample_head(
+            ...         entity_distribution_teacher=entity_distribution_teacher,
+            ...         entity_distribution_student=entity_distribution_student,
+            ...         head_teacher=head, relation_teacher=relation, tail_teacher=tail)
+            ...
+            ...    teacher_relation_tensor, student_relation_tensor = distillation.get_distillation_sample_relation(
+            ...         relation_distribution_teacher=relation_distribution_teacher,
+            ...         relation_distribution_student=relation_distribution_student,
+            ...         head_teacher=head, relation_teacher=relation, tail_teacher=tail)
+            ...
+            ...    teacher_tail_tensor, student_tail_tensor = distillation.get_distillation_sample_tail(
+            ...         entity_distribution_teacher=entity_distribution_teacher,
+            ...         entity_distribution_student=entity_distribution_student,
+            ...         head_teacher=head, relation_teacher=relation, tail_teacher=tail)
 
-            >>> print(distillation.mini_batch_student_tail(teacher_head=1, teacher_relation=1))
-            (tensor([[[0, 0, 0],
-                      [0, 0, 1],
-                      [0, 0, 2]]]), tensor([[[0, 0, 3]]]))
+            Test batch to distill head:
+            >>> x = torch.tensor(
+            ...     [[[1., 1., 2.],
+            ...       [2., 1., 2.],
+            ...       [3., 1., 2.]]])
+
+            >>> torch.eq(teacher_head_tensor, x)
+            tensor([[[True, True, True],
+                     [True, True, True],
+                     [True, True, True]]])
+
+            >>> x = torch.tensor(
+            ...     [[[0., 0., 1.],
+            ...       [1., 0., 1.],
+            ...       [2., 0., 1.]]])
+
+            >>> torch.eq(student_head_tensor, x)
+            tensor([[[True, True, True],
+                     [True, True, True],
+                     [True, True, True]]])
+
+            Test batch to distill relation:
+            >>> x = torch.tensor(
+            ...     [[[1., 1., 2.],
+            ...       [1., 3., 2.],
+            ...       [1., 3., 2.]]])
+
+            >>> torch.eq(teacher_relation_tensor, x)
+            tensor([[[True, True, True],
+                     [True, True, True],
+                     [True, True, True]]])
+
+            >>> x = torch.tensor(
+            ...     [[[0., 0., 1.],
+            ...       [0., 2., 1.],
+            ...       [0., 2., 1.]]])
+
+            >>> torch.eq(student_relation_tensor, x)
+            tensor([[[True, True, True],
+                     [True, True, True],
+                     [True, True, True]]])
+
+            Test batch to distill tail:
+            >>> x = torch.tensor(
+            ...     [[[1., 1., 2.],
+            ...       [1., 1., 2.],
+            ...       [1., 1., 3.]]])
+
+            >>> torch.eq(teacher_tail_tensor, x)
+            tensor([[[True, True, True],
+                     [True, True, True],
+                     [True, True, True]]])
+
+            >>> x = torch.tensor(
+            ...     [[[0., 0., 1.],
+            ...       [0., 0., 1.],
+            ...       [0., 0., 2.]]])
+
+            >>> torch.eq(student_tail_tensor, x)
+            tensor([[[True, True, True],
+                     [True, True, True],
+                     [True, True, True]]])
 
     """
     def __init__(self, teacher_entities, student_entities, teacher_relations, student_relations,
-        ):
+        batch_size_entity, batch_size_relation, seed=None):
         self.teacher_entities = teacher_entities
         self.student_entities = student_entities
         self.teacher_relations = teacher_relations
         self.student_relations = student_relations
+        self.batch_size_entity = batch_size_entity
+        self.batch_size_relation = batch_size_relation
+        self.seed = seed
 
         # Common entities and relations pre-processing:
         self.mapping_entities = collections.OrderedDict({
@@ -126,184 +192,154 @@ class Distillation:
             if e in self.student_relations
         })
 
-        self.common_head_batch_teacher = self.pre_compute_matrix(
-            batch=[torch.tensor([e, 0, 0]) for e, _ in self.mapping_entities.items()], # pylint: disable=not-callable
-            dim=(1, len(self.mapping_entities), 3)
-        )
+        if self.seed is not None:
+            self._rng = np.random.seed(self.seed)
 
-        self.common_tail_batch_teacher = self.pre_compute_matrix(
-            batch=[torch.tensor([0, 0, e]) for e, _ in self.mapping_entities.items()], # pylint: disable=not-callable
-            dim=(1, len(self.mapping_entities), 3)
-        )
-
-        self.common_relation_batch_teacher = self.pre_compute_matrix(
-            batch=[torch.tensor([0, r, 0]) for r, _ in self.mapping_relations.items()], # pylint: disable=not-callable
-            dim=(1, len(self.mapping_relations), 3)
-        )
-
-        self.common_head_batch_student = self.pre_compute_matrix(
-            batch=[torch.tensor([e, 0, 0]) for _, e in self.mapping_entities.items()], # pylint: disable=not-callable
-            dim=(1, len(self.mapping_entities), 3)
-        )
-
-        self.common_tail_batch_student = self.pre_compute_matrix(
-            batch=[torch.tensor([0, 0, e]) for _, e in self.mapping_entities.items()], # pylint: disable=not-callable
-            dim=(1, len(self.mapping_entities), 3)
-        )
-
-        self.common_relation_batch_student = self.pre_compute_matrix(
-            batch=[torch.tensor([0, r, 0]) for _, r in self.mapping_relations.items()], # pylint: disable=not-callable
-            dim=(1, len(self.mapping_relations), 3)
-        )
-
-        # Distinct entities and relations pre-processing:
-
-        # Entities belonging to the student and teacher that are not shared across KG.
-        self.distinct_teacher_entities = [i for e, i in self.teacher_entities.items()
-            if e not in self.student_entities]
-
-        self.distinct_student_entities = [i for e, i in self.student_entities.items()
-            if e not in self.teacher_entities]
-
-        # Relations belonging to the student and teacher that are not shared across KG.
-        self.distinct_teacher_relations = [i for r, i in self.teacher_relations.items()
-            if r not in self.student_relations]
-
-        self.distinct_student_relations = [i for r, i in self.student_relations.items()
-            if r not in self.teacher_relations]
-
-        # Teacher:
-        self.distinct_head_batch_teacher = self.pre_compute_matrix(
-            batch=[torch.tensor([e, 0, 0]) for e in self.distinct_teacher_entities], # pylint: disable=not-callable
-            dim=(1, len(self.distinct_teacher_entities), 3)
-        )
-
-        self.distinct_relation_batch_teacher = self.pre_compute_matrix(
-            batch=[torch.tensor([0, r, 0]) for r in self.distinct_teacher_relations], # pylint: disable=not-callable
-            dim=(1, len(self.distinct_teacher_relations), 3)
-        )
-
-        self.distinct_tail_batch_teacher = self.pre_compute_matrix(
-            batch=[torch.tensor([0, 0, e]) for e in self.distinct_teacher_entities], # pylint: disable=not-callable
-            dim=(1, len(self.distinct_teacher_entities), 3)
-        )
-
-        # Student:
-        self.distinct_head_batch_student = self.pre_compute_matrix(
-            batch=[torch.tensor([e, 0, 0]) for e in self.distinct_student_entities], # pylint: disable=not-callable
-            dim=(1, len(self.distinct_student_entities), 3)
-        )
-
-        self.distinct_relation_batch_student = self.pre_compute_matrix(
-            batch=[torch.tensor([0, r, 0]) for r in self.distinct_student_relations], # pylint: disable=not-callable
-            dim=(1, len(self.distinct_student_relations), 3)
-        )
-
-        self.distinct_tail_batch_student = self.pre_compute_matrix(
-            batch=[torch.tensor([0, 0, e]) for e in self.distinct_student_entities], # pylint: disable=not-callable
-            dim=(1, len(self.distinct_student_entities), 3)
-        )
-
-    def mini_batch_teacher_head(self, relation, tail):
-        self.common_head_batch_teacher[:,:,1] = relation
-        self.common_head_batch_teacher[:,:,2] = tail
-
-        if isinstance(self.distinct_head_batch_teacher, torch.Tensor):
-            self.distinct_head_batch_teacher[:,:,1] = relation
-            self.distinct_head_batch_teacher[:,:,2] = tail
-
-        return (copy.deepcopy(self.common_head_batch_teacher),
-            copy.deepcopy(self.distinct_head_batch_teacher))
-
-    def mini_batch_teacher_relation(self, head, tail):
-        self.common_relation_batch_teacher[:,:,0] = head
-        self.common_relation_batch_teacher[:,:,2] = tail
-
-        if isinstance(self.distinct_relation_batch_teacher, torch.Tensor):
-            self.distinct_relation_batch_teacher[:,:,0] = head
-            self.distinct_relation_batch_teacher[:,:,2] = tail
-
-        return (copy.deepcopy(self.common_relation_batch_teacher),
-            copy.deepcopy(self.distinct_relation_batch_teacher))
-
-    def mini_batch_teacher_tail(self, head, relation):
-        self.common_tail_batch_teacher[:,:,0] = head
-        self.common_tail_batch_teacher[:,:,1] = relation
-
-        if isinstance(self.distinct_tail_batch_teacher, torch.Tensor):
-            self.distinct_tail_batch_teacher[:,:,0] = head
-            self.distinct_tail_batch_teacher[:,:,1] = relation
-
-        return (copy.deepcopy(self.common_tail_batch_teacher),
-            copy.deepcopy(self.distinct_tail_batch_teacher))
-
-    def mini_batch_student_head(self, teacher_relation, teacher_tail):
-        relation = self.mapping_relations[teacher_relation]
-        tail = self.mapping_entities[teacher_tail]
-
-        self.common_head_batch_student[:,:,1] = relation
-        self.common_head_batch_student[:,:,2] = tail
-
-        if isinstance(self.distinct_head_batch_student, torch.Tensor):
-            self.distinct_head_batch_student[:,:,1] = relation
-            self.distinct_head_batch_student[:,:,2] = tail
-
-        return (copy.deepcopy(self.common_head_batch_student),
-            copy.deepcopy(self.distinct_head_batch_student))
-
-    def mini_batch_student_relation(self, teacher_head, teacher_tail):
-        head = self.mapping_entities[teacher_head]
-        tail = self.mapping_entities[teacher_tail]
-
-        self.common_relation_batch_student[:,:,0] = head
-        self.common_relation_batch_student[:,:,2] = tail
-
-        if isinstance(self.distinct_relation_batch_student, torch.Tensor):
-            self.distinct_relation_batch_student[:,:,0] = head
-            self.distinct_relation_batch_student[:,:,2] = tail
-
-        return (copy.deepcopy(self.common_relation_batch_student),
-            copy.deepcopy(self.distinct_relation_batch_student))
-
-    def mini_batch_student_tail(self, teacher_head, teacher_relation):
-        head = self.mapping_entities[teacher_head]
-        relation = self.mapping_relations[teacher_relation]
-
-        self.common_tail_batch_student[:,:,0] = head
-        self.common_tail_batch_student[:,:,1] = relation
-
-        if isinstance(self.distinct_tail_batch_student, torch.Tensor):
-            self.distinct_tail_batch_student[:,:,0] = head
-            self.distinct_tail_batch_student[:,:,1] = relation
-
-        return (copy.deepcopy(self.common_tail_batch_student),
-            copy.deepcopy(self.distinct_tail_batch_student))
-
-    def pre_compute_matrix(self, batch, dim):
-        if dim[1] > 0:
-            batch = list(itertools.chain.from_iterable(batch))
-            batch = torch.stack(batch).reshape(dim)
-        else:
-            batch = None
-        return batch
-
-    def distillation_mode(self, head, relation, tail):
+    def available(self, head, relation, tail):
         """
         Define which type of distillation is available.
         """
         head_available, relation_available, tail_available = False, False, False
 
-        if head in self.mapping_entities:
-            head_available = True
+        if (head in self.mapping_entities
+            and tail in self.mapping_entities
+            and relation in self.mapping_relations):
+            return True
+        else:
+            return False
 
-        if tail in self.mapping_entities:
-            tail_available = True
+    def init_tensor(self, head, relation, tail, batch_size):
+        x = torch.zeros((1, batch_size, 3))
+        x[:,:,0] = head
+        x[:,:,1] = relation
+        x[:,:,2] = tail
+        return x
 
-        if relation in self.mapping_relations:
-            relation_available = True
+    def uniform_subsampling(self):
+        """Init minibatch dedicated to distillation with uniform subsampling for student and
+        teacher.
+        """
+        entity_distribution_teacher = np.random.choice(
+            a=list(self.mapping_entities.keys()), size=self.batch_size_entity,
+        )
 
-        return {
-            'head': relation_available and tail_available,
-            'relation': head_available and tail_available,
-            'tail': head_available and relation_available,
-        }
+        relation_distribution_teacher = np.random.choice(
+            a=list(self.mapping_relations.keys()),  size=self.batch_size_relation
+        )
+
+        entity_distribution_student = [
+            self.mapping_entities[entity] for entity in entity_distribution_teacher]
+
+        relation_distribution_student = [
+            self.mapping_relations[relation] for relation in relation_distribution_teacher]
+
+        entity_distribution_teacher = torch.tensor(entity_distribution_teacher).view( # pylint: disable=not-callable
+            1, self.batch_size_entity)
+
+        entity_distribution_student = torch.tensor(entity_distribution_student).view( # pylint: disable=not-callable
+            1, self.batch_size_entity)
+
+        relation_distribution_teacher = torch.tensor(relation_distribution_teacher).view( # pylint: disable=not-callable
+            1, self.batch_size_relation)
+
+        relation_distribution_student = torch.tensor(relation_distribution_student).view( # pylint: disable=not-callable
+            1, self.batch_size_relation)
+
+        return (entity_distribution_teacher, relation_distribution_teacher,
+            entity_distribution_student, relation_distribution_student)
+
+    def get_distillation_sample_head(self, entity_distribution_teacher, entity_distribution_student,
+        head_teacher, relation_teacher, tail_teacher):
+        # Teacher
+        head_distribution_teacher       = copy.deepcopy(entity_distribution_teacher)
+        head_distribution_teacher[0][0] = head_teacher
+
+        tensor_head_teacher = self.init_tensor(
+            head       = head_distribution_teacher,
+            relation   = relation_teacher,
+            tail       = tail_teacher,
+            batch_size = self.batch_size_entity
+        )
+
+        # Student
+        head_student     = self.mapping_entities[head_teacher]
+        relation_student = self.mapping_relations[relation_teacher]
+        tail_student     = self.mapping_entities[tail_teacher]
+
+        head_distribution_student       = copy.deepcopy(entity_distribution_student)
+        head_distribution_student[0][0] = head_student
+
+        tensor_head_student = self.init_tensor(
+            head       = head_distribution_student,
+            relation   = relation_student,
+            tail       = tail_student,
+            batch_size = self.batch_size_entity
+        )
+
+        return tensor_head_teacher, tensor_head_student
+
+    def get_distillation_sample_relation(self, relation_distribution_teacher,
+        relation_distribution_student, head_teacher, relation_teacher, tail_teacher):
+        batch_size = relation_distribution_teacher.shape[0]
+
+        # Teacher
+        relation_distribution_teacher_copy = copy.deepcopy(relation_distribution_teacher)
+        relation_distribution_teacher_copy[0][0] = relation_teacher
+
+        tensor_relation_teacher = self.init_tensor(
+            head       = head_teacher,
+            relation   = relation_distribution_teacher_copy,
+            tail       = tail_teacher,
+            batch_size = self.batch_size_relation
+        )
+
+        # Student
+        head_student     = self.mapping_entities[head_teacher]
+        relation_student = self.mapping_relations[relation_teacher]
+        tail_student     = self.mapping_entities[tail_teacher]
+
+        relation_distribution_student_copy = copy.deepcopy(relation_distribution_student)
+        relation_distribution_student_copy[0][0] = relation_student
+
+        tensor_relation_student = self.init_tensor(
+            head       = head_student,
+            relation   = relation_distribution_student_copy,
+            tail       = tail_student,
+            batch_size = self.batch_size_relation
+        )
+
+        return tensor_relation_teacher, tensor_relation_student
+
+    def get_distillation_sample_tail(self, entity_distribution_teacher, entity_distribution_student,
+        head_teacher, relation_teacher, tail_teacher):
+        # Teacher
+        tail_distribution_teacher       = copy.deepcopy(entity_distribution_teacher)
+        tail_distribution_teacher[0][0] = tail_teacher
+
+        tensor_tail_teacher = self.init_tensor(
+            head       = head_teacher,
+            relation   = relation_teacher,
+            tail       = tail_distribution_teacher,
+            batch_size = self.batch_size_entity
+        )
+
+        # Student
+        head_student     = self.mapping_entities[head_teacher]
+        relation_student = self.mapping_relations[relation_teacher]
+        tail_student     = self.mapping_entities[tail_teacher]
+
+        tail_distribution_student       = copy.deepcopy(entity_distribution_student)
+        tail_distribution_student[0][0] = tail_student
+
+        tensor_tail_student = self.init_tensor(
+            head       = head_student,
+            relation   = relation_student,
+            tail       = tail_distribution_student,
+            batch_size = self.batch_size_entity
+        )
+
+        return tensor_tail_teacher, tensor_tail_student
+
+    @classmethod
+    def stack_sample(cls, batch, batch_size, device):
+        return torch.stack(batch).reshape(len(batch), batch, 3).to(device=device, dtype=int)
