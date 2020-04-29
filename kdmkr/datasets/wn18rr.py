@@ -3,6 +3,7 @@ import os
 
 from ..stream import fetch_dataset
 from ..utils import read_csv
+from ..utils import read_json
 
 __all__ = ['WN18RR']
 
@@ -46,6 +47,6 @@ class WN18RR(fetch_dataset.FetchDataset):
             valid=read_csv(file_path=self.valid_file_path), test=read_csv(file_path=self.test_file_path),
             batch_size=batch_size, negative_sample_size=negative_sample_size, shuffle=shuffle,
             num_workers=num_workers, seed=seed,
-            entities=json.loads(open(self.entities_file_path).read()),
-            relations = json.loads(open(self.relations_file_path).read()),
+            entities=read_json(self.entities_file_path),
+            relations=read_json(self.relations_file_path),
         )
