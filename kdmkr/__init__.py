@@ -7,4 +7,5 @@ __all__ = [
     'loss',
     'model',
     'stream',
+    'utils',
 ]

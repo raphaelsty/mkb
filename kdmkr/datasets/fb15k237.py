@@ -1,9 +1,8 @@
-import csv
 import json
 import os
-import zipfile
 
 from ..stream import fetch_dataset
+from ..utils import read_csv
 
 
 __all__ = ['FB15K237']
@@ -34,17 +33,20 @@ class FB15K237(fetch_dataset.FetchDataset):
     def __init__(self, batch_size, negative_sample_size=1024, shuffle=False, num_workers=1,
         seed=None):
 
-        self.directory = os.path.dirname(os.path.realpath(__file__))
+        self.folder    = 'fb15k237'
+        self.directory = f'{os.path.dirname(os.path.realpath(__file__))}/{self.folder}'
 
-        super().__init__(train=self.read_csv(file='train.csv'),
-            valid=self.read_csv(file='valid.csv'), test=self.read_csv(file='test.csv'),
+        self.train_file_path = f'{self.directory}/train.csv'
+        self.valid_file_path = f'{self.directory}/valid.csv'
+        self.test_file_path  = f'{self.directory}/test.csv'
+
+        self.entities_file_path  = f'{self.directory}/entities.json'
+        self.relations_file_path = f'{self.directory}/relations.json'
+
+        super().__init__(train=read_csv(file_path=self.train_file_path),
+            valid=read_csv(file_path=self.valid_file_path), test=read_csv(file_path=self.test_file_path),
             batch_size=batch_size, negative_sample_size=negative_sample_size, shuffle=shuffle,
             num_workers=num_workers, seed=seed,
-            entities=json.loads(open(f'{self.directory}/fb15k237/entities.json').read()),
-            relations = json.loads(open(f'{self.directory}/fb15k237/relations.json').read()),
+            entities=json.loads(open(self.entities_file_path).read()),
+            relations = json.loads(open(self.relations_file_path).read()),
         )
-
-    def read_csv(self, file):
-        with open(f'{self.directory}/fb15k237/{file}', 'r') as csv_file:
-            return [(int(head), int(relation), int(tail))
-                for head, relation, tail in csv.reader(csv_file)]
