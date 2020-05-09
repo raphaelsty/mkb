@@ -1,6 +1,9 @@
 import torch
 
-from creme import stats
+from creme       import stats
+from torch.utils import data
+
+from ..stream import base
 
 
 __all__ = ['Evaluation']
@@ -28,11 +31,15 @@ class Evaluation:
             ...     (2, 1, 3),
             ... ]
 
-            >>> test = [
+            >>> valid = [
             ...     (0, 0, 1),
             ...     (2, 1, 3),
             ... ]
 
+            >>> test = [
+            ...     (0, 0, 1),
+            ...     (2, 1, 3),
+            ... ]
 
             >>> entities = {
             ... 'e0': 0,
@@ -68,29 +75,54 @@ class Evaluation:
 
             >>> rotate = rotate.eval()
 
-            >>> score = evaluation.Evaluation()
+            >>> validation = evaluation.Evaluation(train=train, valid=valid, test=test,
+            ...     entities=entities, relations=relations, batch_size=1)
 
-            >>> print(score(model=rotate, dataset=dataset.test_dataset(batch_size=1), device='cpu'))
+            >>> scores = validation.eval(model=rotate)
+
+            >>> print(scores)
             HITS@10: 1.000000, HITS@1: 0.250000, HITS@3: 1.000000, MR: 2.000000, MRR: 0.583333
 
     """
-    def __init__(self):
-        pass
+    def __init__(self, train, valid, test, entities, relations, batch_size, device='cpu',
+        num_workers=1):
+        self.train = train
+        self.valid = valid
+        self.test  = test
+        self.entities = entities
+        self.relations = relations
+        self.batch_size = batch_size
+        self.device = device
+        self.num_workers = num_workers
 
-    def __call__(self, model, dataset, device='cpu'):
+    def _get_test_loader(self, triples, batch_size, mode):
+        test_dataset = base.TestDataset(triples=triples,
+            all_true_triples=self.train + self.test + self.valid, entities=self.entities,
+            relations=self.relations, mode=mode)
+        return data.DataLoader(dataset=test_dataset, batch_size=batch_size,
+            num_workers=self.num_workers, collate_fn=base.TestDataset.collate_fn)
+
+    def get_test_stream(self):
+        head_loader = self._get_test_loader(triples=self.test, batch_size=self.batch_size,
+            mode='head-batch')
+        tail_loader = self._get_test_loader(triples=self.test, batch_size=self.batch_size,
+            mode='tail-batch')
+        return [head_loader, tail_loader]
+
+    def eval(self, model):
         """Evaluate selected model with the metrics: MRR, MR, HITS@1, HITS@3, HITS@10"""
         metrics = {metric: stats.Mean() for metric in ['MRR', 'MR', 'HITS@1', 'HITS@3', 'HITS@10']}
         with torch.no_grad():
 
-            for test_set in dataset:
+            for test_set in self.get_test_stream():
 
                 for step, (positive_sample, negative_sample, filter_bias, mode) in enumerate(test_set):
 
-                    positive_sample = positive_sample.to(device)
+                    positive_sample = positive_sample.to(self.device)
 
-                    negative_sample = negative_sample.to(device)
+                    negative_sample = negative_sample.to(self.device)
 
-                    filter_bias = filter_bias.to(device)
+                    filter_bias = filter_bias.to(self.device)
 
                     score = model(sample=(positive_sample, negative_sample), mode=mode)
 
@@ -105,6 +137,7 @@ class Evaluation:
                         positive_arg = positive_sample[:, 2]
 
                     batch_size = positive_sample.size(0)
+
                     for i in range(batch_size):
                         #Notice that argsort is not ranking
                         ranking = (argsort[i, :] == positive_arg[i]).nonzero()
