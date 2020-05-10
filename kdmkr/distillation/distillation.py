@@ -6,6 +6,8 @@ import itertools
 
 import numpy as np
 
+from .. import loss
+
 
 __all__ = [
     'Distillation'
@@ -172,7 +174,7 @@ class Distillation:
 
     """
     def __init__(self, teacher_entities, student_entities, teacher_relations, student_relations,
-        batch_size_entity, batch_size_relation, seed=None):
+        batch_size_entity, batch_size_relation, seed=None, device='cpu'):
         self.teacher_entities = teacher_entities
         self.student_entities = student_entities
         self.teacher_relations = teacher_relations
@@ -180,6 +182,7 @@ class Distillation:
         self.batch_size_entity = batch_size_entity
         self.batch_size_relation = batch_size_relation
         self.seed = seed
+        self.device = device
 
         # Common entities and relations pre-processing:
         self.mapping_entities = collections.OrderedDict({
@@ -351,3 +354,89 @@ class Distillation:
     def stack_relations(self, batch, device):
         """Convert a list of sample to 3 dimensionnal tensor"""
         return self._stack_sample(batch=batch, batch_size=self.batch_size_relation, device=device)
+
+    def distill(self, teacher, student, positive_sample):
+        """Apply distillation between a teacher and a student from a positive sample."""
+        batch_head_teacher = []
+        batch_head_student = []
+
+        batch_relation_teacher = []
+        batch_relation_student = []
+
+        batch_tail_teacher = []
+        batch_tail_student = []
+
+        (entity_distribution_teacher, relation_distribution_teacher,
+            entity_distribution_student, relation_distribution_student
+    ) = self.uniform_subsampling()
+
+        for head, relation, tail in positive_sample:
+
+            head, relation, tail = head.item(), relation.item(), tail.item()
+
+            distillation_available = self.available(head=head, relation=relation, tail=tail)
+
+            if distillation_available:
+
+                tensor_head_teacher, tensor_head_student = self.get_distillation_sample_head(
+                    entity_distribution_teacher=entity_distribution_teacher,
+                    entity_distribution_student=entity_distribution_student,
+                    head_teacher=head, relation_teacher=relation, tail_teacher=tail
+                )
+
+                tensor_relation_teacher, tensor_relation_student = self.get_distillation_sample_relation(
+                    relation_distribution_teacher=relation_distribution_teacher,
+                    relation_distribution_student=relation_distribution_student,
+                    head_teacher=head, relation_teacher=relation, tail_teacher=tail
+                )
+
+                tensor_tail_teacher, tensor_tail_student = self.get_distillation_sample_tail(
+                    entity_distribution_teacher=entity_distribution_teacher,
+                    entity_distribution_student=entity_distribution_student,
+                    head_teacher=head, relation_teacher=relation, tail_teacher=tail
+                )
+
+                batch_head_teacher.append(tensor_head_teacher)
+                batch_head_student.append(tensor_head_student)
+
+                batch_relation_teacher.append(tensor_relation_teacher)
+                batch_relation_student.append(tensor_relation_student)
+
+                batch_tail_teacher.append(tensor_tail_teacher)
+                batch_tail_student.append(tensor_tail_student)
+
+        if batch_head_teacher or batch_relation_teacher or batch_tail_teacher:
+
+            teacher_head_tensor = self.stack_entity(batch_head_teacher, device=self.device)
+            student_head_tensor = self.stack_entity(batch_head_student, device=self.device)
+
+            teacher_relation_tensor = self.stack_relations(batch_relation_teacher, device=self.device)
+            student_relation_tensor = self.stack_relations(batch_relation_student, device=self.device)
+
+            teacher_tail_tensor = self.stack_entity(batch_tail_teacher, device=self.device)
+            student_tail_tensor = self.stack_entity(batch_tail_student, device=self.device)
+
+            # Distillation loss of heads
+            loss_head = loss.KlDivergence()(
+                teacher_score=teacher.distill(teacher_head_tensor),
+                student_score=student.distill(student_head_tensor)
+            )
+
+            # Distillation loss of relations.
+            loss_relation = loss.KlDivergence()(
+                teacher_score=teacher.distill(teacher_relation_tensor),
+                student_score=student.distill(student_relation_tensor)
+            )
+
+            # Distillation loss of tails.
+            loss_tail = loss.KlDivergence()(
+                teacher_score=teacher.distill(teacher_tail_tensor),
+                student_score=student.distill(student_tail_tensor)
+            )
+
+            # The loss of the student is equal to the sum of all losses.
+            loss_distillation = loss_head + loss_relation + loss_tail
+
+            return loss_distillation, True
+        else:
+            return None, False
