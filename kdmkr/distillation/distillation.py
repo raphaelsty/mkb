@@ -356,7 +356,20 @@ class Distillation:
         return self._stack_sample(batch=batch, batch_size=self.batch_size_relation, device=device)
 
     def distill(self, teacher, student, positive_sample):
-        """Apply distillation between a teacher and a student from a positive sample."""
+        """Apply distillation between a teacher and a student from a positive sample.
+
+            teacher (model): Teacher that will distill his knowledge.
+            student (model): Student that will learn from the teacher.
+            positive_sample (torch.tensor): Positive example from the KB.
+
+            Returns:
+
+                If distillation available:
+                    Distillation loss, Available set to True.
+                Else:
+                    None, Available set to False.
+
+        """
         batch_head_teacher = []
         batch_head_student = []
 
