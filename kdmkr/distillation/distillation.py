@@ -429,21 +429,27 @@ class Distillation:
             teacher_tail_tensor = self.stack_entity(batch_tail_teacher, device=self.device)
             student_tail_tensor = self.stack_entity(batch_tail_student, device=self.device)
 
+            # Disable gradients for teacher:
+            with torch.no_grad():
+                scores_head_teacher = teacher.distill(teacher_head_tensor)
+                scores_relation_teacher = teacher.distill(teacher_relation_tensor)
+                scores_tail_teacher = teacher.distill(teacher_tail_tensor)
+
             # Distillation loss of heads
             loss_head = loss.KlDivergence()(
-                teacher_score=teacher.distill(teacher_head_tensor),
+                teacher_score=scores_head_teacher,
                 student_score=student.distill(student_head_tensor)
             )
 
             # Distillation loss of relations.
             loss_relation = loss.KlDivergence()(
-                teacher_score=teacher.distill(teacher_relation_tensor),
+                teacher_score=scores_relation_teacher,
                 student_score=student.distill(student_relation_tensor)
             )
 
             # Distillation loss of tails.
             loss_tail = loss.KlDivergence()(
-                teacher_score=teacher.distill(teacher_tail_tensor),
+                teacher_score=scores_tail_teacher,
                 student_score=student.distill(student_tail_tensor)
             )
 
