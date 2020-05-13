@@ -75,46 +75,43 @@ class Evaluation:
 
             >>> rotate = rotate.eval()
 
-            >>> validation = evaluation.Evaluation(train=train, valid=valid, test=test,
+            >>> validation = evaluation.Evaluation(all_true_triples=train + valid + test,
             ...     entities=entities, relations=relations, batch_size=1)
 
-            >>> scores = validation.eval(model=rotate)
+            >>> scores = validation.eval(model=rotate, dataset=test)
 
             >>> print(scores)
             HITS@10: 1.000000, HITS@1: 0.250000, HITS@3: 1.000000, MR: 2.000000, MRR: 0.583333
 
     """
-    def __init__(self, train, valid, test, entities, relations, batch_size, device='cpu',
+    def __init__(self, all_true_triples, entities, relations, batch_size, device='cpu',
         num_workers=1):
-        self.train = train
-        self.valid = valid
-        self.test  = test
+        self.all_true_triples = all_true_triples
         self.entities = entities
         self.relations = relations
         self.batch_size = batch_size
         self.device = device
         self.num_workers = num_workers
 
-    def _get_test_loader(self, triples, batch_size, mode):
+    def _get_test_loader(self, triples, mode):
         test_dataset = base.TestDataset(triples=triples,
-            all_true_triples=self.train + self.test + self.valid, entities=self.entities,
+            all_true_triples=self.all_true_triples, entities=self.entities,
             relations=self.relations, mode=mode)
-        return data.DataLoader(dataset=test_dataset, batch_size=batch_size,
+        return data.DataLoader(dataset=test_dataset, batch_size=self.batch_size,
             num_workers=self.num_workers, collate_fn=base.TestDataset.collate_fn)
 
-    def get_test_stream(self):
-        head_loader = self._get_test_loader(triples=self.test, batch_size=self.batch_size,
-            mode='head-batch')
-        tail_loader = self._get_test_loader(triples=self.test, batch_size=self.batch_size,
-            mode='tail-batch')
+    def get_test_stream(self, dataset):
+        head_loader = self._get_test_loader(triples=dataset, mode='head-batch')
+        tail_loader = self._get_test_loader(triples=dataset, mode='tail-batch')
         return [head_loader, tail_loader]
 
-    def eval(self, model):
+    def eval(self, model, dataset):
         """Evaluate selected model with the metrics: MRR, MR, HITS@1, HITS@3, HITS@10"""
         metrics = {metric: stats.Mean() for metric in ['MRR', 'MR', 'HITS@1', 'HITS@3', 'HITS@10']}
+
         with torch.no_grad():
 
-            for test_set in self.get_test_stream():
+            for test_set in self.get_test_stream(dataset):
 
                 for step, (positive_sample, negative_sample, filter_bias, mode) in enumerate(test_set):
 
