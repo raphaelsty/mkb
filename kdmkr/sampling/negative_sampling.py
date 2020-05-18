@@ -1,3 +1,4 @@
+# Reference: https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding
 import numpy as np
 
 import torch
@@ -147,31 +148,8 @@ class NegativeSampling:
         return negative_samples
 
     @staticmethod
-    def count_frequency(triples, start=4):
-        '''
-        Get frequency of a partial triple like (head, relation) or (relation, tail)
-        The frequency will be used for subsampling like word2vec.
-        '''
-        count = {}
-        for head, relation, tail in triples:
-            if (head, relation) not in count:
-                count[(head, relation)] = start
-            else:
-                count[(head, relation)] += 1
-
-            if (tail, -relation-1) not in count:
-                count[(tail, -relation-1)] = start
-            else:
-                count[(tail, -relation-1)] += 1
-        return count
-
-
-    @staticmethod
     def get_true_head_and_tail(triples):
-        '''
-        Build a dictionary of true triples that will
-        be used to filter these true triples for negative sampling
-        '''
+        """ Build a dictionary to filter out existing triples from fakes ones."""
         true_head = {}
         true_tail = {}
 
