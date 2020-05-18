@@ -43,24 +43,24 @@ class FetchDataset:
             ... ]
 
             >>> dataset = stream.FetchDataset(train=train, test=test, entities=entities,
-            ...    relations=relations, negative_sample_size=1, batch_size=1, seed=42)
+            ...    relations=relations, batch_size=1, seed=42)
 
             # Iterate over the first three samples of the input training set:
             >>> for _ in range(3):
-            ...     positive_sample, negative_sample, weight, mode = next(dataset)
-            ...     print(positive_sample, negative_sample, weight, mode)
-            tensor([[0, 0, 2]]) tensor([[3]]) tensor([0.3333]) tail-batch
-            tensor([[0, 0, 2]]) tensor([[3]]) tensor([0.3333]) head-batch
-            tensor([[1, 0, 2]]) tensor([[4]]) tensor([0.3333]) tail-batch
+            ...     positive_sample, weight, mode = next(dataset)
+            ...     print(positive_sample, weight, mode)
+            tensor([[0, 0, 2]]) tensor([0.3333]) tail-batch
+            tensor([[0, 0, 2]]) tensor([0.3333]) head-batch
+            tensor([[1, 0, 2]]) tensor([0.3333]) tail-batch
+
     """
-    def __init__(self, train, negative_sample_size, entities, relations, valid=[], test=[],
+    def __init__(self, train, entities, relations, valid=[], test=[],
         batch_size=1, shuffle=False, num_workers=1, seed=None):
         self.train = train
         self.valid = valid
         self.test = test
         self.entities = entities
         self.relations = relations
-        self.negative_sample_size = negative_sample_size
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.num_workers = num_workers
@@ -97,10 +97,10 @@ class FetchDataset:
 
     def get_train_loader(self, mode):
         dataset = TrainDataset(triples=self.train, entities=self.entities, relations=self.relations,
-            negative_sample_size=self.negative_sample_size, mode=mode, seed=self.seed)
+            mode=mode, seed=self.seed)
 
-        return data.DataLoader(dataset=dataset, batch_size=self.batch_size,
-            shuffle=self.shuffle, num_workers=self.num_workers, collate_fn=TrainDataset.collate_fn)
+        return data.DataLoader(dataset=dataset, batch_size=self.batch_size, shuffle=self.shuffle,
+            num_workers=self.num_workers, collate_fn=TrainDataset.collate_fn)
 
     def test_stream(self, triples, batch_size):
         head_loader = self._get_test_loader(triples=triples, batch_size=batch_size,

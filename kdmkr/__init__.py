@@ -6,6 +6,7 @@ __all__ = [
     'evaluation',
     'loss',
     'model',
+    'sampling',
     'stream',
     'utils',
 ]

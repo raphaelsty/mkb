@@ -19,6 +19,7 @@ class Evaluation:
             >>> from kdmkr import evaluation
             >>> from kdmkr import model
             >>> from kdmkr import loss
+            >>> from kdmkr import sampling
 
             >>> import torch
 
@@ -53,8 +54,22 @@ class Evaluation:
             ... 'r1': 1,
             ... }
 
-            >>> dataset = stream.FetchDataset(train=train, test=test, entities=entities,
-            ...    relations=relations, negative_sample_size=2, batch_size=1, seed=42)
+            >>> dataset = stream.FetchDataset(
+            ...    train=train,
+            ...    test=test,
+            ...    entities=entities,
+            ...    relations=relations,
+            ...    batch_size=1,
+            ...    seed=42
+            ... )
+
+            >>> negative_sampling = sampling.NegativeSampling(
+            ...    size = 2,
+            ...    all_positive_triples = dataset.train,
+            ...    entities = dataset.entities,
+            ...    relations = dataset.relations,
+            ...    seed = 42,
+            ... )
 
             >>> rotate = model.RotatE(hidden_dim=3, n_entity=dataset.n_entity,
             ...    n_relation=dataset.n_relation, gamma=1)
@@ -67,8 +82,10 @@ class Evaluation:
             >>> loss = loss.Adversarial()
 
             >>> for _ in range(10):
-            ...     positive_sample, negative_sample, weight, mode=next(dataset)
+            ...     positive_sample, weight, mode=next(dataset)
             ...     positive_score = rotate(positive_sample)
+            ...     negative_sample = negative_sampling.generate(positive_sample=positive_sample,
+            ...         mode=mode)
             ...     negative_score = rotate((positive_sample, negative_sample), mode=mode)
             ...     loss(positive_score, negative_score, weight, alpha=0.5).backward()
             ...     _ = optimizer.step()

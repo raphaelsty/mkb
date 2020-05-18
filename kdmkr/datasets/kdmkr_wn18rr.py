@@ -17,21 +17,19 @@ class KDMKRWN18RR(fetch_dataset.FetchDataset):
             >>> from kdmkr import datasets
             >>> import torch
 
-            >>> kdmkr_wn18rr = datasets.KDMKRWN18RR(batch_size=1, negative_sample_size=1, shuffle=True,
-            ... seed=42)
+            >>> kdmkr_wn18rr = datasets.KDMKRWN18RR(batch_size=1, shuffle=True, seed=42)
 
             >>> _ = torch.manual_seed(42)
 
             >>> for _ in range(3):
-            ...     positive_sample, negative_sample, weight, mode = next(kdmkr_wn18rr)
-            ...     print(positive_sample, negative_sample, weight, mode)
-            tensor([[2699,    4, 2010]]) tensor([[15795]]) tensor([0.1622]) tail-batch
-            tensor([[ 9667,     5, 15434]]) tensor([[15795]]) tensor([0.1302]) head-batch
-            tensor([[ 9023,     0, 25815]]) tensor([[38158]]) tensor([0.2357]) tail-batch
+            ...     positive_sample, weight, mode = next(kdmkr_wn18rr)
+            ...     print(positive_sample, weight, mode)
+            tensor([[2699,    4, 2010]]) tensor([0.1622]) tail-batch
+            tensor([[ 9667,     5, 15434]]) tensor([0.1302]) head-batch
+            tensor([[ 9023,     0, 25815]]) tensor([0.2357]) tail-batch
 
     """
-    def __init__(self, batch_size, negative_sample_size=1024, shuffle=False, num_workers=1,
-        seed=None):
+    def __init__(self, batch_size, shuffle=False, num_workers=1, seed=None):
 
         self.folder    = 'kdmkr_wn18rr'
         self.directory = f'{os.path.dirname(os.path.realpath(__file__))}/{self.folder}'
@@ -45,8 +43,7 @@ class KDMKRWN18RR(fetch_dataset.FetchDataset):
 
         super().__init__(train=read_csv(file_path=self.train_file_path),
             valid=read_csv(file_path=self.valid_file_path), test=read_csv(file_path=self.test_file_path),
-            batch_size=batch_size, negative_sample_size=negative_sample_size, shuffle=shuffle,
-            num_workers=num_workers, seed=seed,
+            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed,
             entities=read_json(self.entities_file_path),
             relations=read_json(self.relations_file_path),
         )
