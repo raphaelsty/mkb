@@ -96,10 +96,8 @@ class NegativeSampling:
     def generate(self, positive_sample, mode):
         """Generate negative samples from a head, relation tail
 
-        If the mode is set to head-batch, this method will generate a tensor of fake heads with
-        the corresponding weight. If the mode is set to tail-batch, this method will generate a
-        tensor of fake tails.
-
+        If the mode is set to head-batch, this method will generate a tensor of fake heads.
+        If the mode is set to tail-batch, this method will generate a tensor of fake tails.
         """
         batch_size = positive_sample.shape[0]
 
