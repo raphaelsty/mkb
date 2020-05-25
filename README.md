@@ -68,3 +68,65 @@ The model trained on WN18RR is better than the model trained on FB15K237 to find
 It would be interesting to identify the entities that the models classify correctly. We might get better results with distillation if the models provide different results.
 
 ---
+
+#### Experiment 3
+
+#### Target
+
+L'objectif de cet expérience est de quantifier la performance de la distillation d'un étudiant vers plusieurs professeurs pour l'article kdmkb en utilisant les datasets WN18RR et FB15K237.
+
+
+#### Realization
+
+Pour réaliser cette expérience, je découpe WN18RR en deux, puis en trois et finalement en quatre partie de taille identique. Je répète l'opération avec FB15K237. 
+
+- Independant: J'entraine un modèle sur chaque sous-ensemble des knowledges bases, on appel ces modèles "Independant". Best correspond au meilleur modèle 
+
+- Xdistill~X: J'entraine ensuite un modèle par distillation. 
+
+- J'entraine un modèle par distillation sur l'ensemble des modèles entrainé sur chacun sur 
+
+
+
+
+| Dataset 	| Parts 	| Independant 	|  	| Xdistill~X 	|  	| Our model 	|  	|
+|:--------:	|:-----:	|:-----------:	|:-----:	|:----------:	|:-----:	|:---------:	|:-----:	|
+|  	|  	| Best 	| Worst 	| Best 	| Worst 	| Best 	| Worst 	|
+| WN18RR 	|          2          	|        18.29      	|        18.13      	|       17.89      	|       17.54      	|  	|  	|
+| WN18RR 	|               3               	|     12.09   	|    10.81  	|     12.39   	|    10.37  	|  	|  	|
+| WN18RR 	|                    4                    	|  	|  	|  	|  	|  	|  	|
+| FB15K237 	|          2          	|  	|  	|  	|  	|  	|  	|
+| FB15K237 	|               3               	|  	|  	|  	|  	|  	|  	|
+| FB15K237 	|                    4                    	|  	|  	|  	|  	|  	|  	|
+
+
+#### Results
+---
+
+
+Faire 2 versions du tableau 1,
+
+
+Tableau distillation d'entités puis distillation de relations et both.
+
+
+Compléter tableau 2.
+
+Expliquer qu'on utilise un sous ensemble (sampling) et qu'on inclut systématiquement la vérité terrain. Faiblesse du modèle. On pourrait sélectionner le top k des entités.
+
+Dans la verticale du tableau 1, on analyse l'impacte de la base de connaissance dans la qualité de la représentation et dans l'horyzontal, nous validons une stratégie de distillation.
+
+Quesque j'aurai fait si deux personnes ont deux bases de connaissances. 
+
+Xdistill~X distillation séquentielle 
+Our model distillation coopérative
+
+2 propositions
+
+
+18.29 == 18.13
+
+Finir une itération d'expérience
+
+
+
