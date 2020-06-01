@@ -64,7 +64,7 @@ class Distillation:
             >>> distillation = distillation.Distillation(teacher_entities=entities_teacher,
             ...     student_entities=entities_student, teacher_relations=relations_teacher,
             ...     student_relations=relations_student, batch_size_entity=3, batch_size_relation=3,
-            ...     seed=42)
+            ...     seed=42, sampling='uniform')
 
             >>> print(distillation.available(head=1, relation=1, tail=1))
             {'head': True, 'relation': True, 'tail': True}
@@ -72,8 +72,8 @@ class Distillation:
             >>> print(distillation.available(head=0, relation=1, tail=1))
             {'head': True, 'relation': False, 'tail': False}
 
-            >>> print(distillation.uniform_subsampling())
-            (tensor([[3, 1, 3]]), tensor([[3, 1, 1]]), tensor([[2, 0, 2]]), tensor([[2, 0, 0]]))
+            >>> print(distillation.uniform_subsampling(positive_sample_size=1))
+            (tensor([[3, 1, 3]]), tensor([[3, 1, 1]]), tensor([[3, 1, 3]]), tensor([[2, 0, 2]]), tensor([[2, 0, 0]]), tensor([[2, 0, 2]]))
 
             # Training sample from teacher KG:
             >>> head     = 1
@@ -81,23 +81,31 @@ class Distillation:
             >>> tail     = 2
 
             >>> (
-            ...    entity_distribution_teacher,
+            ...    head_distribution_teacher,
             ...    relation_distribution_teacher,
-            ...    entity_distribution_student,
-            ...    relation_distribution_student
-            ... ) = distillation.uniform_subsampling()
+            ...    tail_distribution_teacher,
+            ...    head_distribution_student,
+            ...    relation_distribution_student,
+            ...    tail_distribution_student,
+            ... ) = distillation.uniform_subsampling(positive_sample_size=1)
 
-            >>> print(entity_distribution_teacher)
+            >>> print(head_distribution_teacher)
             tensor([[3, 2, 3]])
 
             >>> print(relation_distribution_teacher)
             tensor([[3, 3, 3]])
 
-            >>> print(entity_distribution_student)
+            >>> print(tail_distribution_teacher)
+            tensor([[3, 2, 3]])
+
+            >>> print(head_distribution_student)
             tensor([[2, 1, 2]])
 
             >>> print(relation_distribution_student)
             tensor([[2, 2, 2]])
+
+            >>> print(tail_distribution_student)
+            tensor([[2, 1, 2]])
 
             >>> distillation_available = distillation.available(
             ...    head=head, relation=relation, tail=tail)
@@ -107,8 +115,8 @@ class Distillation:
 
             >>> if distillation_available['head']:
             ...    teacher_head_tensor, student_head_tensor = distillation.get_distillation_sample_head(
-            ...         entity_distribution_teacher=entity_distribution_teacher,
-            ...         entity_distribution_student=entity_distribution_student,
+            ...         entity_distribution_teacher=head_distribution_teacher,
+            ...         entity_distribution_student=head_distribution_student,
             ...         head_teacher=head, relation_teacher=relation, tail_teacher=tail)
 
             >>> if distillation_available['relation']:
@@ -119,8 +127,8 @@ class Distillation:
 
             >>> if distillation_available['tail']:
             ...    teacher_tail_tensor, student_tail_tensor = distillation.get_distillation_sample_tail(
-            ...         entity_distribution_teacher=entity_distribution_teacher,
-            ...         entity_distribution_student=entity_distribution_student,
+            ...         entity_distribution_teacher=tail_distribution_teacher,
+            ...         entity_distribution_student=tail_distribution_student,
             ...         head_teacher=head, relation_teacher=relation, tail_teacher=tail)
 
             Test batch to distill head:
@@ -188,13 +196,14 @@ class Distillation:
 
     """
     def __init__(self, teacher_entities, student_entities, teacher_relations, student_relations,
-        batch_size_entity, batch_size_relation, seed=None, device='cpu'):
+        batch_size_entity, batch_size_relation, sampling = 'topk', seed=None, device='cpu'):
         self.teacher_entities = teacher_entities
         self.student_entities = student_entities
         self.teacher_relations = teacher_relations
         self.student_relations = student_relations
         self.batch_size_entity = batch_size_entity
         self.batch_size_relation = batch_size_relation
+        self.sampling = sampling
         self.seed = seed
         self.device = device
 
@@ -246,7 +255,7 @@ class Distillation:
         x[:,:,2] = tail
         return x
 
-    def uniform_subsampling(self):
+    def uniform_subsampling(self, positive_sample_size):
         """Init minibatch dedicated to distillation with uniform subsampling for student and
         teacher.
         """
@@ -276,14 +285,52 @@ class Distillation:
         relation_distribution_student = torch.tensor(relation_distribution_student).view( # pylint: disable=not-callable
             1, self.batch_size_relation)
 
-        return (entity_distribution_teacher, relation_distribution_teacher,
-            entity_distribution_student, relation_distribution_student)
+        head_distribution_teacher = torch.cat(
+            positive_sample_size * [entity_distribution_teacher])
+
+        relation_distribution_teacher = torch.cat(
+            positive_sample_size * [relation_distribution_teacher])
+
+        tail_distribution_teacher = torch.cat(
+            positive_sample_size * [entity_distribution_teacher])
+
+        head_distribution_student = torch.cat(
+            positive_sample_size * [entity_distribution_student])
+
+        relation_distribution_student = torch.cat(
+            positive_sample_size * [relation_distribution_student])
+
+        tail_distribution_student = torch.cat(
+            positive_sample_size * [entity_distribution_student])
+
+        return (head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
+            head_distribution_student, relation_distribution_student, tail_distribution_student)
+
+    def topk(self, teacher, positive_sample):
+        # Iterate over positive sample, evaluate head, relation, tail.
+        # Select top k from intersection of entities and relations.
+        # Need to return head distribution teacher, relation, distribution teacher and tail
+        # distribution teacher.
+        # Uniform sampling need to return head, relation, tail distribution for teacher and student.
+
+        head_distribution_teacher = None
+        relation_distribution_teacher = None
+        tail_distribution_teacher = None
+        head_distribution_student = None
+        relation_distribution_student = None
+        tail_distribution_student = None
+
+        return (head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
+            head_distribution_student, relation_distribution_student, tail_distribution_student)
 
     def get_distillation_sample_head(self, entity_distribution_teacher, entity_distribution_student,
         head_teacher, relation_teacher, tail_teacher):
         # Teacher
         head_distribution_teacher       = copy.deepcopy(entity_distribution_teacher)
-        head_distribution_teacher[0][0] = head_teacher
+
+        # Uniform sampling always include the ground truth:
+        if self.sampling == 'uniform':
+            head_distribution_teacher[0][0] = head_teacher
 
         tensor_head_teacher = self.init_tensor(
             head       = head_distribution_teacher,
@@ -298,7 +345,10 @@ class Distillation:
         tail_student     = self.mapping_entities[tail_teacher]
 
         head_distribution_student       = copy.deepcopy(entity_distribution_student)
-        #head_distribution_student[0][0] = head_student
+
+        # Uniform sampling always include the ground truth:
+        if self.sampling == 'uniform':
+            head_distribution_student[0][0] = head_student
 
         tensor_head_student = self.init_tensor(
             head       = head_distribution_student,
@@ -315,7 +365,10 @@ class Distillation:
 
         # Teacher
         relation_distribution_teacher_copy = copy.deepcopy(relation_distribution_teacher)
-        #relation_distribution_teacher_copy[0][0] = relation_teacher
+
+        # Uniform sampling always include the ground truth:
+        if self.sampling == 'uniform':
+            relation_distribution_teacher_copy[0][0] = relation_teacher
 
         tensor_relation_teacher = self.init_tensor(
             head       = head_teacher,
@@ -330,7 +383,10 @@ class Distillation:
         tail_student     = self.mapping_entities[tail_teacher]
 
         relation_distribution_student_copy = copy.deepcopy(relation_distribution_student)
-        relation_distribution_student_copy[0][0] = relation_student
+
+        # Uniform sampling always include the ground truth:
+        if self.sampling == 'uniform':
+            relation_distribution_student_copy[0][0] = relation_student
 
         tensor_relation_student = self.init_tensor(
             head       = head_student,
@@ -345,7 +401,10 @@ class Distillation:
         head_teacher, relation_teacher, tail_teacher):
         # Teacher
         tail_distribution_teacher       = copy.deepcopy(entity_distribution_teacher)
-        #tail_distribution_teacher[0][0] = tail_teacher
+
+        # Uniform sampling always include the ground truth:
+        if self.sampling == 'uniform':
+            tail_distribution_teacher[0][0] = tail_teacher
 
         tensor_tail_teacher = self.init_tensor(
             head       = head_teacher,
@@ -360,7 +419,10 @@ class Distillation:
         tail_student     = self.mapping_entities[tail_teacher]
 
         tail_distribution_student       = copy.deepcopy(entity_distribution_student)
-        tail_distribution_student[0][0] = tail_student
+
+        # Uniform sampling always include the ground truth:
+        if self.sampling == 'uniform':
+            tail_distribution_student[0][0] = tail_student
 
         tensor_tail_student = self.init_tensor(
             head       = head_student,
@@ -433,7 +495,8 @@ class Distillation:
                 ...     student_relations   = wn18rr.relations,
                 ...     batch_size_entity   = 3,
                 ...     batch_size_relation = 3,
-                ...     seed                = 42
+                ...     sampling            = 'uniform',
+                ...     seed                = 42,
                 ... )
 
                 >>> positive_sample, weight, mode = next(wn18rr)
@@ -467,11 +530,21 @@ class Distillation:
 
         loss_distillation = {'head': None, 'relation': None, 'tail': None}
 
-        (entity_distribution_teacher, relation_distribution_teacher,
-            entity_distribution_student, relation_distribution_student
-        ) = self.uniform_subsampling()
+        if self.sampling == 'uniform':
 
-        for head, relation, tail in positive_sample:
+            (
+                head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
+                head_distribution_student, relation_distribution_student, tail_distribution_student
+            ) = self.uniform_subsampling(positive_sample_size = positive_sample.shape[0])
+
+        elif self.sampling == 'topk':
+
+            (
+                head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
+                head_distribution_student, relation_distribution_student, tail_distribution_student
+            ) = self.topk(teacher=teacher, positive_sample=positive_sample)
+
+        for i, (head, relation, tail) in enumerate(positive_sample):
 
             head, relation, tail = head.item(), relation.item(), tail.item()
 
@@ -480,8 +553,8 @@ class Distillation:
             if distillation_available['head']:
 
                 tensor_head_teacher, tensor_head_student = self.get_distillation_sample_head(
-                    entity_distribution_teacher=entity_distribution_teacher,
-                    entity_distribution_student=entity_distribution_student,
+                    entity_distribution_teacher=head_distribution_teacher[i].view(1, 3),
+                    entity_distribution_student=head_distribution_student[i].view(1, 3),
                     head_teacher=head, relation_teacher=relation, tail_teacher=tail
                 )
 
@@ -491,8 +564,8 @@ class Distillation:
             if distillation_available['relation']:
 
                 tensor_relation_teacher, tensor_relation_student = self.get_distillation_sample_relation(
-                    relation_distribution_teacher=relation_distribution_teacher,
-                    relation_distribution_student=relation_distribution_student,
+                    relation_distribution_teacher=relation_distribution_teacher[i].view(1, 3),
+                    relation_distribution_student=relation_distribution_student[i].view(1, 3),
                     head_teacher=head, relation_teacher=relation, tail_teacher=tail
                 )
 
@@ -502,8 +575,8 @@ class Distillation:
             if distillation_available['tail']:
 
                 tensor_tail_teacher, tensor_tail_student = self.get_distillation_sample_tail(
-                    entity_distribution_teacher=entity_distribution_teacher,
-                    entity_distribution_student=entity_distribution_student,
+                    entity_distribution_teacher=tail_distribution_teacher[i].view(1, 3),
+                    entity_distribution_student=tail_distribution_student[i].view(1, 3),
                     head_teacher=head, relation_teacher=relation, tail_teacher=tail
                 )
 
