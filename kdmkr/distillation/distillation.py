@@ -139,7 +139,7 @@ class Distillation:
             >>> x = torch.tensor(
             ...     [[[1., 1., 2.],
             ...       [2., 1., 2.],
-            ...       [3., 1., 2.]]])
+            ...       [1., 1., 2.]]])
 
             # tensor([[1, 2, 3]])
 
@@ -151,7 +151,7 @@ class Distillation:
             >>> x = torch.tensor(
             ...     [[[0., 0., 1.],
             ...       [1., 0., 1.],
-            ...       [2., 0., 1.]]])
+            ...       [0., 0., 1.]]])
 
             >>> torch.eq(student_head_tensor, x)
             tensor([[[True, True, True],
@@ -160,7 +160,7 @@ class Distillation:
 
             Test batch to distill relation:
             >>> x = torch.tensor(
-            ...     [[[1., 1., 2.],
+            ...     [[[1., 2., 2.],
             ...       [1., 3., 2.],
             ...       [1., 1., 2.]]])
 
@@ -170,7 +170,7 @@ class Distillation:
                      [True, True, True]]])
 
             >>> x = torch.tensor(
-            ...     [[[0., 0., 1.],
+            ...     [[[0., 1., 1.],
             ...       [0., 2., 1.],
             ...       [0., 0., 1.]]])
 
@@ -181,9 +181,9 @@ class Distillation:
 
             Test batch to distill tail:
             >>> x = torch.tensor(
-            ...     [[[1., 1., 2.],
+            ...     [[[1., 1., 1.],
             ...       [1., 1., 2.],
-            ...       [1., 1., 3.]]])
+            ...       [1., 1., 2.]]])
 
             >>> torch.eq(teacher_tail_tensor, x)
             tensor([[[True, True, True],
@@ -191,9 +191,9 @@ class Distillation:
                      [True, True, True]]])
 
             >>> x = torch.tensor(
-            ...     [[[0., 0., 1.],
+            ...     [[[0., 0., 0.],
             ...       [0., 0., 1.],
-            ...       [0., 0., 2.]]])
+            ...       [0., 0., 1.]]])
 
             >>> torch.eq(student_tail_tensor, x)
             tensor([[[True, True, True],
@@ -267,7 +267,7 @@ class Distillation:
 
         # Uniform sampling always include the ground truth:
         if self.sampling.supervised:
-            entity_distribution_teacher[0][0] = head_teacher
+            entity_distribution_teacher[0][-1] = head_teacher
 
         tensor_head_teacher = self.init_tensor(
             head       = entity_distribution_teacher,
@@ -285,7 +285,7 @@ class Distillation:
 
         # Uniform sampling always include the ground truth:
         if self.sampling.supervised:
-            entity_distribution_student[0][0] = head_student
+            entity_distribution_student[0][-1] = head_student
 
         tensor_head_student = self.init_tensor(
             head       = entity_distribution_student,
@@ -303,9 +303,9 @@ class Distillation:
         # Teacher
         relation_distribution_teacher_copy = copy.deepcopy(relation_distribution_teacher)
 
-        # Uniform sampling always include the ground truth:
+        # Supervised samplers always include the ground truth:
         if self.sampling.supervised:
-            relation_distribution_teacher_copy[0][0] = relation_teacher
+            relation_distribution_teacher_copy[0][-1] = relation_teacher
 
         tensor_relation_teacher = self.init_tensor(
             head       = head_teacher,
@@ -321,9 +321,9 @@ class Distillation:
 
         relation_distribution_student_copy = copy.deepcopy(relation_distribution_student)
 
-        # Uniform sampling always include the ground truth:
+        # Supervised samplers always include the ground truth:
         if self.sampling.supervised:
-            relation_distribution_student_copy[0][0] = relation_student
+            relation_distribution_student_copy[0][-1] = relation_student
 
         tensor_relation_student = self.init_tensor(
             head       = head_student,
@@ -339,9 +339,9 @@ class Distillation:
         # Teacher
         entity_distribution_teacher = copy.deepcopy(tail_distribution_teacher)
 
-        # Uniform sampling always include the ground truth:
+        # Supervised samplers always include the ground truth:
         if self.sampling.supervised:
-            entity_distribution_teacher[0][0] = tail_teacher
+            entity_distribution_teacher[0][-1] = tail_teacher
 
         tensor_tail_teacher = self.init_tensor(
             head       = head_teacher,
@@ -359,7 +359,7 @@ class Distillation:
 
         # Uniform sampling always include the ground truth:
         if self.sampling.supervised:
-            entity_distribution_student[0][0] = tail_student
+            entity_distribution_student[0][-1] = tail_student
 
         tensor_tail_student = self.init_tensor(
             head       = head_student,
@@ -445,7 +445,7 @@ class Distillation:
                 ... )
 
                 >>> loss_distillation
-                {'head': tensor(0.3589, grad_fn=<MeanBackward0>), 'relation': tensor(0.3398, grad_fn=<MeanBackward0>), 'tail': tensor(0.8487, grad_fn=<MeanBackward0>)}
+                {'head': tensor(0.2896, grad_fn=<MeanBackward0>), 'relation': tensor(0.0981, grad_fn=<MeanBackward0>), 'tail': tensor(0.4686, grad_fn=<MeanBackward0>)}
 
                 >>> loss_student = (
                 ...    loss_distillation['head'] +
