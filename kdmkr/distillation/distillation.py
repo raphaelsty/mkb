@@ -67,15 +67,19 @@ class Distillation:
             ... seed = 42,
             ... )
 
-            >>> distill = distillation.Distillation(teacher_entities=entities_teacher,
-            ...     student_entities=entities_student, teacher_relations=relations_teacher,
-            ...     student_relations=relations_student, sampling = uniform_sampling, seed=30)
+            >>> distill = distillation.Distillation(
+            ...     teacher_entities  = entities_teacher,
+            ...     teacher_relations = relations_teacher,
+            ...     student_entities  = entities_student,
+            ...     student_relations = relations_student,
+            ...     sampling          = uniform_sampling,
+            ... )
 
             >>> print(distill.available(head=1, relation=1, tail=1))
             {'head': True, 'relation': True, 'tail': True}
 
             >>> print(distill.available(head=0, relation=1, tail=1))
-            {'head': True, 'relation': False, 'tail': False}
+            {'head': False, 'relation': False, 'tail': False}
 
             >>> (head_distribution_teacher, relation_distribution_teacher,
             ...  tail_distribution_teacher, head_distribution_student,
@@ -199,14 +203,13 @@ class Distillation:
 
     """
     def __init__(self, teacher_entities, student_entities, teacher_relations, student_relations,
-        sampling, seed=None, device='cpu'):
-        self.teacher_entities = teacher_entities
-        self.student_entities = student_entities
+        sampling, device='cpu'):
+        self.teacher_entities  = teacher_entities
+        self.student_entities  = student_entities
         self.teacher_relations = teacher_relations
         self.student_relations = student_relations
-        self.sampling = sampling
-        self.seed = seed
-        self.device = device
+        self.sampling          = sampling
+        self.device            = device
 
         # Common entities and relations pre-processing:
         self.mapping_entities = collections.OrderedDict({
@@ -218,8 +221,6 @@ class Distillation:
             i: self.student_relations[e] for e, i in self.teacher_relations.items()
             if e in self.student_relations
         })
-
-        self.rng = np.random.seed(seed)
 
     def available(self, head, relation, tail):
         """
@@ -237,14 +238,27 @@ class Distillation:
         if tail in self.mapping_entities:
             tail_available = True
 
-        if head_available and relation_available:
-            distillation_available['tail'] = True
+        # If the sampling is supervised: head, relation and tail must be shared by the student
+        # and the teacher:
+        if self.sampling.supervised:
 
-        if  relation_available and tail_available:
-            distillation_available['head'] = True
+            if head_available and relation_available and tail_available:
 
-        if  head_available and tail_available:
-            distillation_available['relation'] = True
+                distillation_available['head']     = True
+                distillation_available['relation'] = True
+                distillation_available['tail']     = True
+
+        # If the sampling is unsupervised, we allow distillation on part of the triplet:
+        else:
+
+            if head_available and relation_available:
+                distillation_available['tail'] = True
+
+            if  relation_available and tail_available:
+                distillation_available['head'] = True
+
+            if  head_available and tail_available:
+                distillation_available['relation'] = True
 
         return distillation_available
 
@@ -426,7 +440,6 @@ class Distillation:
                 ...     student_entities  = wn18rr.entities,
                 ...     teacher_relations = wn18rr.relations,
                 ...     student_relations = wn18rr.relations,
-                ...     seed              = 42,
                 ...     sampling          = distillation.UniformSampling(
                 ...         batch_size_entity   = 3,
                 ...         batch_size_relation = 3,
