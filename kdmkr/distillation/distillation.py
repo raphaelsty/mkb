@@ -61,10 +61,15 @@ class Distillation:
             ...     (3, 2, 4),
             ... ]
 
+            >>> uniform_sampling = distillation.UniformSampling(
+            ... batch_size_entity   = 3,
+            ... batch_size_relation = 3,
+            ... seed = 42,
+            ... )
+
             >>> distill = distillation.Distillation(teacher_entities=entities_teacher,
             ...     student_entities=entities_student, teacher_relations=relations_teacher,
-            ...     student_relations=relations_student, batch_size_entity=3, batch_size_relation=3,
-            ...     seed=30, sampling=distillation.UniformSampling)
+            ...     student_relations=relations_student, sampling = uniform_sampling, seed=30)
 
             >>> print(distill.available(head=1, relation=1, tail=1))
             {'head': True, 'relation': True, 'tail': True}
@@ -72,20 +77,12 @@ class Distillation:
             >>> print(distill.available(head=0, relation=1, tail=1))
             {'head': True, 'relation': False, 'tail': False}
 
-            >>> (
-            ...    head_distribution_teacher,
-            ...    relation_distribution_teacher,
-            ...    tail_distribution_teacher,
-            ...    head_distribution_student,
-            ...    relation_distribution_student,
-            ...    tail_distribution_student,
-            ... ) = distillation.UniformSampling()(
+            >>> (head_distribution_teacher, relation_distribution_teacher,
+            ...  tail_distribution_teacher, head_distribution_student,
+            ...  relation_distribution_student, tail_distribution_student) = uniform_sampling.get(
             ...    mapping_entities     = distill.mapping_entities,
             ...    mapping_relations    = distill.mapping_relations,
-            ...    batch_size_entity    = distill.batch_size_entity,
-            ...    batch_size_relation  = distill.batch_size_relation,
             ...    positive_sample_size = 1,
-            ...    seed                 = 42,
             ... )
 
             >>> print(head_distribution_teacher)
@@ -202,13 +199,11 @@ class Distillation:
 
     """
     def __init__(self, teacher_entities, student_entities, teacher_relations, student_relations,
-        batch_size_entity, batch_size_relation, sampling = 'topk', seed=None, device='cpu'):
+        sampling, seed=None, device='cpu'):
         self.teacher_entities = teacher_entities
         self.student_entities = student_entities
         self.teacher_relations = teacher_relations
         self.student_relations = student_relations
-        self.batch_size_entity = batch_size_entity
-        self.batch_size_relation = batch_size_relation
         self.sampling = sampling
         self.seed = seed
         self.device = device
@@ -273,7 +268,7 @@ class Distillation:
             head       = entity_distribution_teacher,
             relation   = relation_teacher,
             tail       = tail_teacher,
-            batch_size = self.batch_size_entity
+            batch_size = self.sampling.batch_size_entity
         )
 
         # Student
@@ -291,7 +286,7 @@ class Distillation:
             head       = entity_distribution_student,
             relation   = relation_student,
             tail       = tail_student,
-            batch_size = self.batch_size_entity
+            batch_size = self.sampling.batch_size_entity
         )
 
         return tensor_head_teacher, tensor_head_student
@@ -311,7 +306,7 @@ class Distillation:
             head       = head_teacher,
             relation   = relation_distribution_teacher_copy,
             tail       = tail_teacher,
-            batch_size = self.batch_size_relation
+            batch_size = self.sampling.batch_size_relation
         )
 
         # Student
@@ -329,7 +324,7 @@ class Distillation:
             head       = head_student,
             relation   = relation_distribution_student_copy,
             tail       = tail_student,
-            batch_size = self.batch_size_relation
+            batch_size = self.sampling.batch_size_relation
         )
 
         return tensor_relation_teacher, tensor_relation_student
@@ -347,7 +342,7 @@ class Distillation:
             head       = head_teacher,
             relation   = relation_teacher,
             tail       = entity_distribution_teacher,
-            batch_size = self.batch_size_entity
+            batch_size = self.sampling.batch_size_entity
         )
 
         # Student
@@ -365,7 +360,7 @@ class Distillation:
             head       = head_student,
             relation   = relation_student,
             tail       = entity_distribution_student,
-            batch_size = self.batch_size_entity
+            batch_size = self.sampling.batch_size_entity
         )
 
         return tensor_tail_teacher, tensor_tail_student
@@ -376,11 +371,12 @@ class Distillation:
 
     def stack_entity(self, batch, device):
         """Convert a list of sample to 3 dimensionnal tensor"""
-        return self._stack_sample(batch=batch, batch_size=self.batch_size_entity, device=device)
+        return self._stack_sample(batch=batch, batch_size=self.sampling.batch_size_entity,
+            device=device)
 
     def stack_relations(self, batch, device):
         """Convert a list of sample to 3 dimensionnal tensor"""
-        return self._stack_sample(batch=batch, batch_size=self.batch_size_relation, device=device)
+        return self._stack_sample(batch=batch, batch_size=self.sampling.batch_size_relation, device=device)
 
     def distill(self, teacher, student, positive_sample):
         """Apply distillation between a teacher and a student from a positive sample.
@@ -426,14 +422,16 @@ class Distillation:
                 ... )
 
                 >>> distillation_process = distillation.Distillation(
-                ...     teacher_entities    = wn18rr.entities,
-                ...     student_entities    = wn18rr.entities,
-                ...     teacher_relations   = wn18rr.relations,
-                ...     student_relations   = wn18rr.relations,
-                ...     batch_size_entity   = 3,
-                ...     batch_size_relation = 3,
-                ...     sampling            = distillation.UniformSampling,
-                ...     seed                = 42,
+                ...     teacher_entities  = wn18rr.entities,
+                ...     student_entities  = wn18rr.entities,
+                ...     teacher_relations = wn18rr.relations,
+                ...     student_relations = wn18rr.relations,
+                ...     seed              = 42,
+                ...     sampling          = distillation.UniformSampling(
+                ...         batch_size_entity   = 3,
+                ...         batch_size_relation = 3,
+                ...         seed                = 42,
+                ...     ),
                 ... )
 
                 >>> positive_sample, weight, mode = next(wn18rr)
@@ -467,18 +465,13 @@ class Distillation:
 
         loss_distillation = {'head': None, 'relation': None, 'tail': None}
 
-        (
-            head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
+        (head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
             head_distribution_student, relation_distribution_student, tail_distribution_student
-        ) = self.sampling()(**{
-                'mapping_entities'    : self.mapping_entities,
-                'mapping_relations'   : self.mapping_relations,
-                'batch_size_entity'   : self.batch_size_entity,
-                'batch_size_relation' : self.batch_size_relation,
-                'seed'                : self.seed,
-                'positive_sample_size': positive_sample.shape[0],
-                'positive_sample'     : positive_sample,
-                'teacher'             : teacher,
+        ) = self.sampling.get(**{
+            'positive_sample': positive_sample,
+            'mapping_entities': self.mapping_entities,
+            'mapping_relations': self.mapping_relations,
+            'positive_sample_size': positive_sample.shape[0],
         })
 
         for i, (head, relation, tail) in enumerate(positive_sample):
