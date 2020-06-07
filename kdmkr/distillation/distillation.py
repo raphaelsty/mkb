@@ -466,6 +466,57 @@ class Distillation:
 
                 >>> loss_student.backward()
 
+                # Tok K sampling:
+                >>> teacher = model.TransE(
+                ...    hidden_dim = 3,
+                ...    n_entity   = wn18rr.n_entity,
+                ...    n_relation = wn18rr.n_relation,
+                ...    gamma      = 6
+                ... )
+
+                >>> student = model.TransE(
+                ...    hidden_dim = 3,
+                ...    n_entity   = wn18rr.n_entity,
+                ...    n_relation = wn18rr.n_relation,
+                ...    gamma      = 6
+                ... )
+
+                >>> distillation_process = distillation.Distillation(
+                ...     teacher_entities  = wn18rr.entities,
+                ...     student_entities  = wn18rr.entities,
+                ...     teacher_relations = wn18rr.relations,
+                ...     student_relations = wn18rr.relations,
+                ...     sampling = distillation.TopKSampling(
+                ...         teacher_entities    = wn18rr.entities,
+                ...         student_entities    = wn18rr.entities,
+                ...         teacher_relations   = wn18rr.relations,
+                ...         student_relations   = wn18rr.relations,
+                ...         teacher             = teacher,
+                ...         batch_size_entity   = 3,
+                ...         batch_size_relation = 3,
+                ...         device = 'cpu'
+                ...     ),
+                ... )
+
+                >>> positive_sample, weight, mode = next(wn18rr)
+
+                >>> loss_distillation = distillation_process.distill(
+                ...     teacher = teacher,
+                ...     student = student,
+                ...     positive_sample = positive_sample,
+                ... )
+
+                >>> loss_distillation
+                    {'head': tensor(0.4064, grad_fn=<MeanBackward0>), 'relation': tensor(0.4988, grad_fn=<MeanBackward0>), 'tail': tensor(0.6217, grad_fn=<MeanBackward0>)}
+
+                >>> loss_student = (
+                ...    loss_distillation['head'] +
+                ...    loss_distillation['relation'] +
+                ...    loss_distillation['tail']
+                ... )
+
+                >>> loss_student.backward()
+
         """
         batch_head_teacher = []
         batch_head_student = []
@@ -481,10 +532,11 @@ class Distillation:
         (head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
             head_distribution_student, relation_distribution_student, tail_distribution_student
         ) = self.sampling.get(**{
-            'positive_sample': positive_sample,
-            'mapping_entities': self.mapping_entities,
-            'mapping_relations': self.mapping_relations,
+            'positive_sample'     : positive_sample,
+            'mapping_entities'    : self.mapping_entities,
+            'mapping_relations'   : self.mapping_relations,
             'positive_sample_size': positive_sample.shape[0],
+            'teacher'             : teacher,
         })
 
         for i, (head, relation, tail) in enumerate(positive_sample):

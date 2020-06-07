@@ -4,7 +4,9 @@ import numpy as np
 
 import collections
 
-__all__ = ['UniformSampling', 'TopkSampling']
+import faiss
+
+__all__ = ['UniformSampling', 'TopKSampling']
 
 class UniformSampling:
     """Init tensor dedicated to distillation with uniform sampling for the student and
@@ -129,10 +131,104 @@ class UniformSampling:
             head_distribution_student, relation_distribution_student, tail_distribution_student)
 
 
-class TopkSampling:
+class TopKSampling:
+    """Top k sampling."""
 
-    def __init__(self):
-        pass
+    def __init__(self, teacher_entities, teacher_relations, student_entities,
+        student_relations, teacher, batch_size_entity, batch_size_relation, device='cpu'):
+        self.batch_size_entity   = batch_size_entity
+        self.batch_size_relation = batch_size_relation
+        self.device = device
 
-    def __call__(self, **kwargs):
-        pass
+        self.mapping_entities = collections.OrderedDict({
+            i: student_entities[e] for e, i in teacher_entities.items()
+            if e in student_entities})
+
+        self.mapping_relations = collections.OrderedDict({
+            i: student_relations[e] for e, i in teacher_relations.items()
+            if e in student_relations})
+
+        self.mapping_tree_entities_teacher = collections.defaultdict(int)
+        self.mapping_tree_entities_student = collections.defaultdict(int)
+        for i, (key, value) in enumerate(self.mapping_entities.items()):
+            self.mapping_tree_entities_teacher[i] = key
+            self.mapping_tree_entities_student[i] = value
+
+        self.mapping_tree_relations_teacher = collections.defaultdict(int)
+        self.mapping_tree_relations_student = collections.defaultdict(int)
+        for i, (key, value) in enumerate(self.mapping_relations.items()):
+            self.mapping_tree_relations_teacher[i] = key
+            self.mapping_tree_relations_student[i] = value
+
+        self.trees = {
+            'entities' : faiss.IndexFlatL2(teacher.entity_dim),
+            'relations': faiss.IndexFlatL2(teacher.relation_dim),
+        }
+
+        self.trees['entities'].add(
+            teacher.entity_embedding.cpu().data.numpy()[list(self.mapping_entities.keys())])
+
+        self.trees['relations'].add(
+            teacher.relation_embedding.cpu().data.numpy()[list(self.mapping_relations.keys())])
+
+    @property
+    def supervised(self):
+        return False
+
+    def query_entities(self, x):
+        _, neighbours = self.trees['entities'].search(x, k = self.batch_size_entity)
+        return neighbours
+
+    def query_relations(self, x):
+        _, neighbours = self.trees['relations'].search(x, k = self.batch_size_relation)
+        return neighbours
+
+    def get(self, positive_sample, teacher, **kwargs):
+
+        with torch.no_grad():
+            score_head, score_relation, score_tail = teacher._top_k(
+                positive_sample.to(self.device))
+
+        score_head = score_head.cpu().data.numpy()
+        score_relation = score_relation.cpu().data.numpy()
+        score_tail = score_tail.cpu().data.numpy()
+
+        score_head = score_head.reshape(
+            positive_sample.shape[0], teacher.entity_dim)
+
+        score_relation = score_relation.reshape(
+            positive_sample.shape[0], teacher.relation_dim)
+
+        score_tail = score_tail.reshape(
+            positive_sample.shape[0], teacher.entity_dim)
+
+        top_k_head = self.query_entities(x  = score_head).flatten()
+        top_k_relation = self.query_relations(x = score_relation).flatten()
+        top_k_tail = self.query_entities(x  = score_tail).flatten()
+
+        head_distribution_teacher = torch.tensor(np.array( # pylint: disable=not-callable
+            [self.mapping_tree_entities_teacher[x] for x in top_k_head]
+        ).reshape(positive_sample.shape[0], self.batch_size_entity))
+
+        relation_distribution_teacher = torch.tensor(np.array( # pylint: disable=not-callable
+            [self.mapping_tree_relations_teacher[x] for x in top_k_relation]
+        ).reshape(positive_sample.shape[0], self.batch_size_relation))
+
+        tail_distribution_teacher = torch.tensor(np.array( # pylint: disable=not-callable
+            [self.mapping_tree_entities_teacher[x] for x in top_k_tail]
+        ).reshape(positive_sample.shape[0], self.batch_size_entity))
+
+        head_distribution_student = torch.tensor(np.array( # pylint: disable=not-callable
+            [self.mapping_tree_entities_student[x] for x in top_k_head]
+        ).reshape(positive_sample.shape[0], self.batch_size_entity))
+
+        relation_distribution_student = torch.tensor(np.array( # pylint: disable=not-callable
+            [self.mapping_tree_relations_student[x] for x in top_k_relation]
+        ).reshape(positive_sample.shape[0], self.batch_size_relation))
+
+        tail_distribution_student = torch.tensor(np.array( # pylint: disable=not-callable
+            [self.mapping_tree_entities_student[x] for x in top_k_tail]
+        ).reshape(positive_sample.shape[0], self.batch_size_entity))
+
+        return (head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
+            head_distribution_student, relation_distribution_student, tail_distribution_student)
