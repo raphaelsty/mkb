@@ -30,4 +30,5 @@ class TransE(base.Teacher):
         score_head     = tail - relation
         score_relation = tail - head
         score_tail     = head + relation
-        return score_head, score_relation, score_tail
+        return (torch.norm(score_head, p=1, dim=-1), torch.norm(score_relation, p=1, dim=-1),
+            torch.norm(score_tail, p=1, dim=-1))
