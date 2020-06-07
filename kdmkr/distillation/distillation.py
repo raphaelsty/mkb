@@ -494,7 +494,6 @@ class Distillation:
                 ...         teacher             = teacher,
                 ...         batch_size_entity   = 3,
                 ...         batch_size_relation = 3,
-                ...         device = 'cpu'
                 ...     ),
                 ... )
 

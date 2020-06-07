@@ -1,9 +1,9 @@
 from .distillation import Distillation
-from .sampling import TopkSampling
+from .sampling import TopKSampling
 from .sampling import UniformSampling
 
 __all__ = [
     'Distillation',
-    'TopkSampling',
+    'TopKSampling',
     'UniformSampling',
 ]
