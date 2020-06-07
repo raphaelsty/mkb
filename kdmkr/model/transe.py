@@ -27,8 +27,7 @@ class TransE(base.Teacher):
     def _top_k(self, sample):
         """Method dedicated to compute the top k entities and relations for a given triplet."""
         head, relation, tail = self.head_relation_tail(sample=sample, mode='default')
-        score_head     = tail - relation
-        score_relation = tail - head
-        score_tail     = head + relation
-        return (torch.norm(score_head, p=1, dim=-1), torch.norm(score_relation, p=1, dim=-1),
-            torch.norm(score_tail, p=1, dim=-1))
+        embedding_head     = tail - relation
+        embedding_relation = tail - head
+        embedding_tail     = head + relation
+        return embedding_head, embedding_relation, embedding_tail
