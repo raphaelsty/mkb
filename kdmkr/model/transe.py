@@ -23,3 +23,11 @@ class TransE(base.Teacher):
         head, relation, tail = self.distillation_batch(sample)
         score = head + (relation - tail)
         return self.gamma.item() - torch.norm(score, p=1, dim=-1)
+
+    def _top_k(self, sample):
+        """Method dedicated to compute the top k entities and relations for a given triplet."""
+        head, relation, tail = self.head_relation_tail(sample=sample, mode='default')
+        score_head     = tail - relation
+        score_relation = tail - head
+        score_tail     = head + relation
+        return score_head, score_relation, score_tail
