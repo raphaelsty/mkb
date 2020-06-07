@@ -135,10 +135,9 @@ class TopKSampling:
     """Top k sampling."""
 
     def __init__(self, teacher_entities, teacher_relations, student_entities,
-        student_relations, teacher, batch_size_entity, batch_size_relation, device='cpu'):
+        student_relations, teacher, batch_size_entity, batch_size_relation):
         self.batch_size_entity   = batch_size_entity
         self.batch_size_relation = batch_size_relation
-        self.device = device
 
         self.mapping_entities = collections.OrderedDict({
             i: student_entities[e] for e, i in teacher_entities.items()
@@ -184,10 +183,8 @@ class TopKSampling:
         return neighbours
 
     def get(self, positive_sample, teacher, **kwargs):
-
         with torch.no_grad():
-            score_head, score_relation, score_tail = teacher._top_k(
-                positive_sample.to(self.device))
+            score_head, score_relation, score_tail = teacher._top_k(positive_sample)
 
         score_head = score_head.cpu().data.numpy()
         score_relation = score_relation.cpu().data.numpy()
@@ -202,9 +199,9 @@ class TopKSampling:
         score_tail = score_tail.reshape(
             positive_sample.shape[0], teacher.entity_dim)
 
-        top_k_head = self.query_entities(x  = score_head).flatten()
+        top_k_head = self.query_entities(x = score_head).flatten()
         top_k_relation = self.query_relations(x = score_relation).flatten()
-        top_k_tail = self.query_entities(x  = score_tail).flatten()
+        top_k_tail = self.query_entities(x = score_tail).flatten()
 
         head_distribution_teacher = torch.tensor(np.array( # pylint: disable=not-callable
             [self.mapping_tree_entities_teacher[x] for x in top_k_head]
