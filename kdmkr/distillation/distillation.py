@@ -547,8 +547,8 @@ class Distillation:
             if distillation_available['head']:
 
                 tensor_head_teacher, tensor_head_student = self.get_distillation_sample_head(
-                    head_distribution_teacher=head_distribution_teacher[i].view(1, 3),
-                    head_distribution_student=head_distribution_student[i].view(1, 3),
+                    head_distribution_teacher=head_distribution_teacher[i].unsqueeze(dim=0),
+                    head_distribution_student=head_distribution_student[i].unsqueeze(dim=0),
                     head_teacher=head, relation_teacher=relation, tail_teacher=tail
                 )
 
@@ -558,8 +558,8 @@ class Distillation:
             if distillation_available['relation']:
 
                 tensor_relation_teacher, tensor_relation_student = self.get_distillation_sample_relation(
-                    relation_distribution_teacher=relation_distribution_teacher[i].view(1, 3),
-                    relation_distribution_student=relation_distribution_student[i].view(1, 3),
+                    relation_distribution_teacher=relation_distribution_teacher[i].unsqueeze(dim=0),
+                    relation_distribution_student=relation_distribution_student[i].unsqueeze(dim=0),
                     head_teacher=head, relation_teacher=relation, tail_teacher=tail
                 )
 
@@ -569,8 +569,8 @@ class Distillation:
             if distillation_available['tail']:
 
                 tensor_tail_teacher, tensor_tail_student = self.get_distillation_sample_tail(
-                    tail_distribution_teacher=tail_distribution_teacher[i].view(1, 3),
-                    tail_distribution_student=tail_distribution_student[i].view(1, 3),
+                    tail_distribution_teacher=tail_distribution_teacher[i].unsqueeze(dim=0),
+                    tail_distribution_student=tail_distribution_student[i].unsqueeze(dim=0),
                     head_teacher=head, relation_teacher=relation, tail_teacher=tail
                 )
 
