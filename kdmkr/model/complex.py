@@ -1,3 +1,4 @@
+# Reference: https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding
 import torch
 
 from . import base
