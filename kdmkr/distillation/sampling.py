@@ -257,8 +257,8 @@ class TopKSampling:
         relation_distribution_teacher, tail_distribution_teacher, head_distribution_student,
         relation_distribution_student, tail_distribution_student
     ):
-        """
-        Randomize distribution in ouput of top k.
+        """Randomize distribution in ouput of top k. Append n_random_entity and n_random_relations
+        from teacher and sudent shared entities and relations to the entities selected in the top k.
         """
         if self.n_random_entities > 0:
 
