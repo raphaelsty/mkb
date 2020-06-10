@@ -494,6 +494,9 @@ class Distillation:
                 ...         teacher             = teacher,
                 ...         batch_size_entity   = 3,
                 ...         batch_size_relation = 3,
+                ...         n_random_entities   = 10,
+                ...         n_random_relations  = 10,
+                ...         seed                = 42,
                 ...     ),
                 ... )
 
@@ -506,7 +509,7 @@ class Distillation:
                 ... )
 
                 >>> loss_distillation
-                    {'head': tensor(0.4064, grad_fn=<MeanBackward0>), 'relation': tensor(0.4988, grad_fn=<MeanBackward0>), 'tail': tensor(0.6217, grad_fn=<MeanBackward0>)}
+                {'head': tensor(0.2777, grad_fn=<MeanBackward0>), 'relation': tensor(0.1471, grad_fn=<MeanBackward0>), 'tail': tensor(0.1874, grad_fn=<MeanBackward0>)}
 
                 >>> loss_student = (
                 ...    loss_distillation['head'] +

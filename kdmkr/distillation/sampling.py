@@ -35,18 +35,18 @@ class UniformSampling:
         ... })
 
         >>> uniform_sampling = distillation.UniformSampling(
-        ...    batch_size_entity    = 4,
-        ...    batch_size_relation  = 4,
-        ...    seed                 = 43,
+        ...    batch_size_entity   = 4,
+        ...    batch_size_relation = 4,
+        ...    seed                = 43,
         ... )
 
         >>> ( head_distribution_teacher, relation_distribution_teacher,
         ...    tail_distribution_teacher, head_distribution_student,
         ...    relation_distribution_student, tail_distribution_student,
         ... ) = uniform_sampling.get(
-        ...     mapping_entities = mapping_entities,
-        ...     mapping_relations = mapping_relations,
-        ...     positive_sample_size = 1
+        ...     positive_sample_size = 1,
+        ...     mapping_entities     = mapping_entities,
+        ...     mapping_relations    = mapping_relations,
         ... )
 
         >>> head_distribution_teacher
@@ -73,7 +73,7 @@ class UniformSampling:
         """
         self.batch_size_entity = batch_size_entity
         self.batch_size_relation = batch_size_relation
-        self.rng = np.random.RandomState(seed) # pylint: disable=no-member
+        self._rng = np.random.RandomState(seed) # pylint: disable=no-member
 
     @property
     def supervised(self):
@@ -85,10 +85,10 @@ class UniformSampling:
     def get(self, mapping_entities, mapping_relations, positive_sample_size, **kwargs):
         """
         """
-        entity_distribution_teacher = self.rng.choice(
+        entity_distribution_teacher = self._rng.choice(
             a=list(mapping_entities.keys()), size=self.batch_size_entity, replace=False)
 
-        relation_distribution_teacher = self.rng.choice(
+        relation_distribution_teacher = self._rng.choice(
             a=list(mapping_relations.keys()),  size=self.batch_size_relation, replace=False)
 
         entity_distribution_student = [
@@ -133,11 +133,14 @@ class UniformSampling:
 
 class TopKSampling:
     """Top k sampling."""
-
     def __init__(self, teacher_entities, teacher_relations, student_entities,
-        student_relations, teacher, batch_size_entity, batch_size_relation):
-        self.batch_size_entity   = batch_size_entity
-        self.batch_size_relation = batch_size_relation
+        student_relations, teacher, batch_size_entity, batch_size_relation, n_random_entities,
+        n_random_relations, seed=None):
+        self.batch_size_entity_top_k   = batch_size_entity
+        self.batch_size_relation_top_k = batch_size_relation
+        self.n_random_entities         = n_random_entities
+        self.n_random_relations        = n_random_relations
+        self._rng                      = np.random.RandomState(seed) # pylint: disable=no-member
 
         self.mapping_entities = collections.OrderedDict({
             i: student_entities[e] for e, i in teacher_entities.items()
@@ -174,12 +177,20 @@ class TopKSampling:
     def supervised(self):
         return False
 
+    @property
+    def batch_size_entity(self):
+        return self.batch_size_entity_top_k + self.n_random_entities
+
+    @property
+    def batch_size_relation(self):
+        return self.batch_size_relation_top_k + self.n_random_relations
+
     def query_entities(self, x):
-        _, neighbours = self.trees['entities'].search(x, k = self.batch_size_entity)
+        _, neighbours = self.trees['entities'].search(x, k = self.batch_size_entity_top_k)
         return neighbours
 
     def query_relations(self, x):
-        _, neighbours = self.trees['relations'].search(x, k = self.batch_size_relation)
+        _, neighbours = self.trees['relations'].search(x, k = self.batch_size_relation_top_k)
         return neighbours
 
     def get(self, positive_sample, teacher, **kwargs):
@@ -205,27 +216,101 @@ class TopKSampling:
 
         head_distribution_teacher = torch.tensor(np.array( # pylint: disable=not-callable
             [self.mapping_tree_entities_teacher[x] for x in top_k_head]
-        ).reshape(positive_sample.shape[0], self.batch_size_entity))
+        ).reshape(positive_sample.shape[0], self.batch_size_entity_top_k))
 
         relation_distribution_teacher = torch.tensor(np.array( # pylint: disable=not-callable
             [self.mapping_tree_relations_teacher[x] for x in top_k_relation]
-        ).reshape(positive_sample.shape[0], self.batch_size_relation))
+        ).reshape(positive_sample.shape[0], self.batch_size_relation_top_k))
 
         tail_distribution_teacher = torch.tensor(np.array( # pylint: disable=not-callable
             [self.mapping_tree_entities_teacher[x] for x in top_k_tail]
-        ).reshape(positive_sample.shape[0], self.batch_size_entity))
+        ).reshape(positive_sample.shape[0], self.batch_size_entity_top_k))
 
         head_distribution_student = torch.tensor(np.array( # pylint: disable=not-callable
             [self.mapping_tree_entities_student[x] for x in top_k_head]
-        ).reshape(positive_sample.shape[0], self.batch_size_entity))
+        ).reshape(positive_sample.shape[0], self.batch_size_entity_top_k))
 
         relation_distribution_student = torch.tensor(np.array( # pylint: disable=not-callable
             [self.mapping_tree_relations_student[x] for x in top_k_relation]
-        ).reshape(positive_sample.shape[0], self.batch_size_relation))
+        ).reshape(positive_sample.shape[0], self.batch_size_relation_top_k))
 
         tail_distribution_student = torch.tensor(np.array( # pylint: disable=not-callable
             [self.mapping_tree_entities_student[x] for x in top_k_tail]
-        ).reshape(positive_sample.shape[0], self.batch_size_entity))
+        ).reshape(positive_sample.shape[0], self.batch_size_entity_top_k))
+
+        (head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
+        head_distribution_student, relation_distribution_student, tail_distribution_student
+        ) = self.randomize_distribution(
+            positive_sample               = positive_sample,
+            head_distribution_teacher     = head_distribution_teacher,
+            relation_distribution_teacher = relation_distribution_teacher,
+            tail_distribution_teacher     = tail_distribution_teacher,
+            head_distribution_student     = head_distribution_student,
+            relation_distribution_student = relation_distribution_student,
+            tail_distribution_student     = tail_distribution_student,
+        )
 
         return (head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
             head_distribution_student, relation_distribution_student, tail_distribution_student)
+
+    def randomize_distribution(self, positive_sample, head_distribution_teacher,
+        relation_distribution_teacher, tail_distribution_teacher, head_distribution_student,
+        relation_distribution_student, tail_distribution_student
+    ):
+        """
+        Randomize distribution in ouput of top k.
+        """
+        if self.n_random_entities > 0:
+
+            random_entities_teacher = self._rng.choice(
+                list(self.mapping_entities.keys()),
+                size    = self.n_random_entities,
+                replace = False
+            )
+
+            random_entities_student = torch.tensor([[ # pylint: disable=not-callable
+                self.mapping_entities[i] for i in random_entities_teacher]])
+
+            random_entities_teacher = torch.cat(
+                positive_sample.shape[0] * [torch.tensor([random_entities_teacher])]) # pylint: disable=not-callable
+
+            random_entities_student = torch.cat(
+                positive_sample.shape[0] * [random_entities_student])
+
+            head_distribution_teacher = torch.cat(
+                [head_distribution_teacher, random_entities_teacher], dim = 1)
+
+            head_distribution_student = torch.cat(
+                [head_distribution_student, random_entities_student], dim = 1)
+
+            tail_distribution_teacher = torch.cat(
+                [tail_distribution_teacher, random_entities_teacher], dim = 1)
+
+            tail_distribution_student = torch.cat(
+                [tail_distribution_student, random_entities_student], dim = 1)
+
+        if self.n_random_relations > 0:
+
+            random_relations_teacher = self._rng.choice(
+                list(self.mapping_relations.keys()),
+                size    = self.n_random_relations,
+                replace = False
+            )
+
+            random_relations_student = torch.tensor([[ # pylint: disable=not-callable
+                self.mapping_relations[i] for i in random_relations_teacher]])
+
+            random_relations_teacher = torch.cat(
+                positive_sample.shape[0] * [torch.tensor([random_relations_teacher])]) # pylint: disable=not-callable
+
+            random_relations_student = torch.cat(
+                positive_sample.shape[0] * [random_relations_student])
+
+            relation_distribution_teacher = torch.cat(
+                [relation_distribution_teacher, random_relations_teacher], dim = 1)
+
+            relation_distribution_student = torch.cat(
+                [relation_distribution_student, random_relations_student], dim = 1)
+
+        return (head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
+         head_distribution_student, relation_distribution_student, tail_distribution_student)
