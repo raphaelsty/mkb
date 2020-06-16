@@ -285,8 +285,6 @@ class Distillation:
             batch_size = self.sampling.batch_size_entity
         )
 
-        # Student
-        head_student     = self.mapping_entities[head_teacher]
         relation_student = self.mapping_relations[relation_teacher]
         tail_student     = self.mapping_entities[tail_teacher]
 
@@ -294,6 +292,7 @@ class Distillation:
 
         # Uniform sampling always include the ground truth:
         if self.sampling.supervised:
+            head_student = self.mapping_entities[head_teacher]
             entity_distribution_student[0][-1] = head_student
 
         tensor_head_student = self.init_tensor(
@@ -324,14 +323,14 @@ class Distillation:
         )
 
         # Student
-        head_student     = self.mapping_entities[head_teacher]
-        relation_student = self.mapping_relations[relation_teacher]
-        tail_student     = self.mapping_entities[tail_teacher]
+        head_student = self.mapping_entities[head_teacher]
+        tail_student = self.mapping_entities[tail_teacher]
 
         relation_distribution_student_copy = copy.deepcopy(relation_distribution_student)
 
         # Supervised samplers always include the ground truth:
         if self.sampling.supervised:
+            relation_student = self.mapping_relations[relation_teacher]
             relation_distribution_student_copy[0][-1] = relation_student
 
         tensor_relation_student = self.init_tensor(
@@ -362,12 +361,12 @@ class Distillation:
         # Student
         head_student     = self.mapping_entities[head_teacher]
         relation_student = self.mapping_relations[relation_teacher]
-        tail_student     = self.mapping_entities[tail_teacher]
 
         entity_distribution_student = copy.deepcopy(tail_distribution_student)
 
         # Uniform sampling always include the ground truth:
         if self.sampling.supervised:
+            tail_student = self.mapping_entities[tail_teacher]
             entity_distribution_student[0][-1] = tail_student
 
         tensor_tail_student = self.init_tensor(
