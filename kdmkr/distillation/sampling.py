@@ -4,8 +4,6 @@ import numpy as np
 
 import collections
 
-import faiss
-
 __all__ = ['UniformSampling', 'TopKSampling']
 
 class UniformSampling:
@@ -136,6 +134,7 @@ class TopKSampling:
     def __init__(self, teacher_entities, teacher_relations, student_entities,
         student_relations, teacher, batch_size_entity, batch_size_relation, n_random_entities,
         n_random_relations, seed=None):
+        import faiss
         self.batch_size_entity_top_k   = batch_size_entity
         self.batch_size_relation_top_k = batch_size_relation
         self.n_random_entities         = n_random_entities

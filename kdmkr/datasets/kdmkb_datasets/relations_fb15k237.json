@@ -14,6 +14,7 @@
     "/award/award_winning_work/awards_won./award/award_honor/award_winner": 12,
     "/film/film/release_date_s./film/film_regional_release_date/film_release_region": 13,
     "/film/film/language": 14,
+    "_has_part": 15,
     "/organization/organization/headquarters./location/mailing_address/country": 16,
     "/people/person/profession": 17,
     "/location/statistical_region/religions./location/religion_percentage/religion": 18,
@@ -234,6 +235,5 @@
     "/broadcast/content/artist": 233,
     "/location/statistical_region/gni_per_capita_in_ppp_dollars./measurement_unit/dated_money_value/currency": 234,
     "/music/instrument/family": 235,
-    "/government/politician/government_positions_held./government/government_position_held/jurisdiction_of_office": 236,
-    "_has_part": 15
+    "/government/politician/government_positions_held./government/government_position_held/jurisdiction_of_office": 236
 }
