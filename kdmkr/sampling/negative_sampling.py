@@ -46,7 +46,7 @@ class NegativeSampling:
 
             >>> negative_sampling = sampling.NegativeSampling(
             ...    size = 5,
-            ...    all_positive_triples = dataset.train,
+            ...    train_triples = dataset.train,
             ...    entities = dataset.entities,
             ...    relations = dataset.relations,
             ...    seed = 42,
@@ -77,11 +77,11 @@ class NegativeSampling:
                     [0, 0, 3, 0, 3]])
 
     """
-    def __init__(self, size, all_positive_triples, entities, relations, seed=42):
+    def __init__(self, size, train_triples, entities, relations, seed=42):
         """ Generate negative samples.
 
             size (int): Batch size of the negative samples generated.
-            all_positive_triples (list[(int, int, int)]): Set of positive triples.
+            train_triples (list[(int, int, int)]): Set of positive triples.
             entities (dict | list): Set of entities.
             relations (dict | list): Set of relations.
             seed (int): Random state.
@@ -91,7 +91,7 @@ class NegativeSampling:
         self.n_entity = len(entities)
         self.n_relation = len(relations)
 
-        self.true_head, self.true_tail = self.get_true_head_and_tail(all_positive_triples)
+        self.true_head, self.true_tail = self.get_true_head_and_tail(train_triples)
         self._rng = np.random.RandomState(seed) # pylint: disable=no-member
 
     def generate(self, positive_sample, mode):

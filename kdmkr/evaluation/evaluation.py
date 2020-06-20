@@ -66,7 +66,7 @@ class Evaluation:
 
             >>> negative_sampling = sampling.NegativeSampling(
             ...    size = 2,
-            ...    all_positive_triples = dataset.train,
+            ...    train_triples = dataset.train,
             ...    entities = dataset.entities,
             ...    relations = dataset.relations,
             ...    seed = 42,
