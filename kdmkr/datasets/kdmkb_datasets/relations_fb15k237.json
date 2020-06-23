@@ -14,7 +14,7 @@
     "/award/award_winning_work/awards_won./award/award_honor/award_winner": 12,
     "/film/film/release_date_s./film/film_regional_release_date/film_release_region": 13,
     "/film/film/language": 14,
-    "_has_part": 15,
+    "/location/location/contains": 15,
     "/organization/organization/headquarters./location/mailing_address/country": 16,
     "/people/person/profession": 17,
     "/location/statistical_region/religions./location/religion_percentage/religion": 18,
