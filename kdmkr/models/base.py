@@ -62,6 +62,10 @@ class BaseModel(nn.Module):
         return f'{self.__class__.__name__}({self.get_params})'
 
 
+    def __str__(self):
+        return self
+
+
     def head_relation_tail(self, sample, mode='default'):
         """Extract embeddings of head, relation tail from ids."""
         if mode == 'default':
