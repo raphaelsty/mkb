@@ -38,11 +38,3 @@ class ComplEx(base.Teacher):
         im_score = re_relation * im_tail - im_relation * re_tail
         score = re_head * re_score + im_head * im_score
         return score.sum(dim = -1)
-
-    def _top_k(self, sample):
-        """Method dedicated to compute the top k entities and relations for a given triplet."""
-        head, relation, tail = self.head_relation_tail(sample=sample, mode='default')
-        embedding_head     = - relation + tail
-        embedding_relation = - head + tail
-        embedding_tail     = head + relation
-        return embedding_head, embedding_relation, embedding_tail

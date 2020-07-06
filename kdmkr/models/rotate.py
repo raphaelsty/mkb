@@ -59,13 +59,3 @@ class RotatE(base.Teacher):
         score = score.norm(dim = 0)
 
         return self.gamma.item() - score.sum(dim = -1)
-
-    def _top_k(self, sample):
-        """Method dedicated to compute the top k entities and relations for a given triplet."""
-        head, relation, tail = self.head_relation_tail(sample=sample, mode='default')
-        head, _ = torch.chunk(head, 2, dim = -1)
-        tail, _ = torch.chunk(tail, 2, dim = -1)
-        embedding_head     = - relation + tail
-        embedding_relation = - head + tail
-        embedding_tail     = head + relation
-        return torch.cat(2 * [embedding_head]), embedding_relation, torch.cat(2 * [embedding_tail])
