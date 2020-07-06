@@ -5,9 +5,20 @@ from . import base
 
 __all__ = ['ComplEx']
 
-class ComplEx(base.Teacher):
-    """ComplEx"""
+class ComplEx(base.BaseModel):
+    """ComplEx
 
+
+    Example:
+
+        >>> from kdmkr import models
+
+        >>> model = models.ComplEx(hidden_dim = 10, n_entity = 2, n_relation = 2, gamma = 1)
+
+        >>> model
+        ComplEx({'entity_dim': 20, 'relation_dim': 20, 'gamma': 1.0})
+
+    """
     def __init__(self, hidden_dim, n_entity, n_relation, gamma):
         super().__init__(hidden_dim=hidden_dim, relation_dim=hidden_dim*2, entity_dim=hidden_dim*2,
             n_entity=n_entity, n_relation=n_relation, gamma=gamma)

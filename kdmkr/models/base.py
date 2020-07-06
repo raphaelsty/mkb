@@ -4,15 +4,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-__all__ = ['Teacher']
+__all__ = ['BaseModel']
 
 
-class Teacher(nn.Module):
+class BaseModel(nn.Module):
     """Knowledge graph embedding model class."""
 
     def __init__(self, n_entity, n_relation, hidden_dim, entity_dim, relation_dim, gamma):
         """"""
-        super(Teacher, self).__init__()
+        super(BaseModel, self).__init__()
 
         self.n_entity   = n_entity
         self.n_relation = n_relation
@@ -47,6 +47,20 @@ class Teacher(nn.Module):
             a      = -self.embedding_range.item(),
             b      = self.embedding_range.item()
         )
+
+
+    @property
+    def get_params(self):
+        return {
+            'entity_dim': self.entity_dim,
+            'relation_dim': self.relation_dim,
+            'gamma': self.gamma.item()
+        }
+
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.get_params})'
+
 
     def head_relation_tail(self, sample, mode='default'):
         """Extract embeddings of head, relation tail from ids."""

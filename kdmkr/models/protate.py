@@ -5,9 +5,19 @@ from . import base
 
 __all__ = ['pRotatE']
 
-class pRotatE(base.Teacher):
-    """pRotatE"""
+class pRotatE(base.BaseModel):
+    """pRotatE
 
+    Example:
+
+        >>> from kdmkr import models
+
+        >>> model = models.pRotatE(hidden_dim = 10, n_entity = 2, n_relation = 2, gamma = 1)
+
+        >>> model
+        pRotatE({'entity_dim': 10, 'relation_dim': 10, 'gamma': 1.0})
+
+    """
     def __init__(self, hidden_dim, n_entity, n_relation, gamma):
         super().__init__(hidden_dim=hidden_dim, relation_dim=hidden_dim, entity_dim=hidden_dim,
             n_entity=n_entity, n_relation=n_relation, gamma=gamma)
