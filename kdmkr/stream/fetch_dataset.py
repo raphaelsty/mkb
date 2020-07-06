@@ -45,6 +45,9 @@ class FetchDataset:
             >>> dataset = stream.FetchDataset(train=train, test=test, entities=entities,
             ...    relations=relations, batch_size=1, seed=42)
 
+            >>> dataset
+            FetchDataset({'batch_size': 1})
+
             # Iterate over the first three samples of the input training set:
             >>> for _ in range(3):
             ...     positive_sample, weight, mode = next(dataset)
@@ -80,6 +83,21 @@ class FetchDataset:
         else:
             data = next(self.fetch_tail)
         return data
+
+
+    @property
+    def get_params(self):
+        return {
+            'batch_size': self.batch_size,
+        }
+
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.get_params})'
+
+
+    def __str__(self):
+        return self
 
     def test_dataset(self, batch_size):
         return self.test_stream(triples=self.test, batch_size=batch_size)
