@@ -63,7 +63,7 @@ class BaseModel(nn.Module):
 
 
     def __str__(self):
-        return self.__repr__
+        return self.__repr__()
 
 
     def head_relation_tail(self, sample, mode='default'):

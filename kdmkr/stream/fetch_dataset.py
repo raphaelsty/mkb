@@ -94,7 +94,7 @@ class FetchDataset:
         return f'{self.__class__.__name__}({self.get_params})'
 
     def __str__(self):
-        return self.__repr__
+        return self.__repr__()
 
     def test_dataset(self, batch_size):
         return self.test_stream(triples=self.test, batch_size=batch_size)
