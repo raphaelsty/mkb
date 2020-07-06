@@ -6,7 +6,7 @@ import itertools
 
 import numpy as np
 
-from .. import loss
+from .. import losses
 
 
 __all__ = [
@@ -410,7 +410,7 @@ class Distillation:
 
                 >>> from kdmkr import datasets
                 >>> from kdmkr import distillation
-                >>> from kdmkr import model
+                >>> from kdmkr import models
 
                 >>> import torch
                 >>> _ = torch.manual_seed(42)
@@ -420,14 +420,14 @@ class Distillation:
 
                 >>> wn18rr = datasets.WN18RR(batch_size=3, shuffle=True, seed=42)
 
-                >>> teacher = model.RotatE(
+                >>> teacher = models.RotatE(
                 ...    hidden_dim = 3,
                 ...    n_entity   = wn18rr.n_entity,
                 ...    n_relation = wn18rr.n_relation,
                 ...    gamma      = 6
                 ... )
 
-                >>> student = model.RotatE(
+                >>> student = models.RotatE(
                 ...    hidden_dim = 3,
                 ...    n_entity   = wn18rr.n_entity,
                 ...    n_relation = wn18rr.n_relation,
@@ -466,14 +466,14 @@ class Distillation:
                 >>> loss_student.backward()
 
                 # Tok K sampling:
-                >>> teacher = model.TransE(
+                >>> teacher = models.TransE(
                 ...    hidden_dim = 3,
                 ...    n_entity   = wn18rr.n_entity,
                 ...    n_relation = wn18rr.n_relation,
                 ...    gamma      = 6
                 ... )
 
-                >>> student = model.TransE(
+                >>> student = models.TransE(
                 ...    hidden_dim = 3,
                 ...    n_entity   = wn18rr.n_entity,
                 ...    n_relation = wn18rr.n_relation,
@@ -589,7 +589,7 @@ class Distillation:
                 scores_head_teacher = teacher.distill(teacher_head_tensor)
 
             # Distillation loss of heads
-            loss_distillation['head'] = loss.KlDivergence()(
+            loss_distillation['head'] = losses.KlDivergence()(
                 teacher_score=scores_head_teacher,
                 student_score=student.distill(student_head_tensor)
             )
@@ -604,7 +604,7 @@ class Distillation:
                 scores_relation_teacher = teacher.distill(teacher_relation_tensor)
 
             # Distillation loss of relations.
-            loss_distillation['relation'] = loss.KlDivergence()(
+            loss_distillation['relation'] = losses.KlDivergence()(
                 teacher_score=scores_relation_teacher,
                 student_score=student.distill(student_relation_tensor)
             )
@@ -619,7 +619,7 @@ class Distillation:
                 scores_tail_teacher = teacher.distill(teacher_tail_tensor)
 
             # Distillation loss of tails.
-            loss_distillation['tail'] = loss.KlDivergence()(
+            loss_distillation['tail'] = losses.KlDivergence()(
                 teacher_score=scores_tail_teacher,
                 student_score=student.distill(student_tail_tensor)
             )

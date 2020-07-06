@@ -35,3 +35,11 @@ class pRotatE(base.Teacher):
         score = torch.sin(score)
         score = torch.abs(score)
         return self.gamma.item() - score.sum(dim = -1) * self.modulus
+
+    def _top_k(self, sample):
+        """Method dedicated to compute the top k entities and relations for a given triplet."""
+        head, relation, tail = self.head_relation_tail(sample=sample, mode='default')
+        embedding_head     = - relation + tail
+        embedding_relation = - head + tail
+        embedding_tail     = head + relation
+        return embedding_head, embedding_relation, embedding_tail

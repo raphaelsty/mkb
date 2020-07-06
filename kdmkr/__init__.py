@@ -4,8 +4,8 @@ from .__version__ import __version__
 __all__ = [
     'distillation',
     'evaluation',
-    'loss',
-    'model',
+    'losses',
+    'models',
     'sampling',
     'stream',
     'utils',
