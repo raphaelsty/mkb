@@ -101,7 +101,7 @@ class Evaluation:
             >>> scores = validation.eval(model=rotate, dataset=test)
 
             >>> print(scores)
-            {'MRR': 0.5833333333333334, 'MR': 2.0, 'HITS@1': 0.25, 'HITS@3': 1.0, 'HITS@10': 1.0}
+            {'MRR': 0.5833, 'MR': 2.0, 'HITS@1': 0.25, 'HITS@3': 1.0, 'HITS@10': 1.0}
 
     """
     def __init__(self, all_true_triples, entities, relations, batch_size, device='cpu',
@@ -170,5 +170,5 @@ class Evaluation:
                         metrics['HITS@3'].update(1.0 if ranking <= 3 else 0.0)
                         metrics['HITS@10'].update(1.0 if ranking <= 10 else 0.0)
 
-        return {name: metric.get() for name, metric in metrics.items()}
+        return {name: round(metric.get(), 4) for name, metric in metrics.items()}
 
