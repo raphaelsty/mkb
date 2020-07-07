@@ -21,9 +21,9 @@ class KGEBoard:
         self.key_metric       = key_metric
 
         if bigger_is_better:
-            self.comparison = operator.lt
+            self.comparison = operator.le
         else:
-            self.comparison = operator.gt
+            self.comparison = operator.ge
 
         if self.key_metric:
             self.best_params = collections.defaultdict(lambda: collections.defaultdict(float))
