@@ -1,5 +1,6 @@
 import collections
 import os
+import operator
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -18,7 +19,11 @@ class KGEBoard:
         self.path             = os.path.join(log_dir, experiment)
         self.writer           = SummaryWriter(log_dir=self.path)
         self.key_metric       = key_metric
-        self.bigger_is_better = bigger_is_better
+
+        if bigger_is_better:
+            self.comparison = operator.lt
+        else:
+            self.comparison = operator.gt
 
         if self.key_metric:
             self.best_params = collections.defaultdict(lambda: collections.defaultdict(float))
@@ -28,14 +33,16 @@ class KGEBoard:
         description = f'{model} {self._description(**description)}'
 
         for m, s in metrics.items():
-            self.writer.add_scalars(
-                main_tag=f'{self.experiment}_{m}', tag_scalar_dict={f'{model}': s}, global_step=step)
+            self.writer.add_scalars(main_tag=f'{self.experiment}_{m}',
+                tag_scalar_dict={f'{model}': s}, global_step=step)
 
-        if self.key_metric in metrics and self.best_params[model][self.key_metric] < metrics[self.key_metric]:
-            self.best_params.pop(model)
-            for m, s in metrics.items():
-                self.best_params[f'{self.experiment}_{model}'][m] = s
-            self.best_params[f'{self.experiment}_{model}']['step'] = step
+        if self.key_metric in metrics:
+            if self.comparison(self.best_params[f'{self.experiment}_{model}'][self.key_metric],
+                    metrics[self.key_metric]):
+
+                for m, s in metrics.items():
+                    self.best_params[f'{self.experiment}_{model}'][m] = s
+                self.best_params[f'{self.experiment}_{model}']['step'] = step
 
 
     def export_best_scores(self, model=None):
@@ -44,10 +51,11 @@ class KGEBoard:
         If model is specified, it export the best scores found for this model.
         '''
         if model is not None:
+
             self.writer.add_text(
                 tag         = f'{model}',
-                text_string = self._description(**self.best_params[f'{model}']),
-                global_step = self.best_params[f'{model}']['step']
+                text_string = self._description(**self.best_params[f'{self.experiment}_{model}']),
+                global_step = self.best_params[f'{self.experiment}_{model}']['step']
             )
 
         else:
