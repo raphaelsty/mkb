@@ -6,6 +6,8 @@ from torch.utils import data
 
 from ..stream import base
 
+import collections
+
 
 __all__ = ['Evaluation']
 
@@ -99,7 +101,7 @@ class Evaluation:
             >>> scores = validation.eval(model=rotate, dataset=test)
 
             >>> print(scores)
-            HITS@10: 1.000000, HITS@1: 0.250000, HITS@3: 1.000000, MR: 2.000000, MRR: 0.583333
+            {'MRR': 0.5833333333333334, 'MR': 2.0, 'HITS@1': 0.25, 'HITS@3': 1.0, 'HITS@10': 1.0}
 
     """
     def __init__(self, all_true_triples, entities, relations, batch_size, device='cpu',
@@ -125,7 +127,8 @@ class Evaluation:
 
     def eval(self, model, dataset):
         """Evaluate selected model with the metrics: MRR, MR, HITS@1, HITS@3, HITS@10"""
-        metrics = {metric: stats.Mean() for metric in ['MRR', 'MR', 'HITS@1', 'HITS@3', 'HITS@10']}
+        metrics = collections.OrderedDict(
+            {metric: stats.Mean() for metric in ['MRR', 'MR', 'HITS@1', 'HITS@3', 'HITS@10']})
 
         with torch.no_grad():
 
@@ -167,6 +170,5 @@ class Evaluation:
                         metrics['HITS@3'].update(1.0 if ranking <= 3 else 0.0)
                         metrics['HITS@10'].update(1.0 if ranking <= 10 else 0.0)
 
-        score = {f'{name}: {metric.get():4f}' for name, metric in metrics.items()}
+        return {name: metric.get() for name, metric in metrics.items()}
 
-        return ', '.join(sorted(score))
