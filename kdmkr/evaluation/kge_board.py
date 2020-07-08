@@ -56,7 +56,7 @@ class KGEBoard:
             description = f'{model} {self._description(**description)}'
 
             self.writer.add_text(
-                tag         = f'{description}',
+                tag         = f'{self.experiment}_{description}',
                 text_string = self._description(
                     **self.best_params[f'{self.experiment}_{description}']),
                 global_step = self.best_params[f'{self.experiment}_{description}']['step']
@@ -65,7 +65,7 @@ class KGEBoard:
         else:
             for model, scores in self.best_params.items():
                 self.writer.add_text(
-                    tag         = model,
+                    tag         = f'{self.experiment}_{model}',
                     text_string = self._description(**scores),
                     global_step = scores['step']
                 )
