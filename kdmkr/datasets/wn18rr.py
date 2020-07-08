@@ -29,10 +29,14 @@ class WN18RR(fetch_dataset.FetchDataset):
             tensor([[ 9023,     0, 25815]]) tensor([0.2357]) tail-batch
 
     """
-    def __init__(self, batch_size, shuffle=False, num_workers=1, seed=None):
+    def __init__(self, batch_size, shuffle=False, num_workers=1, seed=None, path = None):
 
         self.folder    = 'wn18rr'
-        self.directory = f'{os.path.dirname(os.path.realpath(__file__))}/{self.folder}'
+
+        if path is None:
+            self.directory = f'{os.path.dirname(os.path.realpath(__file__))}/{self.folder}'
+        else:
+            self.directory = path
 
         self.train_file_path = f'{self.directory}/train.csv'
         self.valid_file_path = f'{self.directory}/valid.csv'
