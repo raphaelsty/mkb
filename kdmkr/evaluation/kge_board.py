@@ -30,32 +30,39 @@ class KGEBoard:
 
 
     def update(self, model, step, metrics, **description):
+
         description = f'{model} {self._description(**description)}'
 
         for m, s in metrics.items():
             self.writer.add_scalars(main_tag=f'{self.experiment}_{m}',
-                tag_scalar_dict={f'{model}': s}, global_step=step)
+                tag_scalar_dict={f'{description}': s}, global_step=step)
 
         if self.key_metric in metrics:
-            if self.comparison(self.best_params[f'{self.experiment}_{model}'][self.key_metric],
+            if self.comparison(self.best_params[f'{self.experiment}_{description}'][self.key_metric],
                     metrics[self.key_metric]):
 
                 for m, s in metrics.items():
-                    self.best_params[f'{self.experiment}_{model}'][m] = s
-                self.best_params[f'{self.experiment}_{model}']['step'] = step
+                    self.best_params[f'{self.experiment}_{description}'][m] = s
+                self.best_params[f'{self.experiment}_{description}']['step'] = step
+
+                for key, value in description.items():
+                    self.best_params[f'{self.experiment}_{description}'][key] = value
 
 
-    def export_best_scores(self, model=None):
+    def export_best_scores(self, model=None, **description):
         '''
         Export best scores founds for each model by default.
         If model is specified, it export the best scores found for this model.
         '''
         if model is not None:
 
+            description = f'{model} {self._description(**description)}'
+
             self.writer.add_text(
-                tag         = f'{model}',
-                text_string = self._description(**self.best_params[f'{self.experiment}_{model}']),
-                global_step = self.best_params[f'{self.experiment}_{model}']['step']
+                tag         = f'{description}',
+                text_string = self._description(
+                    **self.best_params[f'{self.experiment}_{description}']),
+                global_step = self.best_params[f'{self.experiment}_{description}']['step']
             )
 
         else:
