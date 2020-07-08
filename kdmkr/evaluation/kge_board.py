@@ -45,9 +45,6 @@ class KGEBoard:
                     self.best_params[f'{self.experiment}_{description}'][m] = s
                 self.best_params[f'{self.experiment}_{description}']['step'] = step
 
-                for key, value in description.items():
-                    self.best_params[f'{self.experiment}_{description}'][key] = value
-
 
     def export_best_scores(self, model=None, **description):
         '''
