@@ -1,4 +1,3 @@
-# Reference: https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding
 import torch
 
 from . import base
@@ -7,16 +6,42 @@ __all__ = ['TransE']
 
 
 class TransE(base.BaseModel):
-    """TransE
+    """TransE model.
+
+    Parameters:
+        hiddem_dim (int): Embedding size of relations and entities.
+        n_entity (int): Number of entities to consider.
+        n_relation (int): Number of relations to consider.
+        gamma (float): A higher gamma parameter increases the upper and lower bounds of the latent
+            space and vice-versa.
 
     Example:
 
         >>> from kdmkr import models
 
-        >>> model = models.TransE(hidden_dim = 10, n_entity = 2, n_relation = 2, gamma = 1)
+        >>> import torch
+        >>> _ = torch.manual_seed(42)
+
+        >>> model = models.TransE(hidden_dim = 3, n_entity = 2, n_relation = 2, gamma = 1)
 
         >>> model
-        TransE({'entity_dim': 10, 'relation_dim': 10, 'gamma': 1.0})
+        TransE model
+            Entities embeddings dim  3
+            Relations embeddings dim 3
+            Gamma                    1.0
+            Number of entities       2
+            Number of relations      2
+
+        >>> model.embeddings['entities']
+        {0: tensor([ 0.7645,  0.8300, -0.2343]), 1: tensor([ 0.9186, -0.2191,  0.2018])}
+
+        >>> model.embeddings['relations']
+        {0: tensor([-0.4869,  0.5873,  0.8815]), 1: tensor([-0.7336,  0.8692,  0.1872])}
+
+
+    References:
+        1. [Bordes, Antoine, et al. "Translating embeddings for modeling multi-relational data." Advances in neural information processing systems. 2013.](http://papers.nips.cc/paper/5071-translating-embeddings-for-modeling-multi-relational-data.pdf)
+        2. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
 
     """
 
@@ -34,6 +59,7 @@ class TransE(base.BaseModel):
         return self.gamma.item() - torch.norm(score, p=1, dim=2)
 
     def distill(self, sample):
+        """Distillation method of TransE."""
         head, relation, tail = self.distillation_batch(sample)
         score = head + (relation - tail)
         return self.gamma.item() - torch.norm(score, p=1, dim=-1)

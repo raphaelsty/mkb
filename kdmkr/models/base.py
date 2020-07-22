@@ -1,4 +1,3 @@
-# Reference: https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,10 +7,23 @@ __all__ = ['BaseModel']
 
 
 class BaseModel(nn.Module):
-    """Knowledge graph embedding model class."""
+    """Knowledge graph embedding base model class.
+
+    Parameters:
+        hiddem_dim (int): Embedding size of relations and entities.
+        entity_dim (int): Final embedding size of entities.
+        relation_dim (int): Final embedding size of relations.
+        n_entity (int): Number of entities to consider.
+        n_relation (int): Number of relations to consider.
+        gamma (float): A higher gamma parameter increases the upper and lower bounds of the latent
+            space and vice-versa.
+
+    Reference:
+        1. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
+
+    """
 
     def __init__(self, n_entity, n_relation, hidden_dim, entity_dim, relation_dim, gamma):
-        """"""
         super(BaseModel, self).__init__()
 
         self.n_entity = n_entity
@@ -52,18 +64,50 @@ class BaseModel(nn.Module):
         )
 
     @property
-    def get_params(self):
+    def embeddings(self):
+        """Extracts embeddings."""
+        entities_embeddings = {}
+
+        for i in range(self.n_entity):
+            entities_embeddings[i] = self.entity_embedding[i].detach()
+
+        relations_embeddings = {}
+
+        for i in range(self.n_relation):
+            relations_embeddings[i] = self.relation_embedding[i].detach()
+
+        return {'entities': entities_embeddings, 'relations': relations_embeddings}
+
+    @property
+    def _repr_title(self):
+        return f'{self.__class__.__name__} model'
+
+    @property
+    def _repr_content(self):
+        """The items that are displayed in the __repr__ method.
+        This property can be overriden in order to modify the output of the __repr__ method.
+        """
+
         return {
-            'entity_dim': self.entity_dim,
-            'relation_dim': self.relation_dim,
-            'gamma': self.gamma.item()
+            'Entities embeddings dim': f'{self.entity_dim}',
+            'Relations embeddings dim': f'{self.relation_dim}',
+            'Gamma': f'{self.gamma.item()}',
+            'Number of entities': f'{self.n_entity}',
+            'Number of relations': f'{self.n_relation}'
         }
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.get_params})'
 
-    def __str__(self):
-        return self.__repr__()
+        l_len = max(map(len, self._repr_content.keys()))
+        r_len = max(map(len, self._repr_content.values()))
+
+        return (
+            f'{self._repr_title}\n' +
+            '\n'.join(
+                k.rjust(l_len) + '  ' + v.ljust(r_len)
+                for k, v in self._repr_content.items()
+            )
+        )
 
     def head_relation_tail(self, sample, mode='default'):
         """Extract embeddings of head, relation tail from ids."""
@@ -99,6 +143,7 @@ class BaseModel(nn.Module):
             dim=0,
             index=sample[:, :, 2].view(batch_size * distribution_size)
         ).view(batch_size, distribution_size, self.entity_dim)
+
         return head, relation, tail
 
     def head_batch(self, sample):
@@ -122,6 +167,7 @@ class BaseModel(nn.Module):
             dim=0,
             index=tail_part[:, 2]
         ).unsqueeze(1)
+
         return head, relation, tail
 
     def tail_batch(self, sample):
@@ -145,6 +191,7 @@ class BaseModel(nn.Module):
             dim=0,
             index=tail_part.view(-1)
         ).view(batch_size, negative_sample_size, -1)
+
         return head, relation, tail
 
     def default_batch(self, sample):
@@ -165,4 +212,5 @@ class BaseModel(nn.Module):
             dim=0,
             index=sample[:, 2]
         ).unsqueeze(1)
+
         return head, relation, tail
