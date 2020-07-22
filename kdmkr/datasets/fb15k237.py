@@ -17,8 +17,8 @@ class Fb15k237(Fetch):
     weights and the mode (head batch / tail batch)
 
     Parameters:
-        batch_size (int): Number of sample to iter on.
-        shuffle (bool): Wether to shuffle the dataset or not.
+        batch_size (int): Size of the batch.
+        shuffle (bool): Whether to shuffle the dataset or not.
         num_workers (int): Number of workers dedicated to iterate on the dataset.
         seed (int): Random seed.
 
@@ -37,6 +37,16 @@ class Fb15k237(Fetch):
 
         >>> fb15k237 = datasets.Fb15k237(batch_size=1, shuffle=True, seed=42)
 
+        >>> fb15k237
+        Fb15k237 dataset
+            Batch size  1
+            Entities  14541
+            Relations  237
+            Shuffle  True
+            Train triples  272115
+            Validation triples  17535
+            Test triples  20466
+
         >>> for _ in range(3):
         ...     positive_sample, weight, mode = next(fb15k237)
         ...     print(positive_sample, weight, mode)
@@ -53,13 +63,13 @@ class Fb15k237(Fetch):
 
         self.filename = 'fb15k237'
 
-        self.directory = pathlib.Path(__file__).parent.joinpath(self.filename)
+        path = pathlib.Path(__file__).parent.joinpath(self.filename)
 
         super().__init__(
-            train=read_csv(file_path=f'{self.directory}/train.csv'),
-            valid=read_csv(file_path=f'{self.directory}/valid.csv'),
-            test=read_csv(file_path=f'{self.directory}/test.csv'),
-            entities=read_json(f'{self.directory}/entities.json'),
-            relations=read_json(f'{self.directory}/relations.json'),
+            train=read_csv(file_path=f'{path}/train.csv'),
+            valid=read_csv(file_path=f'{path}/valid.csv'),
+            test=read_csv(file_path=f'{path}/test.csv'),
+            entities=read_json(f'{path}/entities.json'),
+            relations=read_json(f'{path}/relations.json'),
             batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed
         )
