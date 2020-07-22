@@ -57,6 +57,7 @@ class TrainDataset(Dataset):
 
     @staticmethod
     def collate_fn(data):
+        """Reshape output data when calling train dataset loader."""
         positive_sample = torch.stack([_[0] for _ in data], dim=0)
         subsample_weight = torch.cat([_[1] for _ in data], dim=0)
         mode = data[0][2]
@@ -130,6 +131,7 @@ class TestDataset(Dataset):
 
     @staticmethod
     def collate_fn(data):
+        """Reshape output data when calling train dataset loader."""
         positive_sample = torch.stack([_[0] for _ in data], dim=0)
         negative_sample = torch.stack([_[1] for _ in data], dim=0)
         filter_bias = torch.stack([_[2] for _ in data], dim=0)
