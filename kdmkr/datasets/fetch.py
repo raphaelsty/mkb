@@ -35,7 +35,7 @@ class Fetch:
         n_relation (int): Number of relations.
 
     References:
-        1. [Dettmers, Tim, et al. "Convolutional 2d knowledge graph embeddings." Thirty-Second AAAI Conference on Artificial Intelligence. 2018.](https://arxiv.org/pdf/1707.01476.pdf)
+        1. [Sun, Zhiqing, et al. "Rotate: Knowledge graph embedding by relational rotation in complex space." arXiv preprint arXiv:1902.10197 (2019).](https://arxiv.org/pdf/1902.10197.pdf)
         2. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
 
     Example:
@@ -89,7 +89,7 @@ class Fetch:
         tensor([[1, 0, 2]]) tensor([0.3333]) tail-batch
 
     References:
-        1. [Dettmers, Tim, et al. "Convolutional 2d knowledge graph embeddings." Thirty-Second AAAI Conference on Artificial Intelligence. 2018.](https://arxiv.org/pdf/1707.01476.pdf)
+        1. [Sun, Zhiqing, et al. "Rotate: Knowledge graph embedding by relational rotation in complex space." arXiv preprint arXiv:1902.10197 (2019).](https://arxiv.org/pdf/1902.10197.pdf)
         2. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
 
     """
@@ -189,7 +189,7 @@ class Fetch:
 
     def _get_test_loader(self, triples, batch_size, mode):
         test_dataset = TestDataset(
-            triples=triples, all_true_triples=self.train + self.test + self.valid,
+            triples=triples, true_triples=self.train + self.test + self.valid,
             entities=self.entities, relations=self.relations, mode=mode)
 
         return data.DataLoader(

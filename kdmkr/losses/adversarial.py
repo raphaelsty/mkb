@@ -9,12 +9,9 @@ __all__ = ['Adversarial']
 class Adversarial(nn.Module):
     """Self-adversarial negative sampling loss function.
 
-    Parameters:
-        positive_score (torch.Tensor):
-
-    Reference:
-        RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space
-        http://arxiv.org/abs/1902.10197
+    References:
+        1. [Sun, Zhiqing, et al. "Rotate: Knowledge graph embedding by relational rotation in complex space." arXiv preprint arXiv:1902.10197 (2019).](https://arxiv.org/pdf/1902.10197.pdf)
+        2. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
 
     """
 
