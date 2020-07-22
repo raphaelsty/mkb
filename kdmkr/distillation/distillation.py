@@ -90,27 +90,27 @@ class Distillation:
             ... )
 
             >>> print(head_distribution_teacher)
-            tensor([[1, 2, 3]])
+            tensor([[1., 2., 3.]])
 
             >>> print(relation_distribution_teacher)
-            tensor([[2, 3, 1]])
+            tensor([[2., 3., 1.]])
 
             >>> print(tail_distribution_teacher)
-            tensor([[1, 2, 3]])
+            tensor([[1., 2., 3.]])
 
             >>> print(head_distribution_student)
-            tensor([[0, 1, 2]])
+            tensor([[0., 1., 2.]])
 
             >>> print(relation_distribution_student)
-            tensor([[1, 2, 0]])
+            tensor([[1., 2., 0.]])
 
             >>> print(tail_distribution_student)
-            tensor([[0, 1, 2]])
+            tensor([[0., 1., 2.]])
 
             # Training sample from teacher KG:
-            >>> head     = 1
+            >>> head = 1
             >>> relation = 1
-            >>> tail     = 2
+            >>> tail = 2
 
             >>> distillation_available = distill.available(
             ...    head=head, relation=relation, tail=tail)
@@ -137,7 +137,7 @@ class Distillation:
             ...         head_teacher=head, relation_teacher=relation, tail_teacher=tail)
 
             Test batch to distill head:
-            >>> x = torch.tensor(
+            >>> x = torch.Tensor(
             ...     [[[1., 1., 2.],
             ...       [2., 1., 2.],
             ...       [1., 1., 2.]]])
@@ -149,7 +149,7 @@ class Distillation:
                      [True, True, True],
                      [True, True, True]]])
 
-            >>> x = torch.tensor(
+            >>> x = torch.Tensor(
             ...     [[[0., 0., 1.],
             ...       [1., 0., 1.],
             ...       [0., 0., 1.]]])
@@ -160,7 +160,7 @@ class Distillation:
                      [True, True, True]]])
 
             Test batch to distill relation:
-            >>> x = torch.tensor(
+            >>> x = torch.Tensor(
             ...     [[[1., 2., 2.],
             ...       [1., 3., 2.],
             ...       [1., 1., 2.]]])
@@ -170,7 +170,7 @@ class Distillation:
                      [True, True, True],
                      [True, True, True]]])
 
-            >>> x = torch.tensor(
+            >>> x = torch.Tensor(
             ...     [[[0., 1., 1.],
             ...       [0., 2., 1.],
             ...       [0., 0., 1.]]])
@@ -181,7 +181,7 @@ class Distillation:
                      [True, True, True]]])
 
             Test batch to distill tail:
-            >>> x = torch.tensor(
+            >>> x = torch.Tensor(
             ...     [[[1., 1., 1.],
             ...       [1., 1., 2.],
             ...       [1., 1., 2.]]])
@@ -191,7 +191,7 @@ class Distillation:
                      [True, True, True],
                      [True, True, True]]])
 
-            >>> x = torch.tensor(
+            >>> x = torch.Tensor(
             ...     [[[0., 0., 0.],
             ...       [0., 0., 1.],
             ...       [0., 0., 1.]]])
@@ -401,7 +401,7 @@ class Distillation:
 
             teacher (model): Teacher that will distill his knowledge.
             student (model): Student that will learn from the teacher.
-            positive_sample (torch.tensor): Positive example from the KB.
+            positive_sample (torch.Tensor): Positive example from the KB.
 
             Returns:
 
