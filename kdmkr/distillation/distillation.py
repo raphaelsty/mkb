@@ -418,7 +418,7 @@ class Distillation:
                 >>> import warnings
                 >>> warnings.filterwarnings("ignore")
 
-                >>> wn18rr = datasets.WN18RR(batch_size=3, shuffle=True, seed=42)
+                >>> wn18rr = datasets.Wn18rr(batch_size=3, shuffle=True, seed=42)
 
                 >>> teacher = models.RotatE(
                 ...    hidden_dim = 3,

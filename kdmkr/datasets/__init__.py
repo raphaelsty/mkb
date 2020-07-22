@@ -1,7 +1,9 @@
-from .fb15k237 import FB15K237
-from .wn18rr import WN18RR
+from .fb15k237 import Fb15k237
+from .wn18rr import Wn18rr
+from .fetch import Fetch
 
 __all__ = [
-    'FB15K237',
-    'WN18RR',
+    'Fetch',
+    'Fb15k237',
+    'Wn18rr',
 ]

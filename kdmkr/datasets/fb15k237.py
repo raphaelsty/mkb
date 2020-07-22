@@ -1,15 +1,17 @@
 import os
+import pathlib
 
-from ..stream import fetch_dataset
+from .fetch import Fetch
+
 from ..utils import read_csv
 from ..utils import read_json
 
 
-__all__ = ['FB15K237']
+__all__ = ['Fb15k237']
 
 
-class FB15K237(fetch_dataset.FetchDataset):
-    """Iter over FB15K237
+class Fb15k237(Fetch):
+    """Iter over Fb15k237
 
     Example:
 
@@ -17,26 +19,23 @@ class FB15K237(fetch_dataset.FetchDataset):
             >>> from kdmkr import datasets
             >>> import torch
 
-            >>> fb15k237 = datasets.FB15K237(batch_size=1, shuffle=True, seed=42)
+            >>> fb15k237 = datasets.Fb15k237(batch_size=1, shuffle=True, seed=42)
 
             >>> _ = torch.manual_seed(42)
 
             >>> for _ in range(3):
             ...     positive_sample, weight, mode = next(fb15k237)
             ...     print(positive_sample, weight, mode)
-            tensor([[5196,   24, 1164]]) tensor([0.2887]) tail-batch
-            tensor([[8539,   12, 2343]]) tensor([0.3333]) head-batch
-            tensor([[  16,   15, 4709]]) tensor([0.0343]) tail-batch
+            tensor([[5222,   24, 1165]]) tensor([0.2887]) tail-batch
+            tensor([[8615,   12, 2350]]) tensor([0.3333]) head-batch
+            tensor([[  16,   15, 4726]]) tensor([0.0343]) tail-batch
 
     """
-    def __init__(self, batch_size, shuffle=False, num_workers=1, seed=None, path=None):
+    def __init__(self, batch_size, shuffle=False, num_workers=1, seed=None):
 
-        self.folder    = 'fb15k237'
+        self.filename = 'fb15k237'
 
-        if path is None:
-            self.directory = f'{os.path.dirname(os.path.realpath(__file__))}/{self.folder}'
-        else:
-            self.directory = path
+        self.directory = pathlib.Path(__file__).parent.joinpath(self.filename)
 
         self.train_file_path = f'{self.directory}/train.csv'
         self.valid_file_path = f'{self.directory}/valid.csv'

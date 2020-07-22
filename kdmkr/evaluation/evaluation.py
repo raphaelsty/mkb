@@ -4,7 +4,7 @@ import torch
 from creme       import stats
 from torch.utils import data
 
-from ..stream import base
+from ..datasets import base
 
 import collections
 
@@ -18,7 +18,7 @@ class Evaluation:
     Example:
 
         :
-            >>> from kdmkr import stream
+            >>> from kdmkr import datasets
             >>> from kdmkr import evaluation
             >>> from kdmkr import models
             >>> from kdmkr import losses
@@ -57,7 +57,7 @@ class Evaluation:
             ... 'r1': 1,
             ... }
 
-            >>> dataset = stream.FetchDataset(
+            >>> dataset = datasets.Fetch(
             ...    train = train,
             ...    test = test,
             ...    entities = entities,
@@ -117,12 +117,14 @@ class Evaluation:
         test_dataset = base.TestDataset(triples=triples,
             all_true_triples=self.all_true_triples, entities=self.entities,
             relations=self.relations, mode=mode)
+
         return data.DataLoader(dataset=test_dataset, batch_size=self.batch_size,
             num_workers=self.num_workers, collate_fn=base.TestDataset.collate_fn)
 
     def get_test_stream(self, dataset):
         head_loader = self._get_test_loader(triples=dataset, mode='head-batch')
         tail_loader = self._get_test_loader(triples=dataset, mode='tail-batch')
+
         return [head_loader, tail_loader]
 
     def eval(self, model, dataset):

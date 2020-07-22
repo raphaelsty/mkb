@@ -1,4 +1,4 @@
-import itertools
+import pathlib
 
 from torch.utils import data
 
@@ -6,16 +6,17 @@ from .base import TrainDataset
 from .base import TestDataset
 
 
-__all__ = ['FetchDataset']
+__all__ = ['Fetch']
 
 
-class FetchDataset:
+
+class Fetch:
     """Fetch Dataset
 
     Example:
 
         :
-            >>> from kdmkr import stream
+            >>> from kdmkr import datasets
 
             >>> entities = {
             ...    0: 'bicycle',
@@ -42,11 +43,11 @@ class FetchDataset:
             ...    (4, 1, 5),
             ... ]
 
-            >>> dataset = stream.FetchDataset(train=train, test=test, entities=entities,
+            >>> dataset = datasets.Fetch(train=train, test=test, entities=entities,
             ...    relations=relations, batch_size=1, seed=42)
 
             >>> dataset
-            FetchDataset({'batch_size': 1})
+            Fetch({'batch_size': 1})
 
             # Iterate over the first three samples of the input training set:
             >>> for _ in range(3):
@@ -111,6 +112,8 @@ class FetchDataset:
             yield from dataloader
 
     def get_train_loader(self, mode):
+        """
+        """
         dataset = TrainDataset(triples=self.train, entities=self.entities, relations=self.relations,
             mode=mode, seed=self.seed)
 
@@ -118,15 +121,22 @@ class FetchDataset:
             num_workers=self.num_workers, collate_fn=TrainDataset.collate_fn)
 
     def test_stream(self, triples, batch_size):
+        """
+        """
         head_loader = self._get_test_loader(triples=triples, batch_size=batch_size,
             mode='head-batch')
+
         tail_loader = self._get_test_loader(triples=triples, batch_size=batch_size,
             mode='tail-batch')
+
         return [head_loader, tail_loader]
 
     def _get_test_loader(self, triples, batch_size, mode):
+        """
+        """
         test_dataset = TestDataset(triples=triples,
             all_true_triples=self.train + self.test + self.valid, entities=self.entities,
             relations=self.relations, mode=mode)
+
         return data.DataLoader(dataset=test_dataset, batch_size=batch_size,
             num_workers=self.num_workers, collate_fn=TestDataset.collate_fn)

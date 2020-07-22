@@ -15,9 +15,18 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/raphaelsty/kdmkr",
     packages=setuptools.find_packages(),
+    package_data={
+        'kdmkr': [
+            'datasets/wn18rr/*.csv',
+            'datasets/wn18rr/*.json',
+            'datasets/fb15k237/*.csv',
+            'datasets/fb15k237/*.json'
+        ]
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
     ],
+
     python_requires='>=3.6',
 )

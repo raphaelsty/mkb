@@ -12,7 +12,7 @@ class NegativeSampling:
 
     Example:
 
-            >>> from kdmkr import stream
+            >>> from kdmkr import datasets
             >>> from kdmkr import sampling
 
             >>> entities = {
@@ -36,7 +36,7 @@ class NegativeSampling:
             ... (3, 0, 1),
             ... ]
 
-            >>> dataset = stream.FetchDataset(
+            >>> dataset = datasets.Fetch(
             ...    train = train,
             ...    entities = entities,
             ...    relations = relations,

@@ -1,14 +1,15 @@
-import json
 import os
+import pathlib
 
-from ..stream import fetch_dataset
+from .fetch import Fetch
+
 from ..utils import read_csv
 from ..utils import read_json
 
-__all__ = ['WN18RR']
+__all__ = ['Wn18rr']
 
 
-class WN18RR(fetch_dataset.FetchDataset):
+class Wn18rr(Fetch):
     """Iter over WN18RR
 
     Example:
@@ -17,7 +18,7 @@ class WN18RR(fetch_dataset.FetchDataset):
             >>> from kdmkr import datasets
             >>> import torch
 
-            >>> wn18rr = datasets.WN18RR(batch_size=1, shuffle=True, seed=42)
+            >>> wn18rr = datasets.Wn18rr(batch_size=1, shuffle=True, seed=42)
 
             >>> _ = torch.manual_seed(42)
 
@@ -29,14 +30,11 @@ class WN18RR(fetch_dataset.FetchDataset):
             tensor([[ 9023,     0, 25815]]) tensor([0.2357]) tail-batch
 
     """
-    def __init__(self, batch_size, shuffle=False, num_workers=1, seed=None, path = None):
+    def __init__(self, batch_size, shuffle=False, num_workers=1, seed=None):
 
-        self.folder    = 'wn18rr'
+        self.filename = 'wn18rr'
 
-        if path is None:
-            self.directory = f'{os.path.dirname(os.path.realpath(__file__))}/{self.folder}'
-        else:
-            self.directory = path
+        self.directory = self.directory = pathlib.Path(__file__).parent.joinpath(self.filename)
 
         self.train_file_path = f'{self.directory}/train.csv'
         self.valid_file_path = f'{self.directory}/valid.csv'
