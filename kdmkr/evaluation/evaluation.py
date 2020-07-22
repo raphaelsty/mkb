@@ -95,7 +95,7 @@ class Evaluation:
 
             >>> rotate = rotate.eval()
 
-            >>> validation = evaluation.Evaluation(all_true_triples=train + valid + test,
+            >>> validation = evaluation.Evaluation(true_triples=train + valid + test,
             ...     entities=entities, relations=relations, batch_size=1)
 
             >>> scores = validation.eval(model=rotate, dataset=test)
@@ -105,22 +105,22 @@ class Evaluation:
 
     """
 
-    def __init__(self, all_true_triples, entities, relations, batch_size, device='cpu',
-                 num_workers=1):
-        self.all_true_triples = all_true_triples
+    def __init__(self, entities, relations, true_triples, batch_size, device='cpu', num_workers=1):
         self.entities = entities
         self.relations = relations
+        self.true_triples = true_triples
         self.batch_size = batch_size
         self.device = device
         self.num_workers = num_workers
 
     def _get_test_loader(self, triples, mode):
-        test_dataset = base.TestDataset(triples=triples,
-                                        all_true_triples=self.all_true_triples, entities=self.entities,
-                                        relations=self.relations, mode=mode)
+        test_dataset = base.TestDataset(
+            triples=triples, true_triples=self.true_triples, entities=self.entities,
+            relations=self.relations, mode=mode)
 
-        return data.DataLoader(dataset=test_dataset, batch_size=self.batch_size,
-                               num_workers=self.num_workers, collate_fn=base.TestDataset.collate_fn)
+        return data.DataLoader(
+            dataset=test_dataset, batch_size=self.batch_size, num_workers=self.num_workers,
+            collate_fn=base.TestDataset.collate_fn)
 
     def get_test_stream(self, dataset):
         head_loader = self._get_test_loader(triples=dataset, mode='head-batch')
