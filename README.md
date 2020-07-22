@@ -109,6 +109,7 @@ Fb15k237 dataset
 ...     entities   = entities, 
 ...     relations  = relations,
 ...     batch_size = 3, 
+...     shuffle    = True,
 ...     seed       = 42
 ... )
 
@@ -117,7 +118,7 @@ Fetch dataset
     Batch size          3
     Entities            6
     Relations           2
-    Shuffle             False
+    Shuffle             True
     Train triples       3
     Validation triples  0
     Test triples        2
