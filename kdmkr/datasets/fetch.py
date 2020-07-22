@@ -124,18 +124,6 @@ class Fetch:
         return data
 
     @property
-    def get_params(self):
-        return {
-            'Batch size': self.batch_size,
-            'Entities': self.n_entity,
-            'Relations': self.n_relation,
-            'Shuffle': self.shuffle,
-            'Train triples': len(self.train),
-            'Validation triples': len(self.valid),
-            'Test triples': len(self.test),
-        }
-
-    @property
     def _repr_title(self):
         return f'{self.__class__.__name__} dataset'
 
