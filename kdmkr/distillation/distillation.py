@@ -404,13 +404,14 @@ class Distillation:
         return torch.stack(batch).reshape(len(batch), batch_size, 3).to(device=device, dtype=int)
 
     def stack_entity(self, batch, device):
-        """Convert a list of sample to 3 dimensionnal tensor"""
-        return self._stack_sample(batch=batch, batch_size=self.sampling.batch_size_entity,
-                                  device=device)
+        """Convert a list of sample to 3 dimensionnal torch tensor."""
+        return self._stack_sample(
+            batch=batch, batch_size=self.sampling.batch_size_entity, device=device)
 
     def stack_relations(self, batch, device):
         """Convert a list of sample to 3 dimensionnal tensor"""
-        return self._stack_sample(batch=batch, batch_size=self.sampling.batch_size_relation, device=device)
+        return self._stack_sample(
+            batch=batch, batch_size=self.sampling.batch_size_relation, device=device)
 
     def distill(self, teacher, student, positive_sample):
         """Apply distillation between a teacher and a student from a batch of positive sample.
