@@ -44,7 +44,7 @@ class Fetch:
 
         >>> entities = {
         ...    0: 'bicycle',
-        ...    1: 'velo',
+        ...    1: 'bike',
         ...    2: 'car',
         ...    3: 'truck',
         ...    4: 'automobile',
@@ -57,9 +57,9 @@ class Fetch:
         ... }
 
         >>> train = [
-        ...     (0, 0, 2),
-        ...     (1, 0, 2),
-        ...     (2, 1, 3),
+        ...     (0, 0, 1),
+        ...     (1, 1, 2),
+        ...     (2, 0, 4),
         ... ]
 
         >>> test = [
@@ -84,9 +84,9 @@ class Fetch:
         >>> for _ in range(3):
         ...     positive_sample, weight, mode = next(dataset)
         ...     print(positive_sample, weight, mode)
-        tensor([[0, 0, 2]]) tensor([0.3333]) tail-batch
-        tensor([[0, 0, 2]]) tensor([0.3333]) head-batch
-        tensor([[1, 0, 2]]) tensor([0.3333]) tail-batch
+        tensor([[0, 0, 1]]) tensor([0.3536]) tail-batch
+        tensor([[0, 0, 1]]) tensor([0.3536]) head-batch
+        tensor([[1, 1, 2]]) tensor([0.3536]) tail-batch
 
     References:
         1. [Sun, Zhiqing, et al. "Rotate: Knowledge graph embedding by relational rotation in complex space." arXiv preprint arXiv:1902.10197 (2019).](https://arxiv.org/pdf/1902.10197.pdf)
