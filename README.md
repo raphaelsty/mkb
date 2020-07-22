@@ -213,11 +213,11 @@ from kdmkb import models
 >>> dataset = Wn18rr(batch_size=512, shuffle=True, seed=42)
 
 >>> negative_sampling = sampling.NegativeSampling(
-...    size = 2,
+...    size          = 1024,
 ...    train_triples = dataset.train,
-...    entities = dataset.entities,
-...    relations = dataset.relations,
-...    seed = 42,
+...    entities      = dataset.entities,
+...    relations     = dataset.relations,
+...    seed          = 42,
 ... )
 
 >>> model = models.RotatE(
