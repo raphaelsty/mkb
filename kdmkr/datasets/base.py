@@ -1,4 +1,5 @@
-# Reference: https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding
+import collections
+
 import numpy as np
 
 import torch
@@ -10,20 +11,37 @@ __all__ = ['TestDataset', 'TrainDataset']
 
 
 class TrainDataset(Dataset):
-    """Loader for training set."""
+    """Train dataset loader.
 
-    def __init__(self, triples, entities, relations, mode, seed=42):
+    Parameters:
+        triples (list): Training set.
+        entities (dict): Index of entities.
+        relations (dict): Index of relations.
+        mode (str): head-batch or tail-batch.
+        seed (int): Random state.
+
+    Attributes:
+        n_entity (int): Number of entities.
+        n_relation (int): Number of relations.
+        count (dict): Frequency of occurrences of (head, relation) and (relation, tail).
+        len (int): Number of training triplets.
+
+    References:
+        1. [Dettmers, Tim, et al. "Convolutional 2d knowledge graph embeddings." Thirty-Second AAAI Conference on Artificial Intelligence. 2018.](https://arxiv.org/pdf/1707.01476.pdf)
+        2. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
+
+    """
+
+    def __init__(self, triples, entities, relations, mode, seed=None):
         self.len = len(triples)
         self.triples = triples
-        self.triple_set = set(triples)
         self.entities = entities
         self.relations = relations
-        self.mode = mode
-        self.seed = seed
         self.n_entity = len(self.entities.keys())
         self.n_relation = len(self.relations.keys())
+        self.mode = mode
         self.count = self.count_frequency(triples)
-        self._rng = np.random.RandomState(self.seed)
+        self._rng = np.random.RandomState(seed)  # pylint: disable=no-member
 
     def __len__(self):
         return self.len
@@ -45,29 +63,38 @@ class TrainDataset(Dataset):
         return positive_sample, subsample_weight, mode
 
     @staticmethod
-    def count_frequency(triples, start=4):
-        '''
-        Get frequency of a partial triple like (head, relation) or (relation, tail)
-        The frequency will be used for subsampling like word2vec
-        '''
-        count = {}
+    def count_frequency(triples, start=3):
+        count = collections.defaultdict(lambda: start)
         for head, relation, tail in triples:
-            if (head, relation) not in count:
-                count[(head, relation)] = start
-            else:
-                count[(head, relation)] += 1
-
-            if (tail, -relation-1) not in count:
-                count[(tail, -relation-1)] = start
-            else:
-                count[(tail, -relation-1)] += 1
+            count[(head, relation)] += 1
+            count[(tail, -relation-1)] += 1
         return count
 
 
 class TestDataset(Dataset):
-    def __init__(self, triples, all_true_triples, entities, relations, mode):
+    """Test dataset loader.
+
+    Parameters:
+        triples (list): Testing set.
+        true_triples (list): Triples to filter when validating the model.
+        entities (dict): Index of entities.
+        relations (dict): Index of relations.
+        mode (str): head-batch or tail-batch.
+
+    Attributes:
+        n_entity (int): Number of entities.
+        n_relation (int): Number of relations.
+        len (int): Number of training triplets.
+
+    References:
+        1. [Dettmers, Tim, et al. "Convolutional 2d knowledge graph embeddings." Thirty-Second AAAI Conference on Artificial Intelligence. 2018.](https://arxiv.org/pdf/1707.01476.pdf)
+        2. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
+
+    """
+
+    def __init__(self, triples, true_triples, entities, relations, mode):
         self.len = len(triples)
-        self.triple_set = set(all_true_triples)
+        self.true_triples = set(true_triples)
         self.triples = triples
         self.n_entity = len(entities.keys())
         self.n_relation = len(relations.keys())
@@ -80,13 +107,15 @@ class TestDataset(Dataset):
         head, relation, tail = self.triples[idx]
 
         if self.mode == 'head-batch':
-            tmp = [(0, rand_head) if (rand_head, relation, tail) not in self.triple_set
+            tmp = [(0, rand_head) if (rand_head, relation, tail) not in self.true_triples
                    else (-1, head) for rand_head in range(self.n_entity)]
             tmp[head] = (0, head)
+
         elif self.mode == 'tail-batch':
-            tmp = [(0, rand_tail) if (head, relation, rand_tail) not in self.triple_set
+            tmp = [(0, rand_tail) if (head, relation, rand_tail) not in self.true_triples
                    else (-1, tail) for rand_tail in range(self.n_entity)]
             tmp[tail] = (0, tail)
+
         else:
             raise ValueError(
                 'negative batch mode %s not supported' % self.mode)

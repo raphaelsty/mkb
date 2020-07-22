@@ -19,7 +19,7 @@ class Wn18rr(Fetch):
         batch_size (int): Size of the batch.
         shuffle (bool): Whether to shuffle the dataset or not.
         num_workers (int): Number of workers dedicated to iterate on the dataset.
-        seed (int): Random seed.
+        seed (int): Random state.
 
     Attributes:
         train (list): Training set.

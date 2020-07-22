@@ -28,7 +28,7 @@ class Fetch:
         batch_size (int): Size of the batch.
         shuffle (bool): Whether to shuffle the dataset or not.
         num_workers (int): Number of workers dedicated to iterate on the dataset.
-        seed (int): Random seed.
+        seed (int): Random state.
 
     Attributes:
         n_entity (int): Number of entities.
@@ -36,6 +36,7 @@ class Fetch:
 
     References:
         1. [Dettmers, Tim, et al. "Convolutional 2d knowledge graph embeddings." Thirty-Second AAAI Conference on Artificial Intelligence. 2018.](https://arxiv.org/pdf/1707.01476.pdf)
+        2. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
 
     Example:
 
@@ -88,7 +89,8 @@ class Fetch:
         tensor([[1, 0, 2]]) tensor([0.3333]) tail-batch
 
     References:
-        1. [Sun, Zhiqing, et al. "Rotate: Knowledge graph embedding by relational rotation in complex space." arXiv preprint arXiv:1902.10197 (2019).](https://arxiv.org/pdf/1902.10197.pdf)
+        1. [Dettmers, Tim, et al. "Convolutional 2d knowledge graph embeddings." Thirty-Second AAAI Conference on Artificial Intelligence. 2018.](https://arxiv.org/pdf/1707.01476.pdf)
+        2. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
 
     """
 
