@@ -6,11 +6,12 @@
 <div align="center">
     <img src="docs/img/pytorch.png" alt="pytorch" width="35%" vspace="20">
 </div>
+</br>
 
 <p align="center">
-  <code>kdmkb</code> is a library dedicated to <b>knowledge graph embeddings.</b> The purpose of this library is to provide modular tools using Pytorch.</p>
-
-Kdmkb provides datasets, models and tools to evaluate performance of models. Kdmkb makes possible to distil the knowledge of a model (teacher) to another model (student).
+  <code>kdmkb</code> is a library dedicated to <b>knowledge graph embeddings.</b> The purpose of this library is to provide modular tools using Pytorch.
+Kdmkb provides datasets, models and tools to evaluate performance of models. Kdmkb makes possible to distil the knowledge of a model (teacher) to another model (student).</p>
+</br>
 
 ## Table of contents
 
@@ -19,7 +20,8 @@ Kdmkb provides datasets, models and tools to evaluate performance of models. Kdm
 - [🗂 Datasets](#-datasets)
 - [🤖 Models](#-models)
 - [🚃 Training](#-training)
-- [📊 Evaluation](#-Evaluation)
+- [📊 Evaluation](#-evaluation)
+- [🤩 Embeddings](#-embeddings)
 - [🧰 Development](#-development)
 - [🗒 License](#-license)
 
@@ -277,7 +279,7 @@ You can evaluate the performance of your models with the `evaluation` module.
 
 ```
 
-## Embeddings
+## 🤩 Embeddings
 
 ```python
 >>> model.embeddings['entities']
