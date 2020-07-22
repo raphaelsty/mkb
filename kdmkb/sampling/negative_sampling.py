@@ -12,8 +12,8 @@ class NegativeSampling:
 
     Example:
 
-            >>> from kdmkr import datasets
-            >>> from kdmkr import sampling
+            >>> from kdmkb import datasets
+            >>> from kdmkb import sampling
 
             >>> entities = {
             ...  'e_0': 0,

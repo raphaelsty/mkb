@@ -18,7 +18,7 @@ class DistMult(base.BaseModel):
 
     Example:
 
-        >>> from kdmkr import models
+        >>> from kdmkb import models
 
         >>> import torch
         >>> _ = torch.manual_seed(42)

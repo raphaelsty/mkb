@@ -24,7 +24,7 @@ class UniformSampling:
 
     Example:
 
-        >>> from kdmkr import distillation
+        >>> from kdmkb import distillation
 
         >>> teacher_entities = {'e_1': 0, 'e_2': 1, 'e_3': 2, 'e_4': 3, 'e_5': 4}
         >>> teacher_relations = {'r_1': 0, 'r_2': 1, 'r_3': 2, 'r_4': 3, 'r_5': 4}
@@ -167,7 +167,7 @@ class TopKSampling:
             self, teacher_entities, teacher_relations, student_entities, student_relations, teacher,
             batch_size_entity, batch_size_relation, n_random_entities, n_random_relations,
             seed=None):
-        import faiss
+        import faiss  # pylint: disable=import-error
 
         self.batch_size_entity_top_k = batch_size_entity
         self.batch_size_relation_top_k = batch_size_relation

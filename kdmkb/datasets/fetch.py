@@ -40,7 +40,7 @@ class Fetch:
 
     Example:
 
-        >>> from kdmkr import datasets
+        >>> from kdmkb import datasets
 
         >>> entities = {
         ...    0: 'bicycle',

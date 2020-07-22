@@ -18,11 +18,11 @@ class Evaluation:
     Example:
 
         :
-            >>> from kdmkr import datasets
-            >>> from kdmkr import evaluation
-            >>> from kdmkr import models
-            >>> from kdmkr import losses
-            >>> from kdmkr import sampling
+            >>> from kdmkb import datasets
+            >>> from kdmkb import evaluation
+            >>> from kdmkb import models
+            >>> from kdmkb import losses
+            >>> from kdmkb import sampling
 
             >>> import torch
 

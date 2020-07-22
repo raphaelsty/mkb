@@ -33,7 +33,7 @@ class Fb15k237(Fetch):
 
     Example:
 
-        >>> from kdmkr import datasets
+        >>> from kdmkb import datasets
 
         >>> fb15k237 = datasets.Fb15k237(batch_size=1, shuffle=True, seed=42)
 

@@ -1,22 +1,22 @@
 import setuptools
 
-from kdmkr.__version__ import __version__
+from kdmkb.__version__ import __version__
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="kdmkr",
+    name="kdmkb",
     version=f"{__version__}",
     author="Raphael Sourty",
     author_email="raphael.sourty@gmail.com",
-    description="kdmkr",
+    description="kdmkb",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/raphaelsty/kdmkr",
+    url="https://github.com/raphaelsty/kdmkb",
     packages=setuptools.find_packages(),
     package_data={
-        'kdmkr': [
+        'kdmkb': [
             'datasets/wn18rr/*.csv',
             'datasets/wn18rr/*.json',
             'datasets/fb15k237/*.csv',

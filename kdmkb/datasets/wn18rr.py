@@ -32,7 +32,7 @@ class Wn18rr(Fetch):
 
     Example:
 
-        >>> from kdmkr import datasets
+        >>> from kdmkb import datasets
 
         >>> wn18rr = datasets.Wn18rr(batch_size=1, shuffle=True, seed=42)
 

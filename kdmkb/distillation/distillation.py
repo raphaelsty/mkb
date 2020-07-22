@@ -38,7 +38,7 @@ class Distillation:
 
     Example:
 
-        >>> from kdmkr import distillation
+        >>> from kdmkb import distillation
 
         >>> entities_teacher = {
         ...    'e0': 0,
@@ -423,9 +423,9 @@ class Distillation:
 
         Example:
 
-            >>> from kdmkr import datasets
-            >>> from kdmkr import distillation
-            >>> from kdmkr import models
+            >>> from kdmkb import datasets
+            >>> from kdmkb import distillation
+            >>> from kdmkb import models
 
             >>> wn18rr = datasets.Wn18rr(batch_size=3, shuffle=True, seed=42)
 
