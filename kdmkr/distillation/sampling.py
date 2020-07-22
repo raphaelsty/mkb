@@ -8,13 +8,19 @@ __all__ = ['UniformSampling', 'TopKSampling']
 
 
 class UniformSampling:
-    """Uniform sampling dedicated to distillation.
+    """Supervised uniform sampling dedicated to distillation.
 
+    Creates 3 tensors for the student and the teacher for each single training sample. Those tensors
+    are made of indexes and allows to computes distribution probability on a subset of entities and
+    relations of the knowledge graph. Uniform sampling is supervised, it includes the ground truth
+    in the probability distribution.
 
-    Init tensor dedicated to distillation with uniform sampling for the student and
-    the teacher. The sampling method must returns 6 tensors dedicated to the distribution
-    of heads, relations and tails for both teacher and student. Each tensor must have the shape
-    (positive_sample_size, 3).
+    Parameters:
+        batch_size_entity (int): Number of entities to consider to compute distribution probability
+            when using distillation.
+        batch_size_relation (int): Number of relations to consider to compute distribution
+            probability when using distillation.
+        seed (int): Random state.
 
     Example:
 
@@ -78,9 +84,7 @@ class UniformSampling:
 
     @property
     def supervised(self):
-        """
-        Distillation method will include the ground truth if the property supervised is set to True.
-        """
+        """Include the ground truth."""
         return True
 
     def get(self, mapping_entities, mapping_relations, positive_sample_size, **kwargs):
@@ -133,15 +137,38 @@ class UniformSampling:
 
 
 class TopKSampling:
-    """Top k sampling.
+    """Unsupervised top k sampling dedicated to distillation.
 
+    Creates 3 tensors for the student and the teacher for each single training sample. Those tensors
+    are made of indexes and allows to computes distribution probability on a subset of entities and
+    relations of the knowledge graph. Top k sampling returns the most probable entities and
+    relations from the teacher point of view for incoming training samples.
+
+    Parameters:
+        batch_size_entity (int): Number of entities to consider to compute distribution probability
+            when using distillation.
+        batch_size_relation (int): Number of relations to consider to compute distribution
+            probability when using distillation.
+        teacher_entities (dict): Entities of the teacher with labels as keys and index as values.
+        student_entities (dict): Entities of the student with labels as keys and index as values.
+        teacher_relations (dict): Relations of the student with labels as keys and index as values.
+        student_relations (dict): Relations of the student with labels as keys and index as values.
+        n_random_entities (int): Number of random entities to add in the distribution probability.
+        n_random_relations (int): Number of random relations to add in the distribution probability.
+        seed (int): Random state.
+
+    .. tip::
+        Adding random entities and relations allows models to move away from entities/relationships
+        in the embeddings space that aren't related to each other.
 
     """
 
-    def __init__(self, teacher_entities, teacher_relations, student_entities,
-                 student_relations, teacher, batch_size_entity, batch_size_relation, n_random_entities,
-                 n_random_relations, seed=None):
+    def __init__(
+            self, teacher_entities, teacher_relations, student_entities, student_relations, teacher,
+            batch_size_entity, batch_size_relation, n_random_entities, n_random_relations,
+            seed=None):
         import faiss
+
         self.batch_size_entity_top_k = batch_size_entity
         self.batch_size_relation_top_k = batch_size_relation
         self.n_random_entities = n_random_entities
@@ -181,6 +208,7 @@ class TopKSampling:
 
     @property
     def supervised(self):
+        """Do not include the ground truth."""
         return False
 
     @property
@@ -263,12 +291,12 @@ class TopKSampling:
                 head_distribution_student, relation_distribution_student, tail_distribution_student)
 
     def randomize_distribution(
-        self, positive_sample, head_distribution_teacher,
-        relation_distribution_teacher, tail_distribution_teacher, head_distribution_student,
-        relation_distribution_student, tail_distribution_student
+        self, positive_sample, head_distribution_teacher, relation_distribution_teacher,
+        tail_distribution_teacher, head_distribution_student, relation_distribution_student,
+        tail_distribution_student
     ):
-        """Randomize distribution in ouput of top k. Append n_random_entity and n_random_relations
-        from teacher and sudent shared entities and relations to the entities selected in the top k.
+        """Randomize distribution in ouput of top k. Append n random entities and n random relations
+        to distillation distribution from teacher and sudent shared entities and relations.
         """
         if self.n_random_entities > 0:
 
