@@ -11,6 +11,7 @@ __all__ = ['TestDataset', 'TrainDataset']
 
 class TrainDataset(Dataset):
     """Loader for training set."""
+
     def __init__(self, triples, entities, relations, mode, seed=42):
         self.len = len(triples)
         self.triples = triples
@@ -22,7 +23,7 @@ class TrainDataset(Dataset):
         self.n_entity = len(self.entities.keys())
         self.n_relation = len(self.relations.keys())
         self.count = self.count_frequency(triples)
-        self._rng = np.random.RandomState(self.seed) # pylint: disable=no-member
+        self._rng = np.random.RandomState(self.seed)
 
     def __len__(self):
         return self.len
@@ -30,7 +31,8 @@ class TrainDataset(Dataset):
     def __getitem__(self, idx):
         positive_sample = self.triples[idx]
         head, relation, tail = positive_sample
-        subsampling_weight = self.count[(head, relation)] + self.count[(tail, -relation-1)]
+        subsampling_weight = self.count[(
+            head, relation)] + self.count[(tail, -relation-1)]
         subsampling_weight = torch.sqrt(1 / torch.Tensor([subsampling_weight]))
         positive_sample = torch.LongTensor(positive_sample)
         return positive_sample, subsampling_weight, self.mode
@@ -86,7 +88,8 @@ class TestDataset(Dataset):
                    else (-1, tail) for rand_tail in range(self.n_entity)]
             tmp[tail] = (0, tail)
         else:
-            raise ValueError('negative batch mode %s not supported' % self.mode)
+            raise ValueError(
+                'negative batch mode %s not supported' % self.mode)
 
         tmp = torch.LongTensor(tmp)
         filter_bias = tmp[:, 0].float()
@@ -103,6 +106,3 @@ class TestDataset(Dataset):
         filter_bias = torch.stack([_[2] for _ in data], dim=0)
         mode = data[0][3]
         return positive_sample, negative_sample, filter_bias, mode
-
-
-

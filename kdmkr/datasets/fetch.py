@@ -9,7 +9,6 @@ from .base import TestDataset
 __all__ = ['Fetch']
 
 
-
 class Fetch:
     """Fetch Dataset
 
@@ -58,8 +57,9 @@ class Fetch:
             tensor([[1, 0, 2]]) tensor([0.3333]) tail-batch
 
     """
+
     def __init__(self, train, entities, relations, valid=[], test=[],
-        batch_size=1, shuffle=False, num_workers=1, seed=None):
+                 batch_size=1, shuffle=False, num_workers=1, seed=None):
         self.train = train
         self.valid = valid
         self.test = test
@@ -115,19 +115,19 @@ class Fetch:
         """
         """
         dataset = TrainDataset(triples=self.train, entities=self.entities, relations=self.relations,
-            mode=mode, seed=self.seed)
+                               mode=mode, seed=self.seed)
 
         return data.DataLoader(dataset=dataset, batch_size=self.batch_size, shuffle=self.shuffle,
-            num_workers=self.num_workers, collate_fn=TrainDataset.collate_fn)
+                               num_workers=self.num_workers, collate_fn=TrainDataset.collate_fn)
 
     def test_stream(self, triples, batch_size):
         """
         """
         head_loader = self._get_test_loader(triples=triples, batch_size=batch_size,
-            mode='head-batch')
+                                            mode='head-batch')
 
         tail_loader = self._get_test_loader(triples=triples, batch_size=batch_size,
-            mode='tail-batch')
+                                            mode='tail-batch')
 
         return [head_loader, tail_loader]
 
@@ -135,8 +135,8 @@ class Fetch:
         """
         """
         test_dataset = TestDataset(triples=triples,
-            all_true_triples=self.train + self.test + self.valid, entities=self.entities,
-            relations=self.relations, mode=mode)
+                                   all_true_triples=self.train + self.test + self.valid, entities=self.entities,
+                                   relations=self.relations, mode=mode)
 
         return data.DataLoader(dataset=test_dataset, batch_size=batch_size,
-            num_workers=self.num_workers, collate_fn=TestDataset.collate_fn)
+                               num_workers=self.num_workers, collate_fn=TestDataset.collate_fn)

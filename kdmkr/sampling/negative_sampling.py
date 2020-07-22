@@ -77,6 +77,7 @@ class NegativeSampling:
                     [0, 0, 3, 0, 3]])
 
     """
+
     def __init__(self, size, train_triples, entities, relations, seed=42):
         """ Generate negative samples.
 
@@ -91,8 +92,9 @@ class NegativeSampling:
         self.n_entity = len(entities)
         self.n_relation = len(relations)
 
-        self.true_head, self.true_tail = self.get_true_head_and_tail(train_triples)
-        self._rng = np.random.RandomState(seed) # pylint: disable=no-member
+        self.true_head, self.true_tail = self.get_true_head_and_tail(
+            train_triples)
+        self._rng = np.random.RandomState(seed)  # pylint: disable=no-member
 
     def generate(self, positive_sample, mode):
         """Generate negative samples from a head, relation tail
@@ -114,7 +116,8 @@ class NegativeSampling:
 
             while size < self.size:
 
-                negative_sample = self._rng.randint(self.n_entity, size=self.size*2)
+                negative_sample = self._rng.randint(
+                    self.n_entity, size=self.size*2)
 
                 if mode == 'head-batch':
 
@@ -143,7 +146,8 @@ class NegativeSampling:
 
             negative_samples.append(negative_entity)
 
-        negative_samples = torch.cat(negative_samples).view(batch_size, self.size)
+        negative_samples = torch.cat(
+            negative_samples).view(batch_size, self.size)
 
         return negative_samples
 
@@ -154,16 +158,21 @@ class NegativeSampling:
         true_tail = {}
 
         for head, relation, tail in triples:
+
             if (head, relation) not in true_tail:
                 true_tail[(head, relation)] = []
             true_tail[(head, relation)].append(tail)
+
             if (relation, tail) not in true_head:
                 true_head[(relation, tail)] = []
             true_head[(relation, tail)].append(head)
 
-        for relation, tail in true_head: # pylint: disable=E1141
-            true_head[(relation, tail)] = np.array(list(set(true_head[(relation, tail)])))
-        for head, relation in true_tail: # pylint: disable=E1141
-            true_tail[(head, relation)] = np.array(list(set(true_tail[(head, relation)])))
+        for relation, tail in true_head:  # pylint: disable=E1141
+            true_head[(relation, tail)] = np.array(
+                list(set(true_head[(relation, tail)])))
+
+        for head, relation in true_tail:  # pylint: disable=E1141
+            true_tail[(head, relation)] = np.array(
+                list(set(true_tail[(head, relation)])))
 
         return true_head, true_tail

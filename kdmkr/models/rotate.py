@@ -6,6 +6,7 @@ from . import base
 
 __all__ = ['RotatE']
 
+
 class RotatE(base.BaseModel):
     """RotatE
 
@@ -19,16 +20,19 @@ class RotatE(base.BaseModel):
         RotatE({'entity_dim': 20, 'relation_dim': 10, 'gamma': 1.0})
 
     """
+
     def __init__(self, hidden_dim, n_entity, n_relation, gamma):
         super().__init__(hidden_dim=hidden_dim, relation_dim=hidden_dim, entity_dim=hidden_dim*2,
-            n_entity=n_entity, n_relation=n_relation, gamma=gamma)
+                         n_entity=n_entity, n_relation=n_relation, gamma=gamma)
         self.pi = 3.14159265358979323846
-        self.modulus = nn.Parameter(torch.Tensor([[0.5 * self.embedding_range.item()]]))
+        self.modulus = nn.Parameter(torch.Tensor(
+            [[0.5 * self.embedding_range.item()]]))
 
     def forward(self, sample, mode='default'):
-        head, relation, tail = self.head_relation_tail(sample=sample, mode=mode)
-        re_head, im_head = torch.chunk(head, 2, dim = 2)
-        re_tail, im_tail = torch.chunk(tail, 2, dim = 2)
+        head, relation, tail = self.head_relation_tail(
+            sample=sample, mode=mode)
+        re_head, im_head = torch.chunk(head, 2, dim=2)
+        re_tail, im_tail = torch.chunk(tail, 2, dim=2)
 
         phase_relation = relation/(self.embedding_range.item()/self.pi)
         re_relation = torch.cos(phase_relation)
@@ -46,15 +50,15 @@ class RotatE(base.BaseModel):
             re_score = re_score - re_tail
             im_score = im_score - im_tail
 
-        score = torch.stack([re_score, im_score], dim = 0)
-        score = score.norm(dim = 0)
-        return self.gamma.item() - score.sum(dim = 2)
+        score = torch.stack([re_score, im_score], dim=0)
+        score = score.norm(dim=0)
+        return self.gamma.item() - score.sum(dim=2)
 
     def distill(self, sample):
         head, relation, tail = self.distillation_batch(sample)
 
-        re_head, im_head = torch.chunk(head, 2, dim = -1)
-        re_tail, im_tail = torch.chunk(tail, 2, dim = -1)
+        re_head, im_head = torch.chunk(head, 2, dim=-1)
+        re_tail, im_tail = torch.chunk(tail, 2, dim=-1)
 
         phase_relation = relation/(self.embedding_range.item()/self.pi)
         re_relation = torch.cos(phase_relation)
@@ -65,7 +69,7 @@ class RotatE(base.BaseModel):
         re_score = re_score - re_head
         im_score = im_score - im_head
 
-        score = torch.stack([re_score, im_score], dim = 0)
-        score = score.norm(dim = 0)
+        score = torch.stack([re_score, im_score], dim=0)
+        score = score.norm(dim=0)
 
-        return self.gamma.item() - score.sum(dim = -1)
+        return self.gamma.item() - score.sum(dim=-1)

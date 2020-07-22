@@ -1,7 +1,7 @@
 # Reference: https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding
 import torch
 
-from creme       import stats
+from creme import stats
 from torch.utils import data
 
 from ..datasets import base
@@ -104,8 +104,9 @@ class Evaluation:
             {'MRR': 0.5833, 'MR': 2.0, 'HITS@1': 0.25, 'HITS@3': 1.0, 'HITS@10': 1.0}
 
     """
+
     def __init__(self, all_true_triples, entities, relations, batch_size, device='cpu',
-        num_workers=1):
+                 num_workers=1):
         self.all_true_triples = all_true_triples
         self.entities = entities
         self.relations = relations
@@ -115,11 +116,11 @@ class Evaluation:
 
     def _get_test_loader(self, triples, mode):
         test_dataset = base.TestDataset(triples=triples,
-            all_true_triples=self.all_true_triples, entities=self.entities,
-            relations=self.relations, mode=mode)
+                                        all_true_triples=self.all_true_triples, entities=self.entities,
+                                        relations=self.relations, mode=mode)
 
         return data.DataLoader(dataset=test_dataset, batch_size=self.batch_size,
-            num_workers=self.num_workers, collate_fn=base.TestDataset.collate_fn)
+                               num_workers=self.num_workers, collate_fn=base.TestDataset.collate_fn)
 
     def get_test_stream(self, dataset):
         head_loader = self._get_test_loader(triples=dataset, mode='head-batch')
@@ -144,11 +145,12 @@ class Evaluation:
 
                     filter_bias = filter_bias.to(self.device)
 
-                    score = model(sample=(positive_sample, negative_sample), mode=mode)
+                    score = model(
+                        sample=(positive_sample, negative_sample), mode=mode)
 
                     score += filter_bias
 
-                    argsort = torch.argsort(score, dim = 1, descending=True)
+                    argsort = torch.argsort(score, dim=1, descending=True)
 
                     if mode == 'head-batch':
                         positive_arg = positive_sample[:, 0]
@@ -159,18 +161,18 @@ class Evaluation:
                     batch_size = positive_sample.size(0)
 
                     for i in range(batch_size):
-                        #Notice that argsort is not ranking
+                        # Notice that argsort is not ranking
                         ranking = (argsort[i, :] == positive_arg[i]).nonzero()
                         assert ranking.size(0) == 1
 
-                        #ranking + 1 is the true ranking used in evaluation metrics
+                        # ranking + 1 is the true ranking used in evaluation metrics
                         ranking = 1 + ranking.item()
 
                         metrics['MRR'].update(1.0/ranking)
                         metrics['MR'].update(ranking)
                         metrics['HITS@1'].update(1.0 if ranking <= 1 else 0.0)
                         metrics['HITS@3'].update(1.0 if ranking <= 3 else 0.0)
-                        metrics['HITS@10'].update(1.0 if ranking <= 10 else 0.0)
+                        metrics['HITS@10'].update(1.0 if ranking <=
+                                                  10 else 0.0)
 
         return {name: round(metric.get(), 4) for name, metric in metrics.items()}
-
