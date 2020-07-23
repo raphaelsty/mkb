@@ -21,7 +21,7 @@ Kdmkb provides datasets, models and tools to evaluate performance of models. Kdm
 - [🤖 Models](#-models)
 - [🚃 Training](#-training)
 - [📊 Evaluation](#-evaluation)
-- [🤩 Embeddings](#-embeddings)
+- [🎁 Distillation](#-distillation)
 - [🧰 Development](#-development)
 - [🗒 License](#-license)
 
@@ -75,7 +75,7 @@ Fb15k237 dataset
 
 - **Custom dataset:**
 
-Vous pouvez construire des
+<b> You can build embeddings of your own knowledge base </b> using the `datasets.Fetch` module. It is necessary to provide the index of entities and relationships with an associated training set. Optionally, you can provide validation or test data to the dataset to validate your model later.
 
 ```python
 >>> from kdmkb import datasets
@@ -127,37 +127,17 @@ Fetch dataset
 
 
 ```
-
 ## 🤖 Models
 
-- **TransE**
+**Models available:**
 
-```python
->>> from kdmkb import models
+- `models.TransE`
+- `models.DistMult`
+- `models.RotatE`
+- `models.pRotatE`
+- `models.ComplEx`
 
->>> model = models.TransE(
-...    n_entity   = dataset.n_entity, 
-...    n_relation = dataset.n_relation, 
-...    gamma      = 3, 
-...    hidden_dim = 500
-... )
-
-```
-
-- **DistMult**
-
-```python
->>> from kdmkb import models
-
->>> model = models.DistMult(
-...    n_entity   = dataset.n_entity, 
-...    n_relation = dataset.n_relation, 
-...    gamma      = 3, 
-...    hidden_dim = 500
-... )
-```
-
-- **RotatE**
+- **Initialize a model:**
 
 ```python
 >>> from kdmkb import models
@@ -169,37 +149,46 @@ Fetch dataset
 ...    hidden_dim = 500
 ... )
 
+>>> model
+RotatE model
+    Entities embeddings  dim  1000 
+    Relations embeddings dim  500  
+    Gamma                     3.0  
+    Number of entities        40923 
+    Number of relations       11   
+
 ```
 
-- **ProtatE**
+- **Set learning rate:**
 
 ```python
->>> from kdmkb import models
+>>> import torch
 
->>> model = models.ProtatE(
-...    n_entity   = dataset.n_entity, 
-...    n_relation = dataset.n_relation, 
-...    gamma      = 3, 
-...    hidden_dim = 500
+>>> learning_rate = 0.00005
+
+>>> optimizer = torch.optim.Adam(
+...    filter(lambda p: p.requires_grad, model.parameters()),
+...    lr = learning_rate,
 ... )
 
 ```
 
-- **ComplEx**
+- 🤩 **Extract embeddings**
+
+You can extract embeddings from entities and relationships computed by the model with the `models.embeddings` property.
 
 ```python
->>> from kdmkb import models
+>>> model.embeddings['entities']
+{0: tensor([ 0.7645,  0.8300, -0.2343]), 1: tensor([ 0.9186, -0.2191,  0.2018])}
 
->>> model = models.ComplEx(
-...    n_entity   = dataset.n_entity, 
-...    n_relation = dataset.n_relation, 
-...    gamma      = 3, 
-...    hidden_dim = 500
-... )
+>>> model.embeddings['relations']
+{0: tensor([-0.4869,  0.5873,  0.8815]), 1: tensor([-0.7336,  0.8692,  0.1872])}
 
 ```
 
 ## 🚃 Training
+
+To train a model from `kdmkb` to the link prediction task you can copy and paste the code below. You will simply have to initialize your dataset, select your model and the associated hyper parameters.
 
 ```python
 >>> from kdmkb import datasets
@@ -211,7 +200,7 @@ Fetch dataset
 
 >>> _ = torch.manual_seed(42)
 
->>> device = 'cpu' # 'cpu' if you do not own a gpu.
+>>> device = 'cuda' # 'cpu' if you do not own a gpu.
 
 >>> dataset = datasets.Wn18rr(batch_size=512, shuffle=True, seed=42)
 
@@ -282,22 +271,21 @@ You can evaluate the performance of your models with the `evaluation` module.
 
 ```
 
-## 🤩 Embeddings
+## 🎁 Distillation
+
+You can distil the knowledge of a pre-trained model. Distillation allows a model to reproduce the results of a pre-trained model. In some configurations, the student can overtake the master. The teacher and student must have a `distill` class method as defined in `kdmkb`.
 
 ```python
->>> model.embeddings['entities']
-{0: tensor([ 0.7645,  0.8300, -0.2343]), 1: tensor([ 0.9186, -0.2191,  0.2018])}
 
->>> model.embeddings['relations']
-{0: tensor([-0.4869,  0.5873,  0.8815]), 1: tensor([-0.7336,  0.8692,  0.1872])}
-        
+
 ```
+
 
 ## 🧰 Development
 
 ```sh
 # Download and navigate to the source code
-$ git clone hhttps://github.com/raphaelsty/kdmkb
+$ git clone https://github.com/raphaelsty/kdmkb
 $ cd kmkb
 
 # Create a virtual environment
@@ -305,8 +293,8 @@ $ python3 -m venv env
 $ source env/bin/activate
 
 # Install in development mode
-$ pip install -e ".[dev]"
-$ python setup.py develop
+$ pip install -r requirements.txt
+$ python setup.py install 
 
 # Run tests
 $ python -m pytest
