@@ -248,7 +248,7 @@ The `sampling.NegativeSampling` module allows you to generate negative samples f
 
 ## 📊 Evaluation
 
-You can evaluate the performance of your models with the `evaluation` module. 
+You can evaluate the performance of your models with the `evaluation` module. By giving the training, validation and test triples to the `true_triples`parameter, you will calculate the `filtered` metrics. You can calculate the `raw` metrics by setting `true_triples = []`.
 
 ```python
 >>> from kdmkb import evaluation
@@ -294,12 +294,7 @@ You can distil the knowledge of a pre-trained model. Distillation allows a model
 ...     seed       = 42
 ... )
 
->>> teacher = models.RotatE(
-...    n_entity   = dataset.n_entity, 
-...    n_relation = dataset.n_relation, 
-...    gamma      = 3, 
-...    hidden_dim = 500
-... )
+>>> teacher = ... # Load pre-trained model
 
 >>> teacher = teacher.to(device) 
 
@@ -326,13 +321,13 @@ You can distil the knowledge of a pre-trained model. Distillation allows a model
 ...     teacher_relations = dataset.relations,
 ...     student_relations = dataset.relations,
 ...     sampling          = distillation.UniformSampling( # Top K Soon
-...         batch_size_entity   = 3,
-...         batch_size_relation = 3,
+...         batch_size_entity   = 20,
+...         batch_size_relation = 11,
 ...         seed                = 42,
 ...     ),
 ... )
 
->>> for _ in range(3):
+>>> for _ in range(20000):
 ...     positive_sample, weight, mode = next(dataset)
 ...     loss = distillation.distill(
 ...         teacher = teacher,
