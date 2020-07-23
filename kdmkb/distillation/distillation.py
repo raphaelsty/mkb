@@ -464,15 +464,9 @@ class Distillation:
             ... )
 
             >>> loss_distillation
-            {'head': tensor(0.2896, grad_fn=<MeanBackward0>), 'relation': tensor(0.0981, grad_fn=<MeanBackward0>), 'tail': tensor(0.4686, grad_fn=<MeanBackward0>)}
+            tensor(0.8563, grad_fn=<AddBackward0>)
 
-            >>> loss_student = (
-            ...    loss_distillation['head'] +
-            ...    loss_distillation['relation'] +
-            ...    loss_distillation['tail']
-            ... )
-
-            >>> loss_student.backward()
+            >>> loss_distillation.backward()
 
             # Tok K sampling:
             >>> teacher = models.TransE(
@@ -517,15 +511,9 @@ class Distillation:
             ... )
 
             >>> loss_distillation
-            {'head': tensor(0.2777, grad_fn=<MeanBackward0>), 'relation': tensor(0.1471, grad_fn=<MeanBackward0>), 'tail': tensor(0.1874, grad_fn=<MeanBackward0>)}
+            tensor(0.6122, grad_fn=<AddBackward0>)
 
-            >>> loss_student = (
-            ...    loss_distillation['head'] +
-            ...    loss_distillation['relation'] +
-            ...    loss_distillation['tail']
-            ... )
-
-            >>> loss_student.backward()
+            >>> loss_distillation.backward()
 
         """
         batch_head_teacher = []
@@ -536,8 +524,6 @@ class Distillation:
 
         batch_tail_teacher = []
         batch_tail_student = []
-
-        loss_distillation = {'head': None, 'relation': None, 'tail': None}
 
         (head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
             head_distribution_student, relation_distribution_student, tail_distribution_student
@@ -595,9 +581,12 @@ class Distillation:
                 batch_tail_teacher.append(tensor_tail_teacher)
                 batch_tail_student.append(tensor_tail_student)
 
+        loss_student = 0
+
         # Compute loss dedicated to relations if any relations or tails from the input sample are
         # shared in student and teacher kgs.
         if batch_head_teacher:
+
             teacher_head_tensor = self.stack_entity(
                 batch_head_teacher, device=self.device)
             student_head_tensor = self.stack_entity(
@@ -607,7 +596,7 @@ class Distillation:
                 scores_head_teacher = teacher.distill(teacher_head_tensor)
 
             # Distillation loss of heads
-            loss_distillation['head'] = losses.KlDivergence()(
+            loss_student += losses.KlDivergence()(
                 teacher_score=scores_head_teacher,
                 student_score=student.distill(student_head_tensor)
             )
@@ -625,7 +614,7 @@ class Distillation:
                     teacher_relation_tensor)
 
             # Distillation loss of relations.
-            loss_distillation['relation'] = losses.KlDivergence()(
+            loss_student += losses.KlDivergence()(
                 teacher_score=scores_relation_teacher,
                 student_score=student.distill(student_relation_tensor)
             )
@@ -642,9 +631,9 @@ class Distillation:
                 scores_tail_teacher = teacher.distill(teacher_tail_tensor)
 
             # Distillation loss of tails.
-            loss_distillation['tail'] = losses.KlDivergence()(
+            loss_student += losses.KlDivergence()(
                 teacher_score=scores_tail_teacher,
                 student_score=student.distill(student_tail_tensor)
             )
 
-        return loss_distillation
+        return loss_student

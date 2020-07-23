@@ -190,6 +190,8 @@ You can extract embeddings from entities and relationships computed by the model
 
 To train a model from `kdmkb` to the link prediction task you can copy and paste the code below. You will simply have to initialize your dataset, select your model and the associated hyper parameters.
 
+The `sampling.NegativeSampling` module allows you to generate negative samples from existing triplets. You can also use your own `sampling` function.
+
 ```python
 >>> from kdmkb import datasets
 >>> from kdmkb import losses 
@@ -276,7 +278,69 @@ You can evaluate the performance of your models with the `evaluation` module.
 You can distil the knowledge of a pre-trained model. Distillation allows a model to reproduce the results of a pre-trained model. In some configurations, the student can overtake the master. The teacher and student must have a `distill` class method as defined in `kdmkb`.
 
 ```python
+>>> from kdmkb import datasets
+>>> from kdmkb import distillation
+>>> from kdmkb import models
 
+>>> import torch
+
+>>> _ = torch.manual_seed(42)
+
+>>> device = 'cpu'
+
+>>> dataset = datasets.Wn18rr(
+...     batch_size = 3, 
+...     shuffle    = True, 
+...     seed       = 42
+... )
+
+>>> teacher = models.RotatE(
+...    n_entity   = dataset.n_entity, 
+...    n_relation = dataset.n_relation, 
+...    gamma      = 3, 
+...    hidden_dim = 500
+... )
+
+>>> teacher = teacher.to(device) 
+
+>>> student = models.RotatE(
+...    n_entity   = dataset.n_entity, 
+...    n_relation = dataset.n_relation, 
+...    gamma      = 3, 
+...    hidden_dim = 500
+... )
+
+>>> student = student.to(device)
+
+>>> optimizer = torch.optim.Adam(
+...    filter(lambda p: p.requires_grad, student.parameters()),
+...    lr = 0.00005,
+... )
+
+
+# Initialize distillation process:
+
+>>> distillation = distillation.Distillation(
+...     teacher_entities  = dataset.entities,
+...     student_entities  = dataset.entities,
+...     teacher_relations = dataset.relations,
+...     student_relations = dataset.relations,
+...     sampling          = distillation.UniformSampling( # Top K Soon
+...         batch_size_entity   = 3,
+...         batch_size_relation = 3,
+...         seed                = 42,
+...     ),
+... )
+
+>>> for _ in range(3):
+...     positive_sample, weight, mode = next(dataset)
+...     loss = distillation.distill(
+...         teacher = teacher,
+...         student = student,
+...         positive_sample = positive_sample,
+...     )
+...     loss.backward()
+...     _ = optimizer.step()
 
 ```
 
@@ -292,7 +356,7 @@ $ cd kmkb
 $ python3 -m venv env
 $ source env/bin/activate
 
-# Install in development mode
+# Install 
 $ pip install -r requirements.txt
 $ python setup.py install 
 
