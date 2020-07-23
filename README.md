@@ -40,7 +40,7 @@ $ pip install git+https://github.com/raphaelsty/kdmkb
 ```python
 >>> from kdmkb import datasets
 
->>> dataset = Wn18rr(batch_size=512, shuffle=True)
+>>> dataset = datasets.Wn18rr(batch_size=512, shuffle=True)
 
 >>> dataset
 Wn18rr dataset
@@ -59,7 +59,7 @@ Wn18rr dataset
 ```python
 >>> from kdmkb import datasets
 
->>> dataset = Fb15k237(batch_size=512, shuffle=True)
+>>> dataset = datasets.Fb15k237(batch_size=512, shuffle=True)
 
 >>> dataset
 Fb15k237 dataset
@@ -73,7 +73,9 @@ Fb15k237 dataset
 
 ```
 
-- **Using custom dataset:**
+- **Custom dataset:**
+
+Vous pouvez construire des
 
 ```python
 >>> from kdmkb import datasets
@@ -136,8 +138,8 @@ Fetch dataset
 >>> model = models.TransE(
 ...    n_entity   = dataset.n_entity, 
 ...    n_relation = dataset.n_relation, 
-...    gamma.     = 3, 
-...    hiddem_dim = 500
+...    gamma      = 3, 
+...    hidden_dim = 500
 ... )
 
 ```
@@ -150,8 +152,8 @@ Fetch dataset
 >>> model = models.DistMult(
 ...    n_entity   = dataset.n_entity, 
 ...    n_relation = dataset.n_relation, 
-...    gamma.     = 3, 
-...    hiddem_dim = 500
+...    gamma      = 3, 
+...    hidden_dim = 500
 ... )
 ```
 
@@ -163,8 +165,8 @@ Fetch dataset
 >>> model = models.RotatE(
 ...    n_entity   = dataset.n_entity, 
 ...    n_relation = dataset.n_relation, 
-...    gamma.     = 3, 
-...    hiddem_dim = 500
+...    gamma      = 3, 
+...    hidden_dim = 500
 ... )
 
 ```
@@ -177,8 +179,8 @@ Fetch dataset
 >>> model = models.ProtatE(
 ...    n_entity   = dataset.n_entity, 
 ...    n_relation = dataset.n_relation, 
-...    gamma.     = 3, 
-...    hiddem_dim = 500
+...    gamma      = 3, 
+...    hidden_dim = 500
 ... )
 
 ```
@@ -186,13 +188,13 @@ Fetch dataset
 - **ComplEx**
 
 ```python
-from kdmkb import models
+>>> from kdmkb import models
 
 >>> model = models.ComplEx(
 ...    n_entity   = dataset.n_entity, 
 ...    n_relation = dataset.n_relation, 
-...    gamma.     = 3, 
-...    hiddem_dim = 500
+...    gamma      = 3, 
+...    hidden_dim = 500
 ... )
 
 ```
@@ -209,9 +211,9 @@ from kdmkb import models
 
 >>> _ = torch.manual_seed(42)
 
->>> device = 'cuda' # 'cpu' if you do not own a gpu.
+>>> device = 'cpu' # 'cpu' if you do not own a gpu.
 
->>> dataset = Wn18rr(batch_size=512, shuffle=True, seed=42)
+>>> dataset = datasets.Wn18rr(batch_size=512, shuffle=True, seed=42)
 
 >>> negative_sampling = sampling.NegativeSampling(
 ...    size          = 1024,
@@ -224,14 +226,14 @@ from kdmkb import models
 >>> model = models.RotatE(
 ...    n_entity   = dataset.n_entity, 
 ...    n_relation = dataset.n_relation, 
-...    gamma.     = 3, 
-...    hiddem_dim = 500
+...    gamma      = 3, 
+...    hidden_dim = 500
 ... )
 
 >>> model = model.to(device)
 
 >>> optimizer = torch.optim.Adam(
-...    filter(lambda p: p.requires_grad, rotate.parameters()),
+...    filter(lambda p: p.requires_grad, model.parameters()),
 ...    lr = 0.00005,
 ... )
 
@@ -239,12 +241,12 @@ from kdmkb import models
 
 >>> for _ in range(80000):
 ...     positive_sample, weight, mode=next(dataset)
-...     positive_score = rotate(positive_sample)
+...     positive_score = model(positive_sample)
 ...     negative_sample = negative_sampling.generate(
 ...         positive_sample = positive_sample,
 ...         mode            = mode
 ...     )
-...     negative_score = rotate(
+...     negative_score = model(
 ...         (positive_sample, negative_sample), 
 ...         mode=mode
 ...     )
