@@ -35,7 +35,20 @@ $ pip install git+https://github.com/raphaelsty/kdmkb
 
 ## 🗂 Datasets
 
-- **WN18RR**
+**Datasets available:**
+
+- `datasets.Wn18rr`
+- `datasets.Fb15k237`
+- `datasets.Yago310`
+- `datasets.CountriesS1`
+- `datasets.CountriesS2`
+- `datasets.CountriesS3`
+- `datasets.Nations`
+- `datasets.Umls`
+
+The datasets available in `kdmkb` all have textual mentions based on the work of [villmow](https://github.com/villmow/datasets_knowledge_embedding). 
+
+**Load dataset:**
 
 ```python
 >>> from kdmkb import datasets
@@ -54,26 +67,7 @@ Wn18rr dataset
 
 ```
 
-- **FB15K237**
-
-```python
->>> from kdmkb import datasets
-
->>> dataset = datasets.Fb15k237(batch_size=512, shuffle=True)
-
->>> dataset
-Fb15k237 dataset
-    Batch size          512
-    Entities            14541
-    Relations           237
-    Shuffle             True
-    Train triples       272115
-    Validation triples  17535
-    Test triples        20466
-
-```
-
-- **Custom dataset:**
+**Load custom dataset:**
 
 <b> You can build embeddings of your own knowledge base </b> using the `datasets.Fetch` module. It is necessary to provide the index of entities and relationships with an associated training set. Optionally, you can provide validation or test data to the dataset to validate your model later.
 
@@ -137,7 +131,7 @@ Fetch dataset
 - `models.pRotatE`
 - `models.ComplEx`
 
-- **Initialize a model:**
+**Initialize a model:**
 
 ```python
 >>> from kdmkb import models
@@ -159,7 +153,7 @@ RotatE model
 
 ```
 
-- **Set learning rate:**
+**Set learning rate:**
 
 ```python
 >>> import torch
@@ -173,7 +167,7 @@ RotatE model
 
 ```
 
-- 🤩 **Extract embeddings**
+🤩 **Extract embeddings**
 
 You can extract embeddings from entities and relationships computed by the model with the `models.embeddings` property.
 
