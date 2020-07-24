@@ -20,7 +20,9 @@ setuptools.setup(
             'datasets/wn18rr/*.csv',
             'datasets/wn18rr/*.json',
             'datasets/fb15k237/*.csv',
-            'datasets/fb15k237/*.json'
+            'datasets/fb15k237/*.json',
+            'datasets/yago310/*.csv',
+            'datasets/yago310/*.json'
         ]
     },
     classifiers=[
