@@ -7,13 +7,13 @@ from ..utils import read_csv
 from ..utils import read_json
 
 
-__all__ = ['Fb15k237']
+__all__ = ['Nations']
 
 
-class Fb15k237(Fetch):
-    """Fb15k237 dataset.
+class Nations(Fetch):
+    """Nations dataset.
 
-    Fb15k237 aim to iterate over the associated dataset. It provide positive samples, corresponding
+    Nations aim to iterate over the associated dataset. It provide positive samples, corresponding
     weights and the mode (head batch / tail batch)
 
     Parameters:
@@ -35,34 +35,35 @@ class Fb15k237(Fetch):
 
         >>> from kdmkb import datasets
 
-        >>> fb15k237 = datasets.Fb15k237(batch_size=1, shuffle=True, seed=42)
+        >>> nations = datasets.Nations(batch_size=1, shuffle=True, seed=42)
 
-        >>> fb15k237
-        Fb15k237 dataset
-            Batch size  1
-            Entities  14541
-            Relations  237
-            Shuffle  True
-            Train triples  272115
-            Validation triples  17535
-            Test triples  20466
+        >>> nations
+        Nations dataset
+            Batch size           1
+            Entities            14
+            Relations           56
+            Shuffle           True
+            Train triples     1619
+            Validation triples 202
+            Test triples       203
+
 
         >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(fb15k237)
+        ...     positive_sample, weight, mode = next(nations)
         ...     print(positive_sample, weight, mode)
-        tensor([[5222,   24, 1165]]) tensor([0.2887]) tail-batch
-        tensor([[8615,   12, 2350]]) tensor([0.3333]) head-batch
-        tensor([[  16,   15, 4726]]) tensor([0.0343]) tail-batch
+        tensor([[ 6,  5, 13]]) tensor([0.2085]) tail-batch
+        tensor([[6, 0, 5]]) tensor([0.2182]) head-batch
+        tensor([[10,  8,  7]]) tensor([0.2085]) tail-batch
+
 
     References:
-        1. [Toutanova, Kristina, et al. "Representing text for joint embedding of text and knowledge bases." Proceedings of the 2015 conference on empirical methods in natural language processing. 2015.](https://www.aclweb.org/anthology/D15-1174.pdf)
-        2. [Datasets for Knowledge Graph Completion with Textual Information about Entities](https://github.com/villmow/datasets_knowledge_embedding)
+        1. [Datasets for Knowledge Graph Completion with Textual Information about Entities](https://github.com/villmow/datasets_knowledge_embedding)
 
     """
 
     def __init__(self, batch_size, shuffle=False, num_workers=1, seed=None):
 
-        self.filename = 'fb15k237'
+        self.filename = 'nations'
 
         path = pathlib.Path(__file__).parent.joinpath(self.filename)
 
