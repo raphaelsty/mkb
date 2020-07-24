@@ -81,17 +81,17 @@ Fb15k237 dataset
 >>> from kdmkb import datasets
 
 >>> entities = {
-...    0: 'bicycle',
-...    1: 'bike',
-...    2: 'car',
-...    3: 'truck',
-...    4: 'automobile',
-...    5: 'brand',
+...    'bicycle'   : 0,
+...    'bike'      : 1,
+...    'car'       : 2,
+...    'truck'     : 3,
+...    'automobile': 4,
+...    'brand'     : 5,
 ... }
 
 >>> relations = {
-...     0: 'is_a',
-...     1: 'not_a',
+...     'is_a' : 0,
+...     'not_a': 1,
 ... }
 
 >>> train = [
@@ -197,12 +197,15 @@ The `sampling.NegativeSampling` module allows you to generate negative samples f
 >>> from kdmkb import losses 
 >>> from kdmkb import models
 >>> from kdmkb import sampling
+>>> from kdmkb import utils
+
+>>> from creme import stats
 
 >>> import torch
 
 >>> _ = torch.manual_seed(42)
 
->>> device = 'cuda' # 'cpu' if you do not own a gpu.
+>>> device = 'cpu' # 'cuda' if you own a gpu.
 
 >>> dataset = datasets.Wn18rr(batch_size=512, shuffle=True, seed=42)
 
@@ -230,7 +233,9 @@ The `sampling.NegativeSampling` module allows you to generate negative samples f
 
 >>> loss = losses.Adversarial()
 
->>> for _ in range(80000):
+>>> bar = utils.Bar(step = 80000, update_every = 30)
+
+>>> for _ in bar():
 ...     positive_sample, weight, mode=next(dataset)
 ...     positive_score = model(positive_sample)
 ...     negative_sample = negative_sampling.generate(
@@ -241,8 +246,10 @@ The `sampling.NegativeSampling` module allows you to generate negative samples f
 ...         (positive_sample, negative_sample), 
 ...         mode=mode
 ...     )
-...     loss(positive_score, negative_score, weight, alpha=0.5).backward()
+...     error = loss(positive_score, negative_score, weight, alpha=0.5)
+...     error.backward()
 ...     _ = optimizer.step()
+...     bar.set_description(f'loss: {error.item():4f}')
 
 ```
 
@@ -280,7 +287,7 @@ You can distil the knowledge of a pre-trained model. Distillation allows a model
 ```python
 >>> from kdmkb import datasets
 >>> from kdmkb import distillation
->>> from kdmkb import models
+>>> from kdmkb import models 
 
 >>> import torch
 
@@ -312,9 +319,7 @@ You can distil the knowledge of a pre-trained model. Distillation allows a model
 ...    lr = 0.00005,
 ... )
 
-
 # Initialize distillation process:
-
 >>> distillation = distillation.Distillation(
 ...     teacher_entities  = dataset.entities,
 ...     student_entities  = dataset.entities,

@@ -43,17 +43,17 @@ class Fetch:
         >>> from kdmkb import datasets
 
         >>> entities = {
-        ...    0: 'bicycle',
-        ...    1: 'bike',
-        ...    2: 'car',
-        ...    3: 'truck',
-        ...    4: 'automobile',
-        ...    5: 'brand',
+        ...    'bicycle'   : 0,
+        ...    'bike'      : 1,
+        ...    'car'       : 2,
+        ...    'truck'     : 3,
+        ...    'automobile': 4,
+        ...    'brand'     : 5,
         ... }
 
         >>> relations = {
-        ...     0: 'is_a',
-        ...     1: 'not_a',
+        ...     'is_a' : 0,
+        ...     'not_a': 1,
         ... }
 
         >>> train = [
