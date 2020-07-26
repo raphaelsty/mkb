@@ -77,7 +77,6 @@ class TransH(base.BaseModel):
         ).unsqueeze(1)
 
         norm = F.normalize(norm, p=2, dim=-1)
-
         head = head - torch.sum(head * norm, dim=-1, keepdim=True) * norm
         tail = tail - torch.sum(tail * norm, dim=-1, keepdim=True) * norm
 
@@ -94,7 +93,13 @@ class TransH(base.BaseModel):
 
         head, relation, tail = self.distillation_batch(sample)
 
-        norm = torch.norm(relation, p=2, dim=-1)
+        norm = torch.index_select(
+            self.relation_embedding,
+            dim=0,
+            index=sample[:, 1]
+        ).unsqueeze(1)
+
+        norm = F.normalize(norm, p=2, dim=-1)
         head = head - torch.sum(head * norm, dim=-1, keepdim=True) * norm
         tail = tail - torch.sum(tail * norm, dim=-1, keepdim=True) * norm
 
