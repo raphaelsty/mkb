@@ -95,7 +95,7 @@ class Fetch:
     """
 
     def __init__(
-            self, train, entities, relations, batch_size, valid=[], test=[], shuffle=False,
+            self, train, entities, relations, batch_size, valid=None, test=None, shuffle=False,
             num_workers=1, seed=None):
         self.train = train
         self.valid = valid
@@ -140,9 +140,9 @@ class Fetch:
             'Entities': f'{self.n_entity}',
             'Relations': f'{self.n_relation}',
             'Shuffle': f'{self.shuffle}',
-            'Train triples': f'{len(self.train)}',
-            'Validation triples': f'{len(self.valid)}',
-            'Test triples': f'{len(self.test)}'
+            'Train triples': f'{len(self.train) if self.train else 0}',
+            'Validation triples': f'{len(self.valid) if self.valid else 0}',
+            'Test triples': f'{len(self.test) if self.test else 0}'
         }
 
     def __repr__(self):
