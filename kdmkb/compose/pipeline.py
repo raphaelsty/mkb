@@ -147,13 +147,16 @@ class Pipeline:
 
             positive_sample, weight, mode = next(dataset)
 
-            positive_score = model(positive_sample)
-
             negative_sample = sampling.generate(
                 positive_sample=positive_sample,
                 mode=mode
             )
 
+            positive_sample = positive_sample.to(self.device)
+            negative_sample = negative_sample.to(self.device)
+            weight = weight.to(self.device)
+
+            positive_score = model(positive_sample)
             negative_score = model(
                 (positive_sample, negative_sample),
                 mode=mode
