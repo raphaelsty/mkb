@@ -231,19 +231,19 @@ import torch
 
 _ = torch.manual_seed(42)
 
-device = 'cuda' # cuda if you own a gpu.
+device = 'cuda' # cpu if you do not own a gpu.
 
-dataset  = datasets.Wn18rr(batch_size = 1024, shuffle = True, seed = 42)
+dataset  = datasets.Wn18rr(batch_size = 512, shuffle = True, seed = 42)
 
 sampling = sampling.NegativeSampling(
-       size          = 512,
+       size          = 1024,
        train_triples = dataset.train,
        entities      = dataset.entities,
        relations     = dataset.relations,
        seed          = 42,
 )
 
-model = models.TransE(
+model = models.RotatE(
    n_entity   = dataset.n_entity,
    n_relation = dataset.n_relation,
    gamma      = 6,
@@ -282,7 +282,7 @@ pipeline = pipeline.learn(
     evaluation = evaluation,
     sampling   = sampling,
     optimizer  = optimizer,
-    loss       = losses.Adversarial(alpha=0.5),
+    loss       = losses.Adversarial(alpha = 0.5),
 )
 
 utils.export_embeddings('./', dataset, model)
