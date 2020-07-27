@@ -1,10 +1,10 @@
 import json
 import os
 
-__all__ = ['export_embebbedings']
+__all__ = ['export_embbedings']
 
 
-def export_embebbedings(folder, dataset, model):
+def export_embbedings(folder, dataset, model):
     """Export embeddings as json file.
 
     Parameters:
