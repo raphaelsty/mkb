@@ -20,6 +20,8 @@ Kdmkb provides datasets, models and tools to evaluate performance of models. Kdm
 - [🗂 Datasets](#-datasets)
 - [🤖 Models](#-models)
 - [🚃 Training](#-training)
+    - [✈️ Pipeline](#-pipeline)
+    - [🔧 Lower level](#-lower-level)   
 - [📊 Evaluation](#-evaluation)
 - [🎁 Distillation](#-distillation)
 - [🧰 Development](#-development)
@@ -200,9 +202,108 @@ model.embeddings['relations']
 
 ## 🚃 Training
 
-To train a model from `kdmkb` to the link prediction task you can copy and paste the code below. You will simply have to initialize your dataset, select your model and the associated hyper parameters.
+To train a model from `kdmkb` to the link prediction task you can copy and paste the code below. There are two alternatives for training a model. The first is to use a pipeline that takes care of the training loop for you. The second is to use `kdmkb` at a lower level.
 
-The `sampling.NegativeSampling` module allows you to generate negative samples from existing triplets. You can also use your own `sampling` function.
+### ✈️ Pipeline:
+
+Your can train our model using `compose.Pipeline`. It's a convenient class to make knowledge graph embeddings easily.You will simply have to select:
+
+- A **dataset** or any available dataset in kbmkb. It is strongly recommended that the dataset has a validation or test set.
+
+- A **model** and the associated hyper parameters.
+
+- An **optimizer** from pytorch.
+
+- A **sampling** method available in kdmkb such as `sampling.NegativeSampling`. This module allows you to generate negative samples from existing triplets. You can also use your own `sampling` function.
+
+- An **evaluation** process.
+
+```python
+from kdmkb import datasets
+from kdmkb import evaluation
+from kdmkb import losses
+from kdmkb import models
+from kdmkb import sampling
+from kdmkb import compose
+
+import torch
+
+_ = torch.manual_seed(42)
+
+device = 'cpu' # cuda if you own a gpu.
+
+dataset  = datasets.Wn18rr(batch_size = 512, shuffle = True, seed = 42)
+
+sampling = sampling.NegativeSampling(
+       size          = 1024,
+       train_triples = dataset.train,
+       entities      = dataset.entities,
+       relations     = dataset.relations,
+       seed          = 42,
+)
+
+model = models.RotatE(
+   n_entity   = dataset.n_entity,
+   n_relation = dataset.n_relation,
+   gamma      = 6,
+   hidden_dim = 500,
+)
+
+model = model.to(device)
+
+optimizer = torch.optim.Adam(
+    filter(lambda p: p.requires_grad, model.parameters()),
+    lr = 0.00005,
+)
+
+evaluation = evaluation.Evaluation(
+   true_triples = (
+      dataset.train +
+       dataset.valid + # Drop it if you do not have a valid set.
+       dataset.test    # Drop it if you do not have a test set.
+   ),
+   entities   = dataset.entities,
+   relations  = dataset.relations,
+   batch_size = 8,
+   device     = device,
+)
+
+pipeline = compose.Pipeline(
+    max_step   = 80000, 
+    eval_every = 2000,  
+    early_stopping_rounds = 3,
+    device = device,
+)
+
+pipeline = pipeline.learn(
+    model      = model,
+    dataset    = dataset,
+    evaluation = evaluation,
+    sampling   = sampling,
+    optimizer  = optimizer,
+    loss       = losses.Adversarial(alpha=0.5),
+)
+
+```
+
+Output:
+
+```python
+Step: 2000. 
+Validation scores - {'MRR':..., 'MR':..., 'HITS@1':..., 'HITS@3':..., 'HITS@10':...}
+Test scores - {'MRR':..., 'MR':..., 'HITS@1':..., 'HITS@3':..., 'HITS@10':...}
+
+Step: 4000. 
+Validation scores - {'MRR':..., 'MR':..., 'HITS@1':..., 'HITS@3':..., 'HITS@10':...}
+Test scores - {'MRR':..., 'MR':..., 'HITS@1':..., 'HITS@3':..., 'HITS@10':...}
+
+...
+```
+
+#### 🔧 Lower level:
+
+You can train a model at a lower level to control all the parameters of model training:
+
 
 ```python
 from kdmkb import datasets
@@ -243,7 +344,7 @@ optimizer = torch.optim.Adam(
    lr = 0.00005,
 )
 
-loss        = losses.Adversarial()
+loss        = losses.Adversarial(alpha=0.5)
 metric_loss = stats.RollingMean(1000)
 
 bar = utils.Bar(step = 80000, update_every = 30)
@@ -252,25 +353,30 @@ for _ in bar():
 
     positive_sample, weight, mode=next(dataset)
     
-    positive_score = model(positive_sample)
-    
     negative_sample = negative_sampling.generate(
         positive_sample = positive_sample,
         mode            = mode
     )
+    
+    positive_sample = positive_sample.to(device)
+    negative_sample = negative_sample.to(device)
+    weight = weight.to(device)
+    
+    positive_score = model(positive_sample)
     
     negative_score = model(
         (positive_sample, negative_sample), 
         mode=mode
     )
     
-    error = loss(positive_score, negative_score, weight, alpha=0.5)
+    error = loss(positive_score, negative_score, weight)
     
     error.backward()
     
     _ = optimizer.step()
     
     metric_loss.update(error.item())
+    
     bar.set_description(f'loss: {metric_loss.get():4f}')
 
 ```
@@ -360,16 +466,24 @@ distillation = distillation.Distillation(
         batch_size_relation = 11,
         seed                = 42,
     ),
+    device = device,
 )
 
 for _ in range(20000):
+
     positive_sample, weight, mode = next(dataset)
+    
+    positive_sample = positive_sample.to(device)
+    weight = weight.to(device)
+    
     loss = distillation.distill(
         teacher = teacher,
         student = student,
         positive_sample = positive_sample,
     )
+    
     loss.backward()
+    
     _ = optimizer.step()
 
 ```

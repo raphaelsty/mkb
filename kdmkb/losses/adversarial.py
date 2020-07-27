@@ -15,13 +15,13 @@ class Adversarial(nn.Module):
 
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, alpha=0.5):
+        self.alpha = alpha
 
-    def __call__(self, positive_score, negative_score, weight, alpha=1e-5):
+    def __call__(self, positive_score, negative_score, weight):
         positive_score = F.logsigmoid(positive_score).squeeze(dim=1)
 
-        negative_score = (F.softmax(negative_score * alpha, dim=1).detach() *
+        negative_score = (F.softmax(negative_score * self.alpha, dim=1).detach() *
                           F.logsigmoid(-negative_score)).sum(dim=1)
 
         positive_loss = - (weight * positive_score).sum()/weight.sum()

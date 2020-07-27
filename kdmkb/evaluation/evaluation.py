@@ -82,7 +82,7 @@ class Evaluation:
             ...    lr = 0.5,
             ... )
 
-            >>> loss = losses.Adversarial()
+            >>> loss = losses.Adversarial(alpha=0.5)
 
             >>> for _ in range(10):
             ...     positive_sample, weight, mode=next(dataset)
@@ -90,7 +90,7 @@ class Evaluation:
             ...     negative_sample = negative_sampling.generate(positive_sample=positive_sample,
             ...         mode=mode)
             ...     negative_score = rotate((positive_sample, negative_sample), mode=mode)
-            ...     loss(positive_score, negative_score, weight, alpha=0.5).backward()
+            ...     loss(positive_score, negative_score, weight).backward()
             ...     _ = optimizer.step()
 
             >>> rotate = rotate.eval()
