@@ -204,7 +204,7 @@ model.embeddings['relations']
 
 To train a model from `kdmkb` to the link prediction task you can copy and paste the code below. There are two alternatives for training a model. The first is to use a pipeline that takes care of the training loop for you. The second is to use `kdmkb` at a lower level.
 
-### ✈️ Pipeline:
+#### ✈️ Pipeline:
 
 Your can train our model using `compose.Pipeline`. It's a convenient class to make knowledge graph embeddings easily.You will simply have to select:
 
@@ -214,7 +214,7 @@ Your can train our model using `compose.Pipeline`. It's a convenient class to ma
 
 - An **optimizer** from pytorch.
 
-- A **sampling** method available in kdmkb such as `sampling.NegativeSampling`. This module allows you to generate negative samples from existing triplets. You can also use your own `sampling` function.
+- A **sampling** method available in kdmkb such as `sampling.NegativeSampling`. This module allows you to generate negative samples from existing triplets. It does not generate triplets that are in the training set. You can also use your own `sampling` function.
 
 - An **evaluation** process.
 
