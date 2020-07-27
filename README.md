@@ -219,30 +219,31 @@ Your can train our model using `compose.Pipeline`. It's a convenient class to ma
 - An **evaluation** process.
 
 ```python
+from kdmkb import compose
 from kdmkb import datasets
 from kdmkb import evaluation
 from kdmkb import losses
 from kdmkb import models
 from kdmkb import sampling
-from kdmkb import compose
+from kdmkb import utils
 
 import torch
 
 _ = torch.manual_seed(42)
 
-device = 'cpu' # cuda if you own a gpu.
+device = 'cuda' # cuda if you own a gpu.
 
-dataset  = datasets.Wn18rr(batch_size = 512, shuffle = True, seed = 42)
+dataset  = datasets.Wn18rr(batch_size = 1024, shuffle = True, seed = 42)
 
 sampling = sampling.NegativeSampling(
-       size          = 1024,
+       size          = 512,
        train_triples = dataset.train,
        entities      = dataset.entities,
        relations     = dataset.relations,
        seed          = 42,
 )
 
-model = models.RotatE(
+model = models.TransE(
    n_entity   = dataset.n_entity,
    n_relation = dataset.n_relation,
    gamma      = 6,
@@ -269,10 +270,10 @@ evaluation = evaluation.Evaluation(
 )
 
 pipeline = compose.Pipeline(
-    max_step   = 80000, 
-    eval_every = 2000,  
+    max_step              = 80000, 
+    eval_every            = 2000,  
     early_stopping_rounds = 3,
-    device = device,
+    device                = device,
 )
 
 pipeline = pipeline.learn(
@@ -284,6 +285,7 @@ pipeline = pipeline.learn(
     loss       = losses.Adversarial(alpha=0.5),
 )
 
+utils.export_embeddings('./', dataset, model)
 ```
 
 Output:
@@ -378,7 +380,10 @@ for _ in bar():
     metric_loss.update(error.item())
     
     bar.set_description(f'loss: {metric_loss.get():4f}')
+    
 
+# Export embeddings as json file.
+utils.export_embeddings('./', dataset, model)
 ```
 
 ## 📊 Evaluation
