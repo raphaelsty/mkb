@@ -217,7 +217,7 @@ import torch
 
 _ = torch.manual_seed(42)
 
-device = 'cpu' # 'cuda' if you own a gpu.
+device = 'cuda' # 'cpu' if do not own a gpu.
 
 dataset = datasets.Wn18rr(batch_size=512, shuffle=True, seed=42)
 
@@ -243,25 +243,35 @@ optimizer = torch.optim.Adam(
    lr = 0.00005,
 )
 
-loss = losses.Adversarial()
+loss        = losses.Adversarial()
+metric_loss = stats.RollingMean(1000)
 
 bar = utils.Bar(step = 80000, update_every = 30)
 
 for _ in bar():
+
     positive_sample, weight, mode=next(dataset)
+    
     positive_score = model(positive_sample)
+    
     negative_sample = negative_sampling.generate(
         positive_sample = positive_sample,
         mode            = mode
     )
+    
     negative_score = model(
         (positive_sample, negative_sample), 
         mode=mode
     )
+    
     error = loss(positive_score, negative_score, weight, alpha=0.5)
+    
     error.backward()
+    
     _ = optimizer.step()
-    bar.set_description(f'loss: {error.item():4f}')
+    
+    metric_loss.update(error.item())
+    bar.set_description(f'loss: {metric_loss.get():4f}')
 
 ```
 
@@ -313,7 +323,7 @@ import torch
 
 _ = torch.manual_seed(42)
 
-device = 'cpu'
+device = 'cuda' # 'cpu' if do not own a gpu.
 
 dataset = datasets.Wn18rr(
     batch_size = 3, 
