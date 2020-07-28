@@ -31,10 +31,10 @@ class KGEBoard:
             self.best_params = collections.defaultdict(
                 lambda: collections.defaultdict(float))
 
-    def update(self, model, step, metrics, **description):
+    def update(self, step, metrics, **description):
         """
         """
-        description = f'{model} {self._description(**description)}'
+        description = f'{self._description(**description)}'
 
         for m, s in metrics.items():
             self.writer.add_scalars(main_tag=f'{self.experiment}_{m}',
@@ -52,14 +52,14 @@ class KGEBoard:
 
         return self
 
-    def export_best_scores(self, model=None, **description):
+    def export_best_scores(self, **description):
         """
         Export best scores founds for each model by default.
         If model is specified, it export the best scores found for this model.
         """
         if model is not None:
 
-            description = f'{model} {self._description(**description)}'
+            description = self._description(**description)
 
             self.writer.add_text(
                 tag=f'{self.experiment}_{description}',
