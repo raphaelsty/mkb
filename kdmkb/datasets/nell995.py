@@ -7,7 +7,7 @@ from ..utils import read_csv
 from ..utils import read_json
 
 
-__all__ = ['Fb15k']
+__all__ = ['Nell995']
 
 
 class Nell995(Fetch):
