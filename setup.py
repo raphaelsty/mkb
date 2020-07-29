@@ -17,12 +17,33 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     package_data={
         'kdmkb': [
-            'datasets/wn18rr/*.csv',
-            'datasets/wn18rr/*.json',
+            'datasets/countries_s1/*.csv',
+            'datasets/countries_s1/*.json',
+            'datasets/countries_s2/*.csv',
+            'datasets/countries_s2/*.json',
+            'datasets/countries_s3/*.csv',
+            'datasets/countries_s3/*.json',
+            'datasets/fb13/*.csv',
+            'datasets/fb13/*.json',
+            'datasets/fb15k/*.csv',
+            'datasets/fb15k/*.json',
             'datasets/fb15k237/*.csv',
             'datasets/fb15k237/*.json',
+            'datasets/nations/*.csv',
+            'datasets/nations/*.json',
+            'datasets/nell995/*.csv',
+            'datasets/nell995/*.json',
+            'datasets/umls/*.csv',
+            'datasets/umls/*.json',
+            'datasets/wn11/*.csv',
+            'datasets/wn11/*.json',
+            'datasets/wn18/*.csv',
+            'datasets/wn18/*.json',
+            'datasets/wn18rr/*.csv',
+            'datasets/wn18rr/*.json',
             'datasets/yago310/*.csv',
             'datasets/yago310/*.json'
+
         ]
     },
     classifiers=[
