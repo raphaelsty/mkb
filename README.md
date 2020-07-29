@@ -47,6 +47,7 @@ $ pip install -r requirements.txt
 - `datasets.Fb13`
 - `datasets.Fb15k`
 - `datasets.Fb15k237`
+- `datasets.Kinship`
 - `datasets.Nations`
 - `datasets.Nell995`
 - `datasets.Umls`
