@@ -29,6 +29,8 @@ setuptools.setup(
             'datasets/fb15k/*.json',
             'datasets/fb15k237/*.csv',
             'datasets/fb15k237/*.json',
+            'datasets/kinship/*.csv',
+            'datasets/kinship/*.json',
             'datasets/nations/*.csv',
             'datasets/nations/*.json',
             'datasets/nell995/*.csv',

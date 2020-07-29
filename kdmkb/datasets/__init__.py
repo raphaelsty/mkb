@@ -5,6 +5,7 @@ from .fb13 import Fb13
 from .fb15k import Fb15k
 from .fb15k237 import Fb15k237
 from .fetch import Fetch
+from .kinship import Kinship
 from .nations import Nations
 from .nell995 import Nell995
 from .umls import Umls
@@ -22,6 +23,7 @@ __all__ = [
     'Fb15k',
     'Fb15k237',
     'Fetch',
+    'Kinship',
     'Nations',
     'Nell995',
     'Umls',
