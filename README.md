@@ -41,16 +41,21 @@ $ pip install -r requirements.txt
 
 **Datasets available:**
 
-- `datasets.Wn18rr`
-- `datasets.Fb15k237`
-- `datasets.Yago310`
 - `datasets.CountriesS1`
 - `datasets.CountriesS2`
 - `datasets.CountriesS3`
+- `datasets.Fb13`
+- `datasets.Fb15k`
+- `datasets.Fb15k237`
 - `datasets.Nations`
+- `datasets.Nell995`
 - `datasets.Umls`
+- `datasets.Wn11`
+- `datasets.Wn18`
+- `datasets.Wn18rr`
+- `datasets.Yago310`
 
-The datasets available in `kdmkb` all have textual mentions based on the work of [villmow](https://github.com/villmow/datasets_knowledge_embedding). 
+`Wn18rr` and `Fb15k237` have textual mentions based on the work of [villmow](https://github.com/villmow/datasets_knowledge_embedding). 
 
 **Load dataset:**
 
