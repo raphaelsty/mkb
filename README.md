@@ -312,7 +312,6 @@ Test scores - {'MRR':..., 'MR':..., 'HITS@1':..., 'HITS@3':..., 'HITS@10':...}
 
 You can train a model at a lower level to control all the parameters of model training:
 
-
 ```python
 from kdmkb import datasets
 from kdmkb import losses 
@@ -390,7 +389,7 @@ utils.export_embeddings('./', dataset, model)
 
 ## 📊 Evaluation
 
-You can evaluate the performance of your models with the `evaluation` module. By giving the training, validation and test triples to the `true_triples`parameter, you will calculate the `filtered` metrics. You can calculate the `raw` metrics by setting `true_triples = []`.
+You can evaluate the performance of your models with the `evaluation` module. By giving the training, validation and test triples to the `true_triples`parameter, you will calculate the `filtered` metrics. You can calculate the `raw` metrics by leaving `true_triples` to default value.
 
 ```python
 from kdmkb import evaluation
@@ -421,6 +420,17 @@ validation.eval(model = model, dataset = dataset.test)
 ```python
 {'MRR': 0.5833, 'MR': 600.0, 'HITS@1': 21.35, 'HITS@3': 38.0, 'HITS@10': 41.0}
 
+```
+
+You can also evaluate your model on relation prediction task:
+
+```python
+validation.eval_relations(model=rotate, dataset=test)
+
+```
+
+```python
+{'MRR_relations': 1.0, 'MR_relations': 1.0, 'HITS@1_relations': 1.0, 'HITS@3_relations': 1.0, 'HITS@10_relations': 1.0}
 ```
 
 ## 🎁 Distillation
