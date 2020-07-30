@@ -13,7 +13,7 @@ ___all___ = ['Pipeline']
 
 
 class Pipeline:
-    """Pipeline to make knowledge graph embeddings.
+    """Pipeline to make knowledge graph embeddings easily.
 
     Parameters:
         dataset (kdmkb.datasets): Dataset.
@@ -104,25 +104,25 @@ class Pipeline:
         <BLANKLINE>
         Step: 4.
         <BLANKLINE>
-        Validation scores - {'MRR': 0.0001, 'MR': 13864.0, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
+        Validation scores - {'MRR': 0.0001, 'MR': 13864.0, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.134, 'MR_relations': 8.0, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.0, 'HITS@10_relations': 1.0}
         <BLANKLINE>
-        Test scores - {'MRR': 0.0001, 'MR': 13847.25, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
-        <BLANKLINE>
-        <BLANKLINE>
-        Step: 9.
-        <BLANKLINE>
-        Validation scores - {'MRR': 0.0001, 'MR': 13868.25, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
-        <BLANKLINE>
-        Test scores - {'MRR': 0.0001, 'MR': 13849.5, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
+        Test scores - {'MRR': 0.0001, 'MR': 13847.25, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.134, 'MR_relations': 8.0, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.0, 'HITS@10_relations': 1.0}
         <BLANKLINE>
         <BLANKLINE>
         Step: 9.
         <BLANKLINE>
+        Validation scores - {'MRR': 0.0001, 'MR': 13868.25, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.134, 'MR_relations': 8.0, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.0, 'HITS@10_relations': 1.0}
         <BLANKLINE>
-        Validation scores - {'MRR': 0.0001, 'MR': 13868.25, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
+        Test scores - {'MRR': 0.0001, 'MR': 13849.5, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.134, 'MR_relations': 8.0, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.0, 'HITS@10_relations': 1.0}
         <BLANKLINE>
         <BLANKLINE>
-        Test scores - {'MRR': 0.0001, 'MR': 13849.5, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
+        Step: 9.
+        <BLANKLINE>
+        <BLANKLINE>
+        Validation scores - {'MRR': 0.0001, 'MR': 13868.25, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.134, 'MR_relations': 8.0, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.0, 'HITS@10_relations': 1.0}
+        <BLANKLINE>
+        <BLANKLINE>
+        Test scores - {'MRR': 0.0001, 'MR': 13849.5, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.134, 'MR_relations': 8.0, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.0, 'HITS@10_relations': 1.0}
         <BLANKLINE>
 
     """
@@ -135,8 +135,12 @@ class Pipeline:
         self.loss = adversarial.Adversarial()
         self.bar = bar.Bar(step=max_step, update_every=20, position=0)
         self.metric_loss = stats.RollingMean(1000)
-        self.round_without_improvement = 0
-        self.history = collections.defaultdict(float)
+
+        self.round_without_improvement_valid = 0
+        self.round_without_improvement_test = 0
+
+        self.history_valid = collections.defaultdict(float)
+        self.history_test = collections.defaultdict(float)
 
         self.valid_scores = {}
         self.test_scores = {}
@@ -176,25 +180,41 @@ class Pipeline:
                     print(f'\n Step: {step}. \n')
 
                     if dataset.valid:
+
                         self.valid_scores = evaluation.eval(
                             model=model, dataset=dataset.valid)
+
+                        self.valid_scores.update(evaluation.eval_relations(
+                            model=model, dataset=dataset.test))
+
                         print(f'Validation scores - {self.valid_scores} \n')
 
                     if dataset.test:
+
                         self.test_scores = evaluation.eval(
                             model=model, dataset=dataset.test)
+
+                        self.test_scores.update(evaluation.eval_relations(
+                            model=model, dataset=dataset.test))
+
                         print(f'Test scores - {self.test_scores} \n')
 
-                        if (self.history['HITS@3'] > self.test_scores['HITS@3'] and
-                                self.history['HITS@1'] > self.test_scores['HITS@1']):
-                            self.round_without_improvement += 1
-
+                        if (self.history_test['HITS@3'] > self.test_scores['HITS@3'] and
+                                self.history_test['HITS@1'] > self.test_scores['HITS@1']):
+                            self.round_without_improvement_test += 1
+                        else:
+                            self.round_without_improvement_test = 0
+                            self.history_test = self.test_scores
                     else:
-                        if (self.history['HITS@3'] > self.valid_scores['HITS@3'] and
-                                self.history['HITS@1'] > self.valid_scores['HITS@1']):
-                            self.round_without_improvement += 1
+                        if (self.history_valid['HITS@3'] > self.valid_scores['HITS@3'] and
+                                self.history_valid['HITS@1'] > self.valid_scores['HITS@1']):
+                            self.round_without_improvement_valid += 1
+                        else:
+                            self.round_without_improvement_valid = 0
+                            self.history_valid = self.valid_scores
 
-                    if self.round_without_improvement == self.early_stopping_rounds:
+                    if (self.round_without_improvement_valid == self.early_stopping_rounds or
+                            self.round_without_improvement_test == self.early_stopping_rounds):
                         print(f'\n Early stopping at {step} iteration. \n')
                         print(f'Validation scores - {self.valid_scores} \n')
                         print(f'Test scores - {self.test_scores} \n')
@@ -205,11 +225,17 @@ class Pipeline:
         if dataset.valid:
             valid_scores = evaluation.eval(
                 model=model, dataset=dataset.valid)
+            valid_scores.update(
+                evaluation.eval_relations(model=model, dataset=dataset.valid)
+            )
             print(f'\n Validation scores - {self.valid_scores} \n')
 
         if dataset.test:
             test_scores = evaluation.eval(
                 model=model, dataset=dataset.test)
+            test_scores.update(
+                evaluation.eval_relations(model=model, dataset=dataset.test)
+            )
             print(f'\n Test scores - {self.test_scores} \n')
 
         return self
