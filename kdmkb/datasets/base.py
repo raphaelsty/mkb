@@ -117,9 +117,11 @@ class TestDataset(Dataset):
 
             # Allow to filter existing triplets
             bias = torch.tensor([
-                0 if (head, relation, random) not in self.true_triples
+                0 if (random, relation, tail) not in self.true_triples
                 else -1 for random in range(self.n_entity)
             ]).float()
+
+            bias[head] = 0
 
         elif self.mode == 'tail-batch':
 
@@ -128,9 +130,11 @@ class TestDataset(Dataset):
 
             # Allow to filter existing triplets
             bias = torch.Tensor([
-                0 if (random, relation, tail) not in self.true_triples
+                0 if (head, relation, random) not in self.true_triples
                 else -1 for random in range(self.n_entity)
             ]).float()
+
+            bias[tail] = 0
 
         tensor_relation = torch.tensor([relation] * self.n_entity)
 
