@@ -38,18 +38,21 @@ class Kinship(Fetch):
         >>> dataset = datasets.Kinship(batch_size=1, shuffle=True, seed=42)
 
         >>> dataset
-         Kinship dataset
+        Kinship dataset
             Batch size         1
             Entities           104
             Relations          25
             Shuffle            True
             Train triples      8548
             Validation triples 1069
-            est triples        1069
+            Test triples        1069
 
         >>> for _ in range(3):
         ...     positive_sample, weight, mode = next(dataset)
         ...     print(positive_sample, weight, mode)
+        tensor([[79, 18, 40]]) tensor([0.1925]) tail-batch
+        tensor([[76, 20, 98]]) tensor([0.2673]) head-batch
+        tensor([[52, 10, 61]]) tensor([0.1925]) tail-batch
 
 
     References:

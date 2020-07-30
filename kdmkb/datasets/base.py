@@ -117,10 +117,6 @@ class TestDataset(Dataset):
                    else (-1, tail) for rand_tail in range(self.n_entity)]
             tmp[tail] = (0, tail)
 
-        else:
-            raise ValueError(
-                'negative batch mode %s not supported' % self.mode)
-
         tmp = torch.LongTensor(tmp)
         filter_bias = tmp[:, 0].float()
         negative_sample = tmp[:, 1]
