@@ -1,4 +1,3 @@
-# Reference: https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding
 import numpy as np
 
 import torch
@@ -118,6 +117,9 @@ class NegativeSampling:
             tensor([[-4.7503, -4.7503, -4.7503, -4.7503, -4.7503],
                     [ 1.0213,  1.0213, -0.8139,  1.0213, -0.8139]], grad_fn=<ViewBackward>)
 
+    Reference:
+        1. [RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
+
     """
 
     def __init__(self, size, train_triples, entities, relations, seed=42):
@@ -209,7 +211,7 @@ class NegativeSampling:
                 size += negative_sample.size
 
             negative_entity = np.concatenate(negative_entity)[:self.size]
-            negative_entity = torch.from_numpy(negative_entity)
+            negative_entity = torch.LongTensor(negative_entity)
 
             samples.append(
                 self._get_sample(
@@ -227,7 +229,7 @@ class NegativeSampling:
 
     @ staticmethod
     def get_true_head_and_tail(triples):
-        """ Build a dictionary to filter out existing triples from fakes ones."""
+        """Build a dictionary to filter out existing triples from fakes ones."""
         true_head = {}
         true_tail = {}
 
