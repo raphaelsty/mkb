@@ -51,27 +51,18 @@ class pRotatE(base.BaseModel):
                          n_entity=n_entity, n_relation=n_relation, gamma=gamma)
         self.pi = 3.14159262358979323846
 
-    def forward(self, sample, mode='default'):
-        head, relation, tail = self.head_relation_tail(
-            sample=sample, mode=mode)
-        phase_head = head/(self.embedding_range.item()/self.pi)
-        phase_relation = relation/(self.embedding_range.item()/self.pi)
-        phase_tail = tail/(self.embedding_range.item()/self.pi)
-        if mode == 'head-batch':
-            score = phase_head + (phase_relation - phase_tail)
-        else:
-            score = (phase_head + phase_relation) - phase_tail
-        score = torch.sin(score)
-        score = torch.abs(score)
-        return self.gamma.item() - score.sum(dim=2) * self.modulus
+    def forward(self, sample):
+        head, relation, tail, shape = self.batch(sample=sample)
 
-    def distill(self, sample):
-        """Distillation method of ProtatE."""
-        head, relation, tail = self.distillation_batch(sample)
         phase_head = head/(self.embedding_range.item()/self.pi)
         phase_relation = relation/(self.embedding_range.item()/self.pi)
         phase_tail = tail/(self.embedding_range.item()/self.pi)
-        score = phase_head + (phase_relation - phase_tail)
+
+        score = (phase_head + phase_relation) - phase_tail
+
         score = torch.sin(score)
         score = torch.abs(score)
-        return self.gamma.item() - score.sum(dim=-1) * self.modulus
+
+        score = self.gamma.item() - score.sum(dim=2) * self.modulus
+
+        return score.view(shape)

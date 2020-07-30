@@ -593,12 +593,12 @@ class Distillation:
                 batch_head_student, device=self.device)
             # Disable gradients for teacher:
             with torch.no_grad():
-                scores_head_teacher = teacher.distill(teacher_head_tensor)
+                scores_head_teacher = teacher(teacher_head_tensor)
 
             # Distillation loss of heads
             loss_student += losses.KlDivergence()(
                 teacher_score=scores_head_teacher,
-                student_score=student.distill(student_head_tensor)
+                student_score=student(student_head_tensor)
             )
 
         # Compute loss dedicated to relations if any heads or tails from the input sample are shared
@@ -610,13 +610,13 @@ class Distillation:
                 batch_relation_student, device=self.device)
             # Disable gradients for teacher:
             with torch.no_grad():
-                scores_relation_teacher = teacher.distill(
+                scores_relation_teacher = teacher(
                     teacher_relation_tensor)
 
             # Distillation loss of relations.
             loss_student += losses.KlDivergence()(
                 teacher_score=scores_relation_teacher,
-                student_score=student.distill(student_relation_tensor)
+                student_score=student(student_relation_tensor)
             )
 
         # Compute loss dedicated to tails if any heads or relations from the input sample are shared
@@ -628,12 +628,12 @@ class Distillation:
                 batch_tail_student, device=self.device)
             # Disable gradients for teacher:
             with torch.no_grad():
-                scores_tail_teacher = teacher.distill(teacher_tail_tensor)
+                scores_tail_teacher = teacher(teacher_tail_tensor)
 
             # Distillation loss of tails.
             loss_student += losses.KlDivergence()(
                 teacher_score=scores_tail_teacher,
-                student_score=student.distill(student_tail_tensor)
+                student_score=student(student_tail_tensor)
             )
 
         return loss_student

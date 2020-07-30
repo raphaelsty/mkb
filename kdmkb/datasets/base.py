@@ -105,25 +105,39 @@ class TestDataset(Dataset):
         return self.len
 
     def __getitem__(self, idx):
+
         head, relation, tail = self.triples[idx]
-
-        if self.mode == 'head-batch':
-            tmp = [(0, rand_head) if (rand_head, relation, tail) not in self.true_triples
-                   else (-1, head) for rand_head in range(self.n_entity)]
-            tmp[head] = (0, head)
-
-        elif self.mode == 'tail-batch':
-            tmp = [(0, rand_tail) if (head, relation, rand_tail) not in self.true_triples
-                   else (-1, tail) for rand_tail in range(self.n_entity)]
-            tmp[tail] = (0, tail)
-
-        tmp = torch.LongTensor(tmp)
-        filter_bias = tmp[:, 0].float()
-        negative_sample = tmp[:, 1]
 
         positive_sample = torch.LongTensor((head, relation, tail))
 
-        return positive_sample, negative_sample, filter_bias, self.mode
+        # Negative sample computation
+        if self.mode == 'head-batch':
+            tensor_head = torch.arange(0, self.n_entity)
+            tensor_tail = torch.tensor([tail] * self.n_entity)
+
+            # Allow to filter existing triplets
+            bias = torch.tensor([
+                0 if (head, relation, random) not in self.true_triples
+                else -1 for random in range(self.n_entity)
+            ]).float()
+
+        elif self.mode == 'tail-batch':
+
+            tensor_head = torch.tensor([head] * self.n_entity)
+            tensor_tail = torch.arange(0, self.n_entity)
+
+            # Allow to filter existing triplets
+            bias = torch.Tensor([
+                0 if (random, relation, tail) not in self.true_triples
+                else -1 for random in range(self.n_entity)
+            ]).float()
+
+        tensor_relation = torch.tensor([relation] * self.n_entity)
+
+        negative_sample = torch.stack(
+            [tensor_head, tensor_relation, tensor_tail], dim=- 1)
+
+        return positive_sample, negative_sample, bias, self.mode
 
     @staticmethod
     def collate_fn(data):

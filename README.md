@@ -371,11 +371,7 @@ for _ in bar():
     weight = weight.to(device)
     
     positive_score = model(positive_sample)
-    
-    negative_score = model(
-        (positive_sample, negative_sample), 
-        mode=mode
-    )
+    negative_score = model(negative_sample)
     
     error = loss(positive_score, negative_score, weight)
     

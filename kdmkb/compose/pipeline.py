@@ -104,25 +104,25 @@ class Pipeline:
         <BLANKLINE>
         Step: 4.
         <BLANKLINE>
-        Validation scores - {'MRR': 0.0001, 'MR': 13861.5, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
+        Validation scores - {'MRR': 0.0001, 'MR': 13855.625, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
         <BLANKLINE>
-        Test scores - {'MRR': 0.0001, 'MR': 13842.125, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
-        <BLANKLINE>
-        <BLANKLINE>
-        Step: 9.
-        <BLANKLINE>
-        Validation scores - {'MRR': 0.0001, 'MR': 13865.75, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
-        <BLANKLINE>
-        Test scores - {'MRR': 0.0001, 'MR': 13844.375, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
+        Test scores - {'MRR': 0.0001, 'MR': 13853.625, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
         <BLANKLINE>
         <BLANKLINE>
         Step: 9.
         <BLANKLINE>
+        Validation scores - {'MRR': 0.0001, 'MR': 13859.875, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
         <BLANKLINE>
-        Validation scores - {'MRR': 0.0001, 'MR': 13865.75, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
+        Test scores - {'MRR': 0.0001, 'MR': 13855.875, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
         <BLANKLINE>
         <BLANKLINE>
-        Test scores - {'MRR': 0.0001, 'MR': 13844.375, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
+        Step: 9.
+        <BLANKLINE>
+        <BLANKLINE>
+        Validation scores - {'MRR': 0.0001, 'MR': 13859.875, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
+        <BLANKLINE>
+        <BLANKLINE>
+        Test scores - {'MRR': 0.0001, 'MR': 13855.875, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0}
         <BLANKLINE>
 
     """
@@ -157,10 +157,7 @@ class Pipeline:
             weight = weight.to(self.device)
 
             positive_score = model(positive_sample)
-            negative_score = model(
-                (positive_sample, negative_sample),
-                mode=mode
-            )
+            negative_score = model(negative_sample)
 
             error = self.loss(positive_score, negative_score, weight)
 

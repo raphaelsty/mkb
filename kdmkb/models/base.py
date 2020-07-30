@@ -109,92 +109,19 @@ class BaseModel(nn.Module):
             )
         )
 
-    def head_relation_tail(self, sample, mode='default'):
-        """Extract embeddings of head, relation tail from ids."""
-        if mode == 'default':
-            head, relation, tail = self.default_batch(sample)
+    @classmethod
+    def format_sample(cls, sample):
+        dim_sample = len(sample.shape)
 
-        elif mode == 'tail-batch':
-            head, relation, tail = self.tail_batch(sample)
+        if dim_sample == 2:
+            return sample, (sample.size(0), 1)
 
-        elif mode == 'head-batch':
-            head, relation, tail = self.head_batch(sample)
+        if dim_sample == 3:
+            return sample.view(sample.size(0) * sample.size(1), 3), (sample.size(0), sample.size(1))
 
-        return head, relation, tail
+    def batch(self, sample):
+        sample, shape = self.format_sample(sample=sample)
 
-    def distillation_batch(self, sample):
-        batch_size = sample.size(0)
-        distribution_size = sample.size(1)
-
-        head = torch.index_select(
-            self.entity_embedding,
-            dim=0,
-            index=sample[:, :, 0].view(batch_size * distribution_size)
-        ).view(batch_size, distribution_size, self.entity_dim)
-
-        relation = torch.index_select(
-            self.relation_embedding,
-            dim=0,
-            index=sample[:, :, 1].view(batch_size * distribution_size)
-        ).view(batch_size, distribution_size, self.relation_dim)
-
-        tail = torch.index_select(
-            self.entity_embedding,
-            dim=0,
-            index=sample[:, :, 2].view(batch_size * distribution_size)
-        ).view(batch_size, distribution_size, self.entity_dim)
-
-        return head, relation, tail
-
-    def head_batch(self, sample):
-        tail_part, head_part = sample
-        batch_size, negative_sample_size = head_part.size(0), head_part.size(1)
-
-        head = torch.index_select(
-            self.entity_embedding,
-            dim=0,
-            index=head_part.view(-1)
-        ).view(batch_size, negative_sample_size, -1)
-
-        relation = torch.index_select(
-            self.relation_embedding,
-            dim=0,
-            index=tail_part[:, 1]
-        ).unsqueeze(1)
-
-        tail = torch.index_select(
-            self.entity_embedding,
-            dim=0,
-            index=tail_part[:, 2]
-        ).unsqueeze(1)
-
-        return head, relation, tail
-
-    def tail_batch(self, sample):
-        head_part, tail_part = sample
-        batch_size, negative_sample_size = tail_part.size(0), tail_part.size(1)
-
-        head = torch.index_select(
-            self.entity_embedding,
-            dim=0,
-            index=head_part[:, 0]
-        ).unsqueeze(1)
-
-        relation = torch.index_select(
-            self.relation_embedding,
-            dim=0,
-            index=head_part[:, 1]
-        ).unsqueeze(1)
-
-        tail = torch.index_select(
-            self.entity_embedding,
-            dim=0,
-            index=tail_part.view(-1)
-        ).view(batch_size, negative_sample_size, -1)
-
-        return head, relation, tail
-
-    def default_batch(self, sample):
         head = torch.index_select(
             self.entity_embedding,
             dim=0,
@@ -213,4 +140,4 @@ class BaseModel(nn.Module):
             index=sample[:, 2]
         ).unsqueeze(1)
 
-        return head, relation, tail
+        return head, relation, tail, shape

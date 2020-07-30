@@ -61,37 +61,8 @@ class TransH(base.BaseModel):
             b=self.embedding_range.item()
         )
 
-    def forward(self, sample, mode='default'):
-        head, relation, tail = self.head_relation_tail(
-            sample=sample, mode=mode)
-
-        if mode == 'default':
-            index = sample
-        else:
-            index, _ = sample
-
-        norm = torch.index_select(
-            self.relation_embedding,
-            dim=0,
-            index=index[:, 1]
-        ).unsqueeze(1)
-
-        norm = F.normalize(norm, p=2, dim=-1)
-        head = head - torch.sum(head * norm, dim=-1, keepdim=True) * norm
-        tail = tail - torch.sum(tail * norm, dim=-1, keepdim=True) * norm
-
-        if mode == 'head-batch':
-
-            score = head + (relation - tail)
-        else:
-            score = (head + relation) - tail
-
-        return self.gamma.item() - torch.norm(score, p=1, dim=2)
-
-    def distill(self, sample):
-        """Distillation method of TransH."""
-
-        head, relation, tail = self.distillation_batch(sample)
+    def forward(self, sample):
+        head, relation, tail, shape = self.head_relation_tail(sample=sample)
 
         norm = torch.index_select(
             self.relation_embedding,
@@ -103,5 +74,8 @@ class TransH(base.BaseModel):
         head = head - torch.sum(head * norm, dim=-1, keepdim=True) * norm
         tail = tail - torch.sum(tail * norm, dim=-1, keepdim=True) * norm
 
-        score = head + (relation - tail)
-        return self.gamma.item() - torch.norm(score, p=1, dim=-1)
+        score = (head + relation) - tail
+
+        score = self.gamma.item() - torch.norm(score, p=1, dim=2)
+
+        return score.view(shape)

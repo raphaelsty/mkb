@@ -1,8 +1,9 @@
-# Reference: https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding
 import torch
 
-from creme import stats
 from torch.utils import data
+
+from creme import stats
+
 
 from ..datasets import base
 
@@ -89,7 +90,7 @@ class Evaluation:
             ...     positive_score = rotate(positive_sample)
             ...     negative_sample = negative_sampling.generate(positive_sample=positive_sample,
             ...         mode=mode)
-            ...     negative_score = rotate((positive_sample, negative_sample), mode=mode)
+            ...     negative_score = rotate(negative_sample)
             ...     loss(positive_score, negative_score, weight).backward()
             ...     _ = optimizer.step()
 
@@ -102,6 +103,9 @@ class Evaluation:
 
             >>> print(scores)
             {'MRR': 0.5833, 'MR': 2.0, 'HITS@1': 0.25, 'HITS@3': 1.0, 'HITS@10': 1.0}
+
+        References:
+            1. [RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
 
     """
 
@@ -123,9 +127,9 @@ class Evaluation:
             collate_fn=base.TestDataset.collate_fn)
 
     def get_test_stream(self, dataset):
+        """Get stream dedicated to validate head, tail and relation prediction."""
         head_loader = self._get_test_loader(triples=dataset, mode='head-batch')
         tail_loader = self._get_test_loader(triples=dataset, mode='tail-batch')
-
         return [head_loader, tail_loader]
 
     def eval(self, model, dataset):
@@ -145,8 +149,7 @@ class Evaluation:
 
                     filter_bias = filter_bias.to(self.device)
 
-                    score = model(
-                        sample=(positive_sample, negative_sample), mode=mode)
+                    score = model(negative_sample)
 
                     score += filter_bias
 
