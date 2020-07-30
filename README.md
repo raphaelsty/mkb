@@ -389,7 +389,7 @@ utils.export_embeddings('./', dataset, model)
 
 ## 📊 Evaluation
 
-You can evaluate the performance of your models with the `evaluation` module. By giving the training, validation and test triples to the `true_triples`parameter, you will calculate the `filtered` metrics. You can calculate the `raw` metrics by leaving `true_triples` to default value.
+You can evaluate the performance of your models with the `evaluation` module. Evaluating *link prediction task* is available using `Evaluation.eval` and *relation prediction task* using `Evaluation.eval_relation`. By giving the training, validation and test triples to the `true_triples`parameter, you will calculate the `filtered` metrics. You can calculate the `raw` metrics by leaving `true_triples` to default value.
 
 ```python
 from kdmkb import evaluation
@@ -422,10 +422,8 @@ validation.eval(model = model, dataset = dataset.test)
 
 ```
 
-You can also evaluate your model on relation prediction task:
-
 ```python
-validation.eval_relations(model=rotate, dataset=test)
+validation.eval_relations(model=model, dataset=dataset.test)
 
 ```
 
