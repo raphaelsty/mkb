@@ -1,6 +1,10 @@
 import torch
 from torch.utils import data
+
+import pandas as pd
+
 from creme import stats
+
 from ..datasets import base
 
 import collections
@@ -84,11 +88,11 @@ class Evaluation:
         ...    seed = 42,
         ... )
 
-        >>> rotate = models.RotatE(hidden_dim=3, n_entity=dataset.n_entity,
+        >>> model = models.RotatE(hidden_dim=3, n_entity=dataset.n_entity,
         ...    n_relation=dataset.n_relation, gamma=1)
 
         >>> optimizer = torch.optim.Adam(
-        ...    filter(lambda p: p.requires_grad, rotate.parameters()),
+        ...    filter(lambda p: p.requires_grad, model.parameters()),
         ...    lr = 0.5,
         ... )
 
@@ -96,23 +100,34 @@ class Evaluation:
 
         >>> for _ in range(10):
         ...     positive_sample, weight, mode=next(dataset)
-        ...     positive_score = rotate(positive_sample)
+        ...     positive_score = model(positive_sample)
         ...     negative_sample = negative_sampling.generate(positive_sample=positive_sample,
         ...         mode=mode)
-        ...     negative_score = rotate(negative_sample)
+        ...     negative_score = model(negative_sample)
         ...     loss(positive_score, negative_score, weight).backward()
         ...     _ = optimizer.step()
 
-        >>> rotate = rotate.eval()
+        >>> model = model.eval()
 
         >>> validation = evaluation.Evaluation(true_triples=train + valid + test,
         ...     entities=entities, relations=relations, batch_size=2)
 
-        >>> validation.eval(model=rotate, dataset=test)
+        >>> validation.eval(model=model, dataset=test)
         {'MRR': 0.5833, 'MR': 2.0, 'HITS@1': 0.25, 'HITS@3': 1.0, 'HITS@10': 1.0}
 
-        >>> validation.eval_relations(model=rotate, dataset=test)
-        {'MRR_relations': 1.0, 'MR_relations': 1.0, 'HITS@1_relations': 1.0, 'HITS@3_relations': 1.0, 'HITS@10_relations': 1.0}
+        >>> validation.eval_relations(model=model, dataset=test)
+        {'MRR_relations': 1.0, 'MR_relations': 1.0, 'HITS@1_relations': 1.0,
+            'HITS@3_relations': 1.0, 'HITS@10_relations': 1.0}
+
+        >>> validation.detail_eval(model=model, dataset=test, treshold=1.5)
+                  head                               tail
+                  MRR   MR HITS@1 HITS@3 HITS@10     MRR   MR HITS@1 HITS@3 HITS@10
+        relation
+        1_1       0.5  2.0    0.0    1.0     1.0  0.3333  3.0    0.0    1.0     1.0
+        1_M       1.0  1.0    1.0    1.0     1.0  0.5000  2.0    0.0    1.0     1.0
+        M_1       0.0  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0
+        M_M       0.0  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0
+
 
     References:
         1. [RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
@@ -174,16 +189,142 @@ class Evaluation:
             for metric in ['MRR', 'MR', 'HITS@1', 'HITS@3', 'HITS@10']
         })
 
-        metrics = self.compute_score(
-            model=model,
-            test_set=self.get_relation_stream(dataset),
-            metrics=metrics,
-            device=self.device
-        )
+        with torch.no_grad():
+
+            metrics = self.compute_score(
+                model=model,
+                test_set=self.get_relation_stream(dataset),
+                metrics=metrics,
+                device=self.device
+            )
 
         return {f'{name}_relations': round(metric.get(), 4) for name, metric in metrics.items()}
 
-    @classmethod
+    def detail_eval(self, model, dataset, treshold=1.5):
+        """
+        Divide input dataset relations into different categories (i.e. ONE-TO-ONE, ONE-TO-MANY,
+        MANY-TO-ONE and MANY-TO-MANY) according to the mapping properties of relationships.
+
+        Reference:
+            1. [Bordes, Antoine, et al. "Translating embeddings for modeling multi-relational data." Advances in neural information processing systems. 2013.](http://papers.nips.cc/paper/5071-translating-embeddings-for-modeling-multi-relational-data.pdf)
+
+        """
+        stat_df = pd.DataFrame(self.true_triples)
+
+        stat_df.columns = ['head', 'relation', 'tail']
+
+        mean_head = stat_df[['head', 'relation', 'tail']].groupby(
+            ['tail', 'relation']).count().groupby('relation').mean()
+
+        mean_tail = stat_df[['head', 'relation', 'tail']].groupby(
+            ['head', 'relation']).count().groupby('relation').mean()
+
+        mean_relations = pd.concat(
+            [mean_head, mean_tail], axis='columns').reset_index()
+
+        mean_relations['head'] = mean_relations['head'].apply(
+            lambda x: '1' if x < treshold else 'M')
+
+        mean_relations['tail'] = mean_relations['tail'].apply(
+            lambda x: '1' if x < treshold else 'M')
+
+        mean_relations['type'] = mean_relations['head'] + \
+            '_' + mean_relations['tail']
+
+        type_relation = mean_relations.to_dict()['type']
+
+        types_relations = ['1_1', '1_M', 'M_1', 'M_M']
+
+        metrics = collections.OrderedDict({'head-batch': {}, 'tail-batch': {}})
+
+        for mode in ['head-batch', 'tail-batch']:
+
+            for type_relation in types_relations:
+
+                metrics[mode][type_relation] = collections.OrderedDict({
+                    f'{metric}': stats.Mean()
+                    for metric in ['MRR', 'MR', 'HITS@1', 'HITS@3', 'HITS@10']
+                })
+
+        with torch.no_grad():
+
+            for test_set in self.get_entity_stream(dataset):
+
+                metrics = self.compute_detailled_score(
+                    model=model,
+                    test_set=test_set,
+                    metrics=metrics,
+                    types_relations=types_relations,
+                    device=self.device
+                )
+
+        for mode in ['head-batch', 'tail-batch']:
+            for type_relation in types_relations:
+                for metric in ['MRR', 'MR', 'HITS@1', 'HITS@3', 'HITS@10']:
+                    metrics[mode][type_relation][metric] = round(
+                        metrics[mode][type_relation][metric].get(), 4)
+
+        results = pd.DataFrame(metrics)
+
+        head = pd.DataFrame(results['head-batch'].values.tolist())
+        tail = pd.DataFrame(results['tail-batch'].values.tolist())
+
+        head.columns = pd.MultiIndex.from_product([["head"], head.columns])
+        tail.columns = pd.MultiIndex.from_product([["tail"], tail.columns])
+        results = pd.concat([head, tail], axis='columns')
+        results = results.set_index(pd.Series(['1_1', '1_M', 'M_1', 'M_M']))
+        results.index.name = 'relation'
+
+        return results
+
+    @ classmethod
+    def compute_detailled_score(cls, model, test_set, metrics, types_relations, device):
+
+        for step, (positive_sample, negative_sample, filter_bias, mode) in enumerate(test_set):
+
+            positive_sample = positive_sample.to(device)
+            negative_sample = negative_sample.to(device)
+            filter_bias = filter_bias.to(device)
+
+            score = model(negative_sample)
+            score += filter_bias
+
+            argsort = torch.argsort(score, dim=1, descending=True)
+
+            if mode == 'head-batch':
+                positive_arg = positive_sample[:, 0]
+
+            elif mode == 'tail-batch':
+                positive_arg = positive_sample[:, 2]
+
+            batch_size = positive_sample.size(0)
+
+            for i in range(batch_size):
+                # Notice that argsort is not ranking
+                ranking = (argsort[i, :] == positive_arg[i]).nonzero()
+                assert ranking.size(0) == 1
+
+                ranking = 1 + ranking.item()
+
+                type_relation = types_relations[positive_sample[:, 1][i]]
+
+                # ranking + 1 is the true ranking used in evaluation metrics
+                metrics[mode][type_relation]['MRR'].update(1.0/ranking)
+
+                metrics[mode][type_relation]['MR'].update(ranking)
+
+                metrics[mode][type_relation]['HITS@1'].update(
+                    1.0 if ranking <= 1 else 0.0)
+
+                metrics[mode][type_relation]['HITS@3'].update(
+                    1.0 if ranking <= 3 else 0.0)
+
+                metrics[mode][type_relation]['HITS@10'].update(
+                    1.0 if ranking <= 10 else 0.0)
+
+        return metrics
+
+    @ classmethod
     def compute_score(cls, model, test_set, metrics, device):
 
         for step, (positive_sample, negative_sample, filter_bias, mode) in enumerate(test_set):

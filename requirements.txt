@@ -4,3 +4,4 @@ numpy >= 1.18.1
 pytest-cov >= 2.10.0
 faiss >= 1.5.3
 tqdm  >= 4.36.1
+pandas >= 1.0.5
