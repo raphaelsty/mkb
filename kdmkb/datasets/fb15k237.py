@@ -4,6 +4,7 @@ import pathlib
 from .fetch import Fetch
 
 from ..utils import read_csv
+from ..utils import read_csv_classification
 from ..utils import read_json
 
 
@@ -54,6 +55,12 @@ class Fb15k237(Fetch):
         tensor([[8615,   12, 2350]]) tensor([0.3333]) head-batch
         tensor([[  16,   15, 4726]]) tensor([0.0343]) tail-batch
 
+        >>> assert len(fb15k237.classification_valid['X']) == len(fb15k237.classification_valid['y'])
+        >>> assert len(fb15k237.classification_test['X']) == len(fb15k237.classification_test['y'])
+
+        >>> assert len(fb15k237.classification_valid['X']) == len(fb15k237.valid) * 2
+        >>> assert len(fb15k237.classification_test['X']) == len(fb15k237.test) * 2
+
     References:
         1. [Toutanova, Kristina, et al. "Representing text for joint embedding of text and knowledge bases." Proceedings of the 2015 conference on empirical methods in natural language processing. 2015.](https://www.aclweb.org/anthology/D15-1174.pdf)
         2. [Datasets for Knowledge Graph Completion with Textual Information about Entities](https://github.com/villmow/datasets_knowledge_embedding)
@@ -72,5 +79,9 @@ class Fb15k237(Fetch):
             test=read_csv(file_path=f'{path}/test.csv'),
             entities=read_json(f'{path}/entities.json'),
             relations=read_json(f'{path}/relations.json'),
-            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed
+            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed,
+            classification_valid=read_csv_classification(
+                f'{path}/classification_valid.csv'),
+            classification_test=read_csv_classification(
+                f'{path}/classification_test.csv'),
         )

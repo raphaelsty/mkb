@@ -4,6 +4,7 @@ import pathlib
 from .fetch import Fetch
 
 from ..utils import read_csv
+from ..utils import read_csv_classification
 from ..utils import read_json
 
 
@@ -14,7 +15,7 @@ class Wn11(Fetch):
     """Wn11 dataset.
 
     Wn11 aim to iterate over the associated dataset. It provide positive samples, corresponding
-    weights and the mode (head batch / tail batch)
+    weights and the mode (head batch / tail batch).
 
     Parameters:
         batch_size (int): Size of the batch.
@@ -39,14 +40,13 @@ class Wn11(Fetch):
 
         >>> dataset
         Wn11 dataset
-            Batch size         1
-            Entities           38551
-            Relations          11
-            Shuffle            True
-            Train triples      112581
-            Validation triples 2609
+            Batch size             1
+            Entities           38588
+            Relations             11
+            Shuffle             True
+            Train triples     112581
+            Validation triples  2609
             Test triples       10544
-
 
         >>> for _ in range(3):
         ...     positive_sample, weight, mode = next(dataset)
@@ -55,9 +55,15 @@ class Wn11(Fetch):
         tensor([[36732,     2,   563]]) tensor([0.3333]) head-batch
         tensor([[ 4115,     0, 20415]]) tensor([0.3015]) tail-batch
 
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
+        >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])
+
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.valid) * 2
+        >>> assert len(dataset.classification_test['X']) == len(dataset.test) * 2
 
     References:
         1. [An Open-source Framework for Knowledge Embedding implemented with PyTorch.](https://github.com/thunlp/OpenKE)
+        2. [Socher, Richard, et al. "Reasoning with neural tensor networks for knowledge base completion." Advances in neural information processing systems. 2013.](http://papers.nips.cc/paper/5028-reasoning-with-neural-tensor-networks-for-knowledge-base-completion)
 
     """
 
@@ -73,5 +79,9 @@ class Wn11(Fetch):
             test=read_csv(file_path=f'{path}/test.csv'),
             entities=read_json(f'{path}/entities.json'),
             relations=read_json(f'{path}/relations.json'),
-            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed
+            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed,
+            classification_valid=read_csv_classification(
+                f'{path}/classification_valid.csv'),
+            classification_test=read_csv_classification(
+                f'{path}/classification_test.csv'),
         )

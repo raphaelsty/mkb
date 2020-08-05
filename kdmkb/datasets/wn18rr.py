@@ -4,6 +4,7 @@ import pathlib
 from .fetch import Fetch
 
 from ..utils import read_csv
+from ..utils import read_csv_classification
 from ..utils import read_json
 
 __all__ = ['Wn18rr']
@@ -54,6 +55,12 @@ class Wn18rr(Fetch):
         tensor([[ 9667,     5, 15434]]) tensor([0.1302]) head-batch
         tensor([[ 9023,     0, 25815]]) tensor([0.2357]) tail-batch
 
+        >>> assert len(wn18rr.classification_valid['X']) == len(wn18rr.classification_valid['y'])
+        >>> assert len(wn18rr.classification_test['X']) == len(wn18rr.classification_test['y'])
+
+        >>> assert len(wn18rr.classification_valid['X']) == len(wn18rr.valid) * 2
+        >>> assert len(wn18rr.classification_test['X']) == len(wn18rr.test) * 2
+
     References:
         1. [Dettmers, Tim, et al. "Convolutional 2d knowledge graph embeddings." Thirty-Second AAAI Conference on Artificial Intelligence. 2018.](https://arxiv.org/pdf/1707.01476.pdf)
 
@@ -71,5 +78,9 @@ class Wn18rr(Fetch):
             test=read_csv(file_path=f'{path}/test.csv'),
             entities=read_json(f'{path}/entities.json'),
             relations=read_json(f'{path}/relations.json'),
-            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed
+            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed,
+            classification_valid=read_csv_classification(
+                f'{path}/classification_valid.csv'),
+            classification_test=read_csv_classification(
+                f'{path}/classification_test.csv'),
         )

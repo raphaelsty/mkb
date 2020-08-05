@@ -4,6 +4,7 @@ import pathlib
 from .fetch import Fetch
 
 from ..utils import read_csv
+from ..utils import read_csv_classification
 from ..utils import read_json
 
 
@@ -55,6 +56,12 @@ class Nations(Fetch):
         tensor([[6, 0, 5]]) tensor([0.2182]) head-batch
         tensor([[10,  8,  7]]) tensor([0.2085]) tail-batch
 
+        >>> assert len(nations.classification_valid['X']) == len(nations.classification_valid['y'])
+        >>> assert len(nations.classification_test['X']) == len(nations.classification_test['y'])
+
+        >>> assert len(nations.classification_valid['X']) == len(nations.valid) * 2
+        >>> assert len(nations.classification_test['X']) == len(nations.test) * 2
+
 
     References:
         1. [Datasets for Knowledge Graph Completion with Textual Information about Entities](https://github.com/villmow/datasets_knowledge_embedding)
@@ -73,5 +80,9 @@ class Nations(Fetch):
             test=read_csv(file_path=f'{path}/test.csv'),
             entities=read_json(f'{path}/entities.json'),
             relations=read_json(f'{path}/relations.json'),
-            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed
+            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed,
+            classification_valid=read_csv_classification(
+                f'{path}/classification_valid.csv'),
+            classification_test=read_csv_classification(
+                f'{path}/classification_test.csv'),
         )

@@ -4,6 +4,7 @@ import pathlib
 from .fetch import Fetch
 
 from ..utils import read_csv
+from ..utils import read_csv_classification
 from ..utils import read_json
 
 
@@ -54,6 +55,12 @@ class Nell995(Fetch):
         tensor([[18308,   123, 25477]]) tensor([0.0379]) head-batch
         tensor([[34369,   103, 23009]]) tensor([0.1796]) tail-batch
 
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
+        >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])
+
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.valid) * 2
+        >>> assert len(dataset.classification_test['X']) == len(dataset.test) * 2
+
 
     References:
         1. [An Open-source Framework for Knowledge Embedding implemented with PyTorch.](https://github.com/thunlp/OpenKE)
@@ -72,5 +79,9 @@ class Nell995(Fetch):
             test=read_csv(file_path=f'{path}/test.csv'),
             entities=read_json(f'{path}/entities.json'),
             relations=read_json(f'{path}/relations.json'),
-            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed
+            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed,
+            classification_valid=read_csv_classification(
+                f'{path}/classification_valid.csv'),
+            classification_test=read_csv_classification(
+                f'{path}/classification_test.csv'),
         )

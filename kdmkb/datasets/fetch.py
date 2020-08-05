@@ -29,6 +29,10 @@ class Fetch:
         shuffle (bool): Whether to shuffle the dataset or not.
         num_workers (int): Number of workers dedicated to iterate on the dataset.
         seed (int): Random state.
+        classification_valid (dict[str, list]): Validation set dedicated to triplet classification
+            task.
+        classification_valid (dict[str, list]): Test set dedicated to triplet classification
+            task.
 
     Attributes:
         n_entity (int): Number of entities.
@@ -96,7 +100,7 @@ class Fetch:
 
     def __init__(
             self, train, entities, relations, batch_size, valid=None, test=None, shuffle=False,
-            num_workers=1, seed=None):
+            num_workers=1, seed=None, classification_valid=None, classification_test=None):
         self.train = train
         self.valid = valid
         self.test = test
@@ -113,6 +117,9 @@ class Fetch:
 
         self.fetch_head = self.fetch(self.get_train_loader(mode='head-batch'))
         self.fetch_tail = self.fetch(self.get_train_loader(mode='tail-batch'))
+
+        self.classification_valid = classification_valid
+        self.classification_test = classification_test
 
         if self.seed:
             torch.manual_seed(self.seed)

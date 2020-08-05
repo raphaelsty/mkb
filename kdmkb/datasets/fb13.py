@@ -4,6 +4,7 @@ import pathlib
 from .fetch import Fetch
 
 from ..utils import read_csv
+from ..utils import read_csv_classification
 from ..utils import read_json
 
 
@@ -39,13 +40,14 @@ class Fb13(Fetch):
 
         >>> dataset
         Fb13 dataset
-            Batch size         1
-            Entities           75043
-            Relations          13
-            Shuffle            True
-            Train triples      316232
-            Validation triples 5908
-            Test triples       23733
+            Batch size          1
+            Entities            75043
+            Relations           13
+            Shuffle             True
+            Train triples       316232
+            Validation triples  5908
+            Test triples        23733
+
 
         >>> for _ in range(3):
         ...     positive_sample, weight, mode = next(dataset)
@@ -54,9 +56,16 @@ class Fb13(Fetch):
         tensor([[18750,     8, 67427]]) tensor([0.0370]) head-batch
         tensor([[40007,     6, 67431]]) tensor([0.0175]) tail-batch
 
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
+        >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])
+
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.valid) * 2
+        >>> assert len(dataset.classification_test['X']) == len(dataset.test) * 2
+
 
     References:
         1. [An Open-source Framework for Knowledge Embedding implemented with PyTorch.](https://github.com/thunlp/OpenKE)
+        2. [Socher, Richard, et al. "Reasoning with neural tensor networks for knowledge base completion." Advances in neural information processing systems. 2013.](http://papers.nips.cc/paper/5028-reasoning-with-neural-tensor-networks-for-knowledge-base-completion)
 
     """
 
@@ -72,5 +81,9 @@ class Fb13(Fetch):
             test=read_csv(file_path=f'{path}/test.csv'),
             entities=read_json(f'{path}/entities.json'),
             relations=read_json(f'{path}/relations.json'),
-            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed
+            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed,
+            classification_valid=read_csv_classification(
+                f'{path}/classification_valid.csv'),
+            classification_test=read_csv_classification(
+                f'{path}/classification_test.csv'),
         )

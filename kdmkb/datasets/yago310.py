@@ -4,6 +4,7 @@ import pathlib
 from .fetch import Fetch
 
 from ..utils import read_csv
+from ..utils import read_csv_classification
 from ..utils import read_json
 
 
@@ -54,6 +55,12 @@ class Yago310(Fetch):
         tensor([[  4032,      2, 116067]]) tensor([0.1768]) head-batch
         tensor([[ 68567,      1, 117352]]) tensor([0.1690]) tail-batch
 
+        >>> assert len(yago310.classification_valid['X']) == len(yago310.classification_valid['y'])
+        >>> assert len(yago310.classification_test['X']) == len(yago310.classification_test['y'])
+
+        >>> assert len(yago310.classification_valid['X']) == len(yago310.valid) * 2
+        >>> assert len(yago310.classification_test['X']) == len(yago310.test) * 2
+
 
     References:
         1. [Fabian M. Suchanek and Gjergji Kasneci and Gerhard Weikum, Yago: A Core of Semantic Knowledge, 16th International Conference on the World Wide Web, 2007](https://github.com/yago-naga/yago3)
@@ -72,5 +79,9 @@ class Yago310(Fetch):
             test=read_csv(file_path=f'{path}/test.csv'),
             entities=read_json(f'{path}/entities.json'),
             relations=read_json(f'{path}/relations.json'),
-            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed
+            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed,
+            classification_valid=read_csv_classification(
+                f'{path}/classification_valid.csv'),
+            classification_test=read_csv_classification(
+                f'{path}/classification_test.csv'),
         )
