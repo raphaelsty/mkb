@@ -24,8 +24,9 @@ Kdmkb provides datasets, models and tools to evaluate performance of models. Kdm
     - [🔧 Lower level](#-lower-level)   
 - [📊 Evaluation](#-evaluation)
     - [🎯 Link Prediction](#-link-prediction)
+    - [🔎 Link prediction detailed evaluation](#-link-prediction-detailed-evaluation) 
     - [➡️ Relation Prediction](#-relation-prediction)
-    - [🔎 Detailed evaluation](#-detailed-evaluation) 
+    - [🦾 Triplet classification](#-triplet-classification) 
 - [🎁 Distillation](#-distillation)
 - [🧰 Development](#-development)
 - [🗒 License](#-license)
@@ -392,7 +393,11 @@ utils.export_embeddings('./', dataset, model)
 
 ## 📊 Evaluation
 
-You can evaluate the performance of your models with the `evaluation` module. Evaluating *link prediction task* is available using `Evaluation.eval` and *relation prediction task* using `Evaluation.eval_relation`. By giving the training, validation and test triples to the `true_triples`parameter, you will calculate the `filtered` metrics. You can calculate the `raw` metrics by leaving `true_triples` to default value.
+You can evaluate the performance of your models with the `evaluation` module. Evaluating *link prediction task* is available using `Evaluation.eval` and *relation prediction task* using `Evaluation.eval_relation`. 
+
+By giving the training, validation and test triples to the `true_triples`parameter, you will calculate the `filtered` metrics. You can calculate the `raw` metrics by leaving `true_triples` to default value. 
+
+Evaluating your model with the triplet prediction task is also available.
 
 ```python
 from kdmkb import evaluation
@@ -412,6 +417,8 @@ validation = evaluation.Evaluation(
 
 #### 🎯 Link prediction:
 
+The task of link prediction is to find the most likely head or tail for a given tuple (head, relation) or (relation, tail).
+
 ```python
 validation.eval(model = model, dataset = dataset.valid)
 
@@ -430,18 +437,9 @@ validation.eval(model = model, dataset = dataset.test)
 
 ```
 
-#### ➡️ Relation prediction:
+#### 🔎 Link prediction detailed evaluation:
 
-```python
-validation.eval_relations(model=model, dataset=dataset.test)
-
-```
-
-```python
-{'MRR_relations': 1.0, 'MR_relations': 1.0, 'HITS@1_relations': 1.0, 'HITS@3_relations': 1.0, 'HITS@10_relations': 1.0}
-```
-
-#### 🔎 Detailed evaluation:
+Detailed evaluation dedicated to link prediction task. The table allows to measure the performance of the model according to the type of relationship. This validation process is identical to the one used by [Bordes, Antoine, et al. 2013.](https://papers.nips.cc/paper/5071-translating-embeddings-for-modeling-multi-relational-data.pdf).
 
 ```python
 validation.detail_eval(model=model, dataset=dataset.test, treshold=1.5)
@@ -457,6 +455,56 @@ M_1       0.0  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0
 M_M       0.0  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0
   
 ```
+
+#### ➡️ Relation prediction:
+
+The task of relation prediction is to find the most likely relation for a given tuple (head, tail).
+
+```python
+validation.eval_relations(model=model, dataset=dataset.test)
+
+```
+
+```python
+{'MRR_relations': 1.0, 'MR_relations': 1.0, 'HITS@1_relations': 1.0, 'HITS@3_relations': 1.0, 'HITS@10_relations': 1.0}
+```
+
+#### 🦾 Triplet classification
+
+```python
+from kdmkb import evaluation
+
+evaluation.find_treshold(
+    model = model,
+    X = dataset.classification_valid['X'],
+    y = dataset.classification_valid['y'],
+    batch_size = 10,
+)
+
+```
+
+Best treshold found from triplet classification valid set and associated accuracy:
+
+```python
+{'threshold': 1.924787, 'accuracy': 0.803803}
+```
+
+```python
+evaluation.accuracy(
+    model = model,
+    X = dataset.classification_test['X'],
+    y = dataset.classification_test['y'],
+    threshold = 1.924787,
+    batch_size = 10,
+)
+```
+
+Accuracy of the model on the triplet classification test set:
+
+```python
+0.793803
+```
+
 
 ## 🎁 Distillation
 
