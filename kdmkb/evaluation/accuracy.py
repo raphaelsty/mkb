@@ -80,7 +80,7 @@ def find_treshold(model, X, y, batch_size, num_workers=1):
             y_true=y
         )
 
-        return _compute_best_treshold(y_pred=y_pred, positive=positive, negative=negative)
+        return _compute_best_treshold(y_pred=y_pred.numpy(), positive=positive, negative=negative)
 
 
 def accuracy(model, X, y, threshold, batch_size, num_workers=1):
@@ -163,12 +163,41 @@ def accuracy(model, X, y, threshold, batch_size, num_workers=1):
 
 
 def _accuracy(positive, negative, threshold):
+    """Computes accuracy.
+
+    Example:
+
+        >>> import numpy as np
+
+        >>> negative = np.array([1, 2, 3, 4, 5])
+        >>> positive = np.array([5, 6, 7, 8, 9])
+
+        >>> _accuracy(positive, negative, threshold = 5)
+        0.9
+
+    """
     tp = np.count_nonzero(positive >= threshold)
     tn = np.count_nonzero(negative < threshold)
     return (tp + tn) / (len(positive) + len(negative))
 
 
 def _get_positive_negative(y_true, y_pred):
+    """Splits the output scores of the model according to the target variable.
+
+    Example:
+
+        >>> y_pred = [1, 2, 3, 4, 5]
+        >>> y_true = [-1, -1, -1, 1., 1, 1]
+
+        >>> positive, negative = _get_positive_negative(y_true=y_true, y_pred=y_pred)
+
+        >>> positive
+        array([4, 5])
+
+        >>> negative
+        array([1, 2, 3])
+
+    """
     positive = []
     negative = []
 
@@ -182,12 +211,25 @@ def _get_positive_negative(y_true, y_pred):
 
 
 def _compute_best_treshold(y_pred, positive, negative):
+    """Find the best treshold for triplet classification. Every triplets with a score >= treshold
+    can be considered as existing triplets.
+
+    Example:
+
+        >>> import numpy as np
+
+        >>> y_pred = np.array([1, 2, 3, 4, 5])
+        >>> positive = np.array([4, 5])
+        >>> negative = np.array([1, 2, 3])
+
+        >>> _compute_best_treshold(y_pred=y_pred, positive=positive, negative=negative)
+        {'threshold': 4, 'accuracy': 1.0}
+
+    """
     best_accuracy = 0
     best_treshold = None
 
     for threshold in y_pred:
-
-        threshold = threshold.item()
 
         accuracy = _accuracy(
             positive=positive,
