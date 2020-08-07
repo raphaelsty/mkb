@@ -5,6 +5,7 @@ from .predict import make_prediction
 from .read_csv import read_csv
 from .read_csv import read_csv_classification
 from .read_json import read_json
+from .top_k import TopK
 
 
 __all__ = [
@@ -15,4 +16,5 @@ __all__ = [
     'read_csv',
     'read_csv_classification',
     'read_json',
+    'TopK',
 ]
