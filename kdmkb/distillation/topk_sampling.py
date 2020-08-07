@@ -59,9 +59,9 @@ class TopKSampling:
         ...     student_entities = dataset_student.entities,
         ...     student_relations = dataset_student.relations,
         ...     batch_size_entity = 4,
-        ...     batch_size_relation = 4,
+        ...     batch_size_relation = 1,
         ...     n_random_entities = 1,
-        ...     n_random_relations = 1,
+        ...     n_random_relations = 0,
         ...     seed = 42,
         ... )
 
@@ -81,8 +81,8 @@ class TopKSampling:
                 [ 10, 240, 251,   3,  30]])
 
         >>> relation_distribution_teacher
-        tensor([[0, 1, 1],
-                [1, 0, 1]])
+        tensor([[0],
+                [1]])
 
         >>> tail_distribution_teacher
         tensor([[269, 210, 270, 261,  30],
@@ -93,13 +93,81 @@ class TopKSampling:
                 [ 10, 229, 240,   3,  28]])
 
         >>> relation_distribution_student
-        tensor([[0, 1, 1],
-                [1, 0, 1]])
+        tensor([[0],
+                [1]])
 
         >>> tail_distribution_student
         tensor([[269, 198, 270, 256,  28],
                 [111, 149, 201, 234,  28]])
 
+        Check if the top k computes top k and not bottom k.
+
+        Check top k on heads:
+        >>> heads = torch.tensor([
+        ...    [197, 0, 266],
+        ...    [50,  0, 266],
+        ...    [75,  0, 266],
+        ...    [176, 0, 266],
+        ...    [30,  0, 266],
+        ... ])
+
+        >>> teacher(heads)
+        tensor([[ 1.0877],
+                [ 0.6982],
+                [ 0.6696],
+                [ 0.4555],
+                [-0.8312]], grad_fn=<ViewBackward>)
+
+        >>> for e, _ in distillation.mapping_entities.items():
+        ...     score = teacher(torch.tensor([[e, 0, 266]]))
+        ...     if score > 0.4555:
+        ...         print(e, score)
+        50 tensor([[0.6982]], grad_fn=<ViewBackward>)
+        75 tensor([[0.6696]], grad_fn=<ViewBackward>)
+        197 tensor([[1.0877]], grad_fn=<ViewBackward>)
+
+        Check top k on relations:
+        >>> relations = torch.tensor([
+        ...    [
+        ...         [0,  0, 266],
+        ...         [0,  1, 266],
+        ...     ],
+        ...     [
+        ...         [1,  0, 56],
+        ...         [1,  1, 56],
+        ...      ]
+        ... ])
+
+        >>> teacher(relations)
+        tensor([[-2.5582, -3.1826],
+                [-3.6232, -2.4322]], grad_fn=<ViewBackward>)
+
+        Relation 0 is the right top 1 for the triple (0, ?, 266).
+        Relation 1 is the right top 1 for the triple (1, ?, 56).
+
+        Check top k on tails:
+        >>> tails = torch.tensor([
+        ...    [0, 0, 269],
+        ...    [0, 0, 210],
+        ...    [0, 0, 270],
+        ...    [0, 0, 261],
+        ...    [0, 0, 30],
+        ... ])
+
+        >>> teacher(tails)
+        tensor([[ 1.5890],
+                [ 0.3337],
+                [ 0.1993],
+                [ 0.1206],
+                [-3.0354]], grad_fn=<ViewBackward>)
+
+        >>> for e, _ in distillation.mapping_entities.items():
+        ...     score = teacher(torch.tensor([[0, 0, e]]))
+        ...     if score > 0.1206:
+        ...         print(e, score)
+        210 tensor([[0.3337]], grad_fn=<ViewBackward>)
+        269 tensor([[1.5890]], grad_fn=<ViewBackward>)
+        270 tensor([[0.1993]], grad_fn=<ViewBackward>)
 
 
     """
@@ -125,8 +193,8 @@ class TopKSampling:
         })
 
         self.mapping_relations = collections.OrderedDict({
-            i: student_relations[e] for e, i in teacher_relations.items()
-            if e in student_relations
+            i: student_relations[r] for r, i in teacher_relations.items()
+            if r in student_relations
         })
 
         self.entities_teacher = torch.tensor(
