@@ -9,6 +9,8 @@ __all__ = ['KlDivergence']
 class KlDivergence(nn.Module):
     """Kullback-Leibler divergence loss dedicated to distillation.
 
+    Inputs scores must have shape 3: (n distributions, n triplets per distribution, 3).
+
     Reference:
         1. [Hinton, Geoffrey, Oriol Vinyals, and Jeff Dean. "Distilling the knowledge in a neural network." arXiv preprint arXiv:1503.02531 (2015).](https://arxiv.org/abs/1503.02531)
 
