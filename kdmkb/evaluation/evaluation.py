@@ -235,7 +235,10 @@ class Evaluation:
 
         types_relations = ['1_1', '1_M', 'M_1', 'M_M']
 
-        metrics = collections.OrderedDict({'head-batch': {}, 'tail-batch': {}})
+        metrics = collections.OrderedDict({
+            'head-batch': collections.OrderedDict({}),
+            'tail-batch': collections.OrderedDict({})
+        })
 
         for mode in ['head-batch', 'tail-batch']:
 

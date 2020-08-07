@@ -439,7 +439,7 @@ validation.eval(model = model, dataset = dataset.test)
 
 #### 🔎 Link prediction detailed evaluation:
 
-Detailed evaluation dedicated to link prediction task. The table allows to measure the performance of the model according to the type of relationship. This validation process is identical to the one used by [Bordes, Antoine, et al. 2013.](https://papers.nips.cc/paper/5071-translating-embeddings-for-modeling-multi-relational-data.pdf).
+Detailed evaluation dedicated to link prediction task. The table allows to measure the performance of the model according to the type of relationship. This validation process is identical to the one used by [Bordes, Antoine, et al. 2013](https://papers.nips.cc/paper/5071-translating-embeddings-for-modeling-multi-relational-data.pdf).
 
 ```python
 validation.detail_eval(model=model, dataset=dataset.test, treshold=1.5)
