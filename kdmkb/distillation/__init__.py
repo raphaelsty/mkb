@@ -1,6 +1,6 @@
 from .distillation import Distillation
-from .topk_sampling import TopKSampling
-from .topk_sampling import TopKSamplingTransE
+from .top_k_sampling import TopKSampling
+from .top_k_sampling import TopKSamplingTransE
 from .uniform_sampling import UniformSampling
 
 __all__ = [
