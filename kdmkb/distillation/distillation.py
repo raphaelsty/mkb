@@ -2,9 +2,6 @@ import torch
 
 import collections
 import copy
-import itertools
-
-import numpy as np
 
 from .. import losses
 
