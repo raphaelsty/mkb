@@ -485,7 +485,7 @@ class Distillation:
             ...     student_entities  = wn18rr.entities,
             ...     teacher_relations = wn18rr.relations,
             ...     student_relations = wn18rr.relations,
-            ...     sampling = distillation.TopKSampling(
+            ...     sampling = distillation.TopKSamplingTransE(
             ...         teacher_entities    = wn18rr.entities,
             ...         student_entities    = wn18rr.entities,
             ...         teacher_relations   = wn18rr.relations,
