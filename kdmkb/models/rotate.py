@@ -64,7 +64,7 @@ class RotatE(base.BaseModel):
         re_head, im_head = torch.chunk(head, 2, dim=2)
         re_tail, im_tail = torch.chunk(tail, 2, dim=2)
 
-        phase_relation = relation/(self.embedding_range.item()/self.pi)
+        phase_relation = relation/(self.embedding_range.item() / self.pi)
         re_relation = torch.cos(phase_relation)
         im_relation = torch.sin(phase_relation)
 
