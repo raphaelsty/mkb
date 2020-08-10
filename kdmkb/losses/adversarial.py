@@ -21,8 +21,10 @@ class Adversarial(nn.Module):
     def __call__(self, positive_score, negative_score, weight):
         positive_score = F.logsigmoid(positive_score).squeeze(dim=1)
 
-        negative_score = (F.softmax(negative_score * self.alpha, dim=1).detach() *
-                          F.logsigmoid(-negative_score)).sum(dim=1)
+        negative_score = (
+            F.softmax(negative_score * self.alpha, dim=1).detach() *
+            F.logsigmoid(-negative_score)
+        ).sum(dim=1)
 
         positive_loss = - (weight * positive_score).sum()/weight.sum()
         negative_loss = - (weight * negative_score).sum()/weight.sum()
