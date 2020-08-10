@@ -120,13 +120,14 @@ class Evaluation:
             'HITS@3_relations': 1.0, 'HITS@10_relations': 1.0}
 
         >>> validation.detail_eval(model=model, dataset=test, treshold=1.5)
-                head                               tail
-                MRR   MR HITS@1 HITS@3 HITS@10     MRR   MR HITS@1 HITS@3 HITS@10
+                    head                               tail
+                    MRR   MR HITS@1 HITS@3 HITS@10     MRR   MR HITS@1 HITS@3 HITS@10
         relation
-        1_1       0.5  2.0    0.0    1.0     1.0  0.5000  2.0    0.0    1.0     1.0
-        1_M       1.0  1.0    1.0    1.0     1.0  0.3333  3.0    0.0    1.0     1.0
+        1_1       0.5  2.0    0.0    1.0     1.0  0.3333  3.0    0.0    1.0     1.0
+        1_M       1.0  1.0    1.0    1.0     1.0  0.5000  2.0    0.0    1.0     1.0
         M_1       0.0  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0
         M_M       0.0  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0
+
 
     References:
         1. [RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)

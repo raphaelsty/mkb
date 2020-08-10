@@ -72,23 +72,22 @@ class NegativeSampling:
 
             >>> negative_sample
             tensor([[[0, 0, 2],
-                    [0, 0, 3],
-                    [0, 0, 0],
-                    [0, 0, 2],
-                    [0, 0, 2]],
+             [0, 0, 3],
+             [0, 0, 0],
+             [0, 0, 2],
+             [0, 0, 2]],
             <BLANKLINE>
-                    [[1, 0, 3],
-                    [1, 0, 0],
-                    [1, 0, 3],
-                    [1, 0, 3],
-                    [1, 0, 3]]])
+            [[1, 0, 3],
+             [1, 0, 0],
+             [1, 0, 3],
+             [1, 0, 0],
+             [1, 0, 0]]])
 
             >>> model(negative_sample)
             tensor([[ 1.0213, -3.4006, -3.1048,  1.0213,  1.0213],
-                    [-2.4555, -3.9517, -2.4555, -2.4555, -2.4555]], grad_fn=<ViewBackward>)
+            [-2.4555, -3.9517, -2.4555, -3.9517, -3.9517]], grad_fn=<ViewBackward>)
 
             Generate fake heads:
-
             >>> positive_sample, weight, mode = next(dataset)
 
             >>> negative_sample = negative_sampling.generate(positive_sample, mode)
@@ -101,21 +100,21 @@ class NegativeSampling:
                     [1, 0, 2]])
 
             >>> negative_sample
-            tensor([[[1, 0, 1],
-                    [1, 0, 1],
-                    [1, 0, 1],
-                    [1, 0, 1],
-                    [1, 0, 1]],
+            tensor([[[2, 0, 1],
+             [2, 0, 1],
+             [2, 0, 1],
+             [2, 0, 1],
+             [2, 0, 1]],
             <BLANKLINE>
-                    [[0, 0, 2],
-                    [0, 0, 2],
-                    [3, 0, 2],
-                    [0, 0, 2],
-                    [3, 0, 2]]])
+             [[2, 0, 2],
+             [2, 0, 2],
+             [2, 0, 2],
+             [2, 0, 2],
+             [3, 0, 2]]])
 
             >>> model(negative_sample)
-            tensor([[-4.7503, -4.7503, -4.7503, -4.7503, -4.7503],
-                    [ 1.0213,  1.0213, -0.8139,  1.0213, -0.8139]], grad_fn=<ViewBackward>)
+            tensor([[-2.3821, -2.3821, -2.3821, -2.3821, -2.3821],
+            [-2.4623, -2.4623, -2.4623, -2.4623, -0.8139]], grad_fn=<ViewBackward>)
 
     Reference:
         1. [RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
@@ -133,32 +132,32 @@ class NegativeSampling:
 
         """
         self.size = size
+
         self.n_entity = len(entities)
+
         self.n_relation = len(relations)
 
         self.true_head, self.true_tail = self.get_true_head_and_tail(
             train_triples)
+
         self._rng = np.random.RandomState(seed)  # pylint: disable=no-member
 
-        self.tensor_head = torch.zeros(self.size)
-        self.tensor_relation = torch.zeros(self.size)
-        self.tensor_tail = torch.zeros(self.size)
+        self.sample = torch.stack([
+            torch.zeros(self.size, dtype=int),
+            torch.zeros(self.size, dtype=int),
+            torch.zeros(self.size, dtype=int)
+        ], dim=1)
 
-    def _get_sample(self, head, relation, tail, negative_entity, mode):
-
+    def _get_sample(self, head, relation, tail, negative_entities, mode):
         if mode == 'head-batch':
-
-            self.tensor_head[:] = negative_entity
-            self.tensor_tail[:] = tail
-
+            self.sample[:, 0] = negative_entities
+            self.sample[:, 1] = relation
+            self.sample[:, 2] = tail
         elif mode == 'tail-batch':
-
-            self.tensor_tail[:] = negative_entity
-            self.tensor_head[:] = head
-
-        self.tensor_relation[:] = relation
-
-        return torch.stack([self.tensor_head, self.tensor_relation, self.tensor_tail], dim=-1)
+            self.sample[:, 0] = head
+            self.sample[:, 1] = relation
+            self.sample[:, 2] = negative_entities
+        return self.sample.detach().clone()
 
     @classmethod
     def _filter_negative_sample(cls, negative_sample, record):
@@ -168,7 +167,6 @@ class NegativeSampling:
             assume_unique=True,
             invert=True
         )
-
         return negative_sample[mask]
 
     def generate(self, positive_sample, mode):
@@ -177,56 +175,59 @@ class NegativeSampling:
         If the mode is set to head-batch, this method will generate a tensor of fake heads.
         If the mode is set to tail-batch, this method will generate a tensor of fake tails.
         """
-        batch_size = positive_sample.shape[0]
-
         samples = []
+
+        negative_entities = self._rng.randint(
+            self.n_entity,
+            size=self.size * 2
+        )
 
         for head, relation, tail in positive_sample:
 
             head, relation, tail = head.item(), relation.item(), tail.item()
 
-            negative_entity = []
+            negative_entities_sample = []
 
             size = 0
 
             while size < self.size:
 
-                negative_sample = self._rng.randint(
-                    self.n_entity, size=self.size*2)
-
                 if mode == 'head-batch':
 
-                    negative_sample = self._filter_negative_sample(
-                        negative_sample=negative_sample,
+                    negative_entities_filtered = self._filter_negative_sample(
+                        negative_sample=negative_entities,
                         record=self.true_head[(relation, tail)],
                     )
 
                 elif mode == 'tail-batch':
 
-                    negative_sample = self._filter_negative_sample(
-                        negative_sample=negative_sample,
+                    negative_entities_filtered = self._filter_negative_sample(
+                        negative_sample=negative_entities,
                         record=self.true_tail[(head, relation)],
                     )
 
-                negative_entity.append(negative_sample)
-                size += negative_sample.size
+                size += negative_entities_filtered.size
+                negative_entities_sample.append(negative_entities_filtered)
 
-            negative_entity = np.concatenate(negative_entity)[:self.size]
-            negative_entity = torch.LongTensor(negative_entity)
+            negative_entities_sample = np.concatenate(
+                negative_entities_sample
+            )[:self.size]
+
+            negative_entities_sample = torch.LongTensor(
+                negative_entities_sample
+            )
 
             samples.append(
                 self._get_sample(
                     head=head,
                     relation=relation,
                     tail=tail,
-                    negative_entity=negative_entity,
+                    negative_entities=negative_entities_sample,
                     mode=mode
                 )
             )
 
-        samples = torch.stack(samples, dim=0)
-
-        return samples.long()
+        return torch.stack(samples, dim=0).long()
 
     @ staticmethod
     def get_true_head_and_tail(triples):
