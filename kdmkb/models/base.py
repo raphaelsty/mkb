@@ -116,7 +116,7 @@ class BaseModel(nn.Module):
         if dim_sample == 2:
             return sample, (sample.size(0), 1)
 
-        if dim_sample == 3:
+        elif dim_sample == 3:
             return sample.view(sample.size(0) * sample.size(1), 3), (sample.size(0), sample.size(1))
 
     def batch(self, sample):
