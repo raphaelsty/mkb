@@ -141,3 +141,15 @@ class BaseModel(nn.Module):
         ).unsqueeze(1)
 
         return head, relation, tail, shape
+
+    def _set_params(self, entities_embeddings, relations_embeddings, **kwargs):
+        """Load pre-trained weights."""
+        self.entity_embedding.data.copy_(entities_embeddings)
+        self.relation_embedding.data.copy_(relations_embeddings)
+        for parameter, weights in kwargs.items():
+            self._parameters[parameter].data.copy_(weights)
+        return self
+
+    def save(self, path):
+        import pickle
+        pickle.dump(self, open(path, 'wb'))

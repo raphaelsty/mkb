@@ -112,44 +112,48 @@ class TestDataset(Dataset):
 
         # Negative sample computation
         if self.mode == 'head-batch':
-            tensor_head = torch.arange(0, self.n_entity)
+
             tensor_relation = torch.tensor([relation] * self.n_entity)
             tensor_tail = torch.tensor([tail] * self.n_entity)
 
-            # Allow to filter existing triplets
-            bias = torch.tensor([
-                0 if (random, relation, tail) not in self.true_triples
-                else -1 for random in range(self.n_entity)
-            ]).float()
+            tmp = torch.LongTensor([
+                (0, random) if (random, relation, tail) not in self.true_triples
+                else (-1, head)
+                for random in range(self.n_entity)
+            ])
 
+            tensor_head = tmp[:, 1]
+            bias = tmp[:, 0]
             bias[head] = 0
 
         elif self.mode == 'relation-batch':
 
             tensor_head = torch.tensor([head] * self.n_relation)
-            tensor_relation = torch.tensor([relation] * self.n_relation)
             tensor_tail = torch.tensor([tail] * self.n_relation)
 
-            # Allow to filter existing triplets
-            bias = torch.Tensor([
-                0 if (head, random, tail) not in self.true_triples
-                else -1 for random in range(self.n_relation)
-            ]).float()
+            tmp = torch.LongTensor([
+                (0, random) if (head, random, tail) not in self.true_triples
+                else (-1, relation)
+                for random in range(self.n_relation)
+            ])
 
+            tensor_relation = tmp[:, 1]
+            bias = tmp[:, 0]
             bias[relation] = 0
 
         elif self.mode == 'tail-batch':
 
             tensor_head = torch.tensor([head] * self.n_entity)
             tensor_relation = torch.tensor([relation] * self.n_entity)
-            tensor_tail = torch.arange(0, self.n_entity)
 
-            # Allow to filter existing triplets
-            bias = torch.Tensor([
-                0 if (head, relation, random) not in self.true_triples
-                else -1 for random in range(self.n_entity)
-            ]).float()
+            tmp = torch.LongTensor([
+                (0, random) if (head, relation, random) not in self.true_triples
+                else (-1, relation)
+                for random in range(self.n_entity)
+            ])
 
+            tensor_tail = tmp[:, 1]
+            bias = tmp[:, 0]
             bias[tail] = 0
 
         negative_sample = torch.stack(
