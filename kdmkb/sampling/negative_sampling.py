@@ -140,24 +140,25 @@ class NegativeSampling:
             train_triples)
         self._rng = np.random.RandomState(seed)  # pylint: disable=no-member
 
+        self.tensor_head = torch.zeros(self.size)
+        self.tensor_relation = torch.zeros(self.size)
+        self.tensor_tail = torch.zeros(self.size)
+
     def _get_sample(self, head, relation, tail, negative_entity, mode):
-        tensor_head = torch.zeros(self.size)
-        tensor_relation = torch.zeros(self.size)
-        tensor_tail = torch.zeros(self.size)
 
         if mode == 'head-batch':
 
-            tensor_head[:] = negative_entity
-            tensor_tail[:] = tail
+            self.tensor_head[:] = negative_entity
+            self.tensor_tail[:] = tail
 
         elif mode == 'tail-batch':
 
-            tensor_tail[:] = negative_entity
-            tensor_head[:] = head
+            self.tensor_tail[:] = negative_entity
+            self.tensor_head[:] = head
 
-        tensor_relation[:] = relation
+        self.tensor_relation[:] = relation
 
-        return torch.stack([tensor_head, tensor_relation, tensor_tail], dim=-1)
+        return torch.stack([self.tensor_head, self.tensor_relation, self.tensor_tail], dim=-1)
 
     @classmethod
     def _filter_negative_sample(cls, negative_sample, record):
