@@ -104,27 +104,26 @@ class Pipeline:
         <BLANKLINE>
         Step: 4.
         <BLANKLINE>
-        Validation scores - {'MRR': 0.0001, 'MR': 19072.125, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
+        Validation scores - {'MRR': 0.0001, 'MR': 13861.5, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
         <BLANKLINE>
-        Test scores - {'MRR': 0.0001, 'MR': 20477.625, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
-        <BLANKLINE>
-        <BLANKLINE>
-        Step: 9.
-        <BLANKLINE>
-        Validation scores - {'MRR': 0.0001, 'MR': 19075.25, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
-        <BLANKLINE>
-        Test scores - {'MRR': 0.0001, 'MR': 20479.25, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
+        Test scores - {'MRR': 0.0001, 'MR': 13842.125, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
         <BLANKLINE>
         <BLANKLINE>
         Step: 9.
         <BLANKLINE>
+        Validation scores - {'MRR': 0.0001, 'MR': 13865.75, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
         <BLANKLINE>
-        Validation scores - {'MRR': 0.0001, 'MR': 19075.25, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
+        Test scores - {'MRR': 0.0001, 'MR': 13844.375, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
         <BLANKLINE>
         <BLANKLINE>
-        Test scores - {'MRR': 0.0001, 'MR': 20479.25, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
+        Step: 9.
         <BLANKLINE>
-
+        <BLANKLINE>
+        Validation scores - {'MRR': 0.0001, 'MR': 13865.75, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
+        <BLANKLINE>
+        <BLANKLINE>
+        Test scores - {'MRR': 0.0001, 'MR': 13844.375, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
+        <BLANKLINE>
 
     """
 

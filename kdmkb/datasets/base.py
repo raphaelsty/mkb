@@ -148,7 +148,7 @@ class TestDataset(Dataset):
 
             tmp = torch.LongTensor([
                 (0, random) if (head, relation, random) not in self.true_triples
-                else (-1, relation)
+                else (-1, tail)
                 for random in range(self.n_entity)
             ])
 
