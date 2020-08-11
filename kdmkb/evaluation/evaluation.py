@@ -120,14 +120,13 @@ class Evaluation:
             'HITS@3_relations': 1.0, 'HITS@10_relations': 1.0}
 
         >>> validation.detail_eval(model=model, dataset=test, treshold=1.5)
-                head                             tail
-                MRR   MR HITS@1 HITS@3 HITS@10   MRR   MR  HITS@1 HITS@3 HITS@10
+                    head                             tail                             metadata
+                    MRR   MR HITS@1 HITS@3 HITS@10   MRR   MR HITS@1 HITS@3 HITS@10 frequency
         relation
-        1_1       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0
-        1_M       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0
-        M_1       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0
-        M_M       0.625  2.5    0.5    0.5     1.0  0.75  1.5    0.5    1.0     1.0
-
+        1_1       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0       0.0
+        1_M       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0       0.0
+        M_1       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0       0.0
+        M_M       0.625  2.5    0.5    0.5     1.0  0.75  1.5    0.5    1.0     1.0       1.0
 
     References:
         1. [RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
@@ -394,5 +393,26 @@ class Evaluation:
         results = pd.concat([head, tail], axis='columns')
         results = results.set_index(pd.Series(['1_1', '1_M', 'M_1', 'M_M']))
         results.index.name = 'relation'
+
+        # Add frequency of each type of relation:
+        frequency = collections.OrderedDict()
+        for type_relation in types_relations:
+            frequency[type_relation] = 0
+        for _, type_relation in mapping_type_relations.items():
+            frequency[type_relation] += 1
+        for type_relation in types_relations:
+            frequency[type_relation] /= len(mapping_type_relations)
+
+        frequency = pd.DataFrame.from_dict(
+            frequency,
+            orient='index',
+            columns=['frequency']
+        )
+
+        frequency.columns = pd.MultiIndex.from_product(
+            [["metadata"], frequency.columns]
+        )
+
+        results = pd.concat([results, frequency], axis='columns')
 
         return results
