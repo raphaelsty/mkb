@@ -49,9 +49,18 @@ class TransE(base.BaseModel):
         super().__init__(hidden_dim=hidden_dim, relation_dim=hidden_dim, entity_dim=hidden_dim,
                          n_entity=n_entity, n_relation=n_relation, gamma=gamma)
 
-    def forward(self, sample):
-        head, relation, tail, shape = self.batch(sample=sample)
-        score = (head + relation) - tail
+    def forward(self, sample, negative_sample=None, mode=None):
+        head, relation, tail, shape = self.batch(
+            sample=sample,
+            negative_sample=negative_sample,
+            mode=mode
+        )
+
+        if mode == 'head-batch':
+            score = head + (relation - tail)
+        else:
+            score = (head + relation) - tail
+
         score = self.gamma.item() - torch.norm(score, p=1, dim=2)
         return score.view(shape)
 

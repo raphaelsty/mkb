@@ -161,7 +161,12 @@ class Pipeline:
             weight = weight.to(self.device)
 
             positive_score = model(positive_sample)
-            negative_score = model(negative_sample)
+
+            negative_score = model(
+                sample=positive_sample,
+                negative_sample=negative_sample,
+                mode=mode
+            )
 
             error = self.loss(positive_score, negative_score, weight)
 

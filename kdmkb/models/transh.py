@@ -62,7 +62,11 @@ class TransH(base.BaseModel):
         )
 
     def forward(self, sample):
-        head, relation, tail, shape = self.head_relation_tail(sample=sample)
+        head, relation, tail, shape = self.batch(
+            sample=sample,
+            negative_sample=negative_sample,
+            mode=mode
+        )
 
         norm = torch.index_select(
             self.relation_embedding,

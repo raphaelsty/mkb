@@ -34,10 +34,12 @@ class pRotatE(base.BaseModel):
             Number of relations      2
 
         >>> model.embeddings['entities']
-        {0: tensor([ 0.7645,  0.8300, -0.2343]), 1: tensor([ 0.9186, -0.2191,  0.2018])}
+        {0: tensor([ 0.7645,  0.8300, -0.2343]),
+                   1: tensor([ 0.9186, -0.2191,  0.2018])}
 
         >>> model.embeddings['relations']
-        {0: tensor([-0.4869,  0.5873,  0.8815]), 1: tensor([-0.7336,  0.8692,  0.1872])}
+        {0: tensor([-0.4869,  0.5873,  0.8815]),
+                   1: tensor([-0.7336,  0.8692,  0.1872])}
 
 
     References:
@@ -51,14 +53,21 @@ class pRotatE(base.BaseModel):
                          n_entity=n_entity, n_relation=n_relation, gamma=gamma)
         self.pi = 3.14159262358979323846
 
-    def forward(self, sample):
-        head, relation, tail, shape = self.batch(sample=sample)
+    def forward(self, sample, negative_sample=None, mode=None):
+        head, relation, tail, shape = self.batch(
+            sample=sample,
+            negative_sample=negative_sample,
+            mode=mode
+        )
 
         phase_head = head/(self.embedding_range.item()/self.pi)
         phase_relation = relation/(self.embedding_range.item()/self.pi)
         phase_tail = tail/(self.embedding_range.item()/self.pi)
 
-        score = (phase_head + phase_relation) - phase_tail
+        if mode == 'head-batch':
+            score = phase_head + (phase_relation - phase_tail)
+        else:
+            score = (phase_head + phase_relation) - phase_tail
 
         score = torch.sin(score)
         score = torch.abs(score)

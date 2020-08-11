@@ -76,7 +76,7 @@ class Evaluation:
         ...    test = test,
         ...    entities = entities,
         ...    relations = relations,
-        ...    batch_size = 1,
+        ...    batch_size = 2,
         ...    seed = 42
         ... )
 
@@ -103,7 +103,7 @@ class Evaluation:
         ...     positive_score = model(positive_sample)
         ...     negative_sample = negative_sampling.generate(positive_sample=positive_sample,
         ...         mode=mode)
-        ...     negative_score = model(negative_sample)
+        ...     negative_score = model(positive_sample, negative_sample, mode)
         ...     loss(positive_score, negative_score, weight).backward()
         ...     _ = optimizer.step()
 
@@ -113,20 +113,20 @@ class Evaluation:
         ...     entities=entities, relations=relations, batch_size=2)
 
         >>> validation.eval(model=model, dataset=test)
-        {'MRR': 0.5833, 'MR': 2.0, 'HITS@1': 0.25, 'HITS@3': 1.0, 'HITS@10': 1.0}
+        {'MRR': 0.6875, 'MR': 2.0, 'HITS@1': 0.5, 'HITS@3': 0.75, 'HITS@10': 1.0}
 
         >>> validation.eval_relations(model=model, dataset=test)
         {'MRR_relations': 1.0, 'MR_relations': 1.0, 'HITS@1_relations': 1.0,
             'HITS@3_relations': 1.0, 'HITS@10_relations': 1.0}
 
         >>> validation.detail_eval(model=model, dataset=test, treshold=1.5)
-                    head                               tail
-                    MRR   MR HITS@1 HITS@3 HITS@10     MRR   MR HITS@1 HITS@3 HITS@10
+                head                            tail
+                MRR   MR HITS@1 HITS@3 HITS@10  MRR   MR HITS@1 HITS@3 HITS@10
         relation
-        1_1       0.5  2.0    0.0    1.0     1.0  0.3333  3.0    0.0    1.0     1.0
-        1_M       1.0  1.0    1.0    1.0     1.0  0.5000  2.0    0.0    1.0     1.0
-        M_1       0.0  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0
-        M_M       0.0  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0
+        1_1       0.25  4.0    0.0    0.0     1.0  0.5  2.0    0.0    1.0     1.0
+        1_M       1.00  1.0    1.0    1.0     1.0  1.0  1.0    1.0    1.0     1.0
+        M_1       0.00  0.0    0.0    0.0     0.0  0.0  0.0    0.0    0.0     0.0
+        M_M       0.00  0.0    0.0    0.0     0.0  0.0  0.0    0.0    0.0     0.0
 
 
     References:
@@ -159,9 +159,13 @@ class Evaluation:
 
     def get_relation_stream(self, dataset):
         """Get stream dedicated to relation prediction."""
-        relation_loader = self._get_test_loader(
-            triples=dataset, mode='relation-batch')
-        return relation_loader
+        test_dataset = base.TestDatasetRelation(
+            triples=dataset, true_triples=self.true_triples, entities=self.entities,
+            relations=self.relations)
+
+        return data.DataLoader(
+            dataset=test_dataset, batch_size=self.batch_size, num_workers=self.num_workers,
+            collate_fn=base.TestDatasetRelation.collate_fn)
 
     def eval(self, model, dataset):
         """Evaluate selected model with the metrics: MRR, MR, HITS@1, HITS@3, HITS@10"""
@@ -199,6 +203,117 @@ class Evaluation:
             )
 
         return {f'{name}_relations': round(metric.get(), 4) for name, metric in metrics.items()}
+
+    @classmethod
+    def compute_score(cls, model, test_set, metrics, device):
+
+        for step, (positive_sample, negative_sample, filter_bias, mode) in enumerate(test_set):
+
+            positive_sample = positive_sample.to(device)
+            negative_sample = negative_sample.to(device)
+            filter_bias = filter_bias.to(device)
+
+            if mode == 'head-batch' or mode == 'tail-batch':
+
+                score = model(
+                    sample=positive_sample,
+                    negative_sample=negative_sample,
+                    mode=mode
+                )
+
+            elif mode == 'relation-batch':
+
+                score = model(negative_sample)
+
+            score += filter_bias
+
+            argsort = torch.argsort(score, dim=1, descending=True)
+
+            if mode == 'head-batch':
+                positive_arg = positive_sample[:, 0]
+
+            if mode == 'relation-batch':
+                positive_arg = positive_sample[:, 1]
+
+            elif mode == 'tail-batch':
+                positive_arg = positive_sample[:, 2]
+
+            batch_size = positive_sample.size(0)
+
+            for i in range(batch_size):
+                # Notice that argsort is not ranking
+                ranking = (argsort[i, :] == positive_arg[i]).nonzero()
+                assert ranking.size(0) == 1
+
+                ranking = 1 + ranking.item()
+
+                # ranking + 1 is the true ranking used in evaluation metrics
+                metrics['MRR'].update(1.0/ranking)
+
+                metrics['MR'].update(ranking)
+
+                metrics['HITS@1'].update(
+                    1.0 if ranking <= 1 else 0.0)
+
+                metrics['HITS@3'].update(
+                    1.0 if ranking <= 3 else 0.0)
+
+                metrics['HITS@10'].update(
+                    1.0 if ranking <= 10 else 0.0)
+
+        return metrics
+
+    @classmethod
+    def compute_detailled_score(cls, model, test_set, metrics, types_relations, device):
+
+        for step, (positive_sample, negative_sample, filter_bias, mode) in enumerate(test_set):
+
+            positive_sample = positive_sample.to(device)
+            negative_sample = negative_sample.to(device)
+            filter_bias = filter_bias.to(device)
+
+            score = model(
+                sample=positive_sample,
+                negative_sample=negative_sample,
+                mode=mode,
+            )
+
+            score += filter_bias
+
+            argsort = torch.argsort(score, dim=1, descending=True)
+
+            if mode == 'head-batch':
+                positive_arg = positive_sample[:, 0]
+
+            elif mode == 'tail-batch':
+                positive_arg = positive_sample[:, 2]
+
+            batch_size = positive_sample.size(0)
+
+            for i in range(batch_size):
+                # Notice that argsort is not ranking
+                ranking = (argsort[i, :] == positive_arg[i]).nonzero()
+                assert ranking.size(0) == 1
+
+                ranking = 1 + ranking.item()
+
+                type_relation = types_relations[positive_sample[:, 1][i]]
+
+                # ranking + 1 is the true ranking used in evaluation metrics
+                metrics[mode][type_relation]['MRR'].update(1.0/ranking)
+
+                metrics[mode][type_relation]['MR'].update(ranking)
+
+                metrics[mode][type_relation]['HITS@1'].update(
+                    1.0 if ranking <= 1 else 0.0)
+
+                metrics[mode][type_relation]['HITS@3'].update(
+                    1.0 if ranking <= 3 else 0.0)
+
+                metrics[mode][type_relation]['HITS@10'].update(
+                    1.0 if ranking <= 10 else 0.0)
+
+        return metrics
 
     def detail_eval(self, model, dataset, treshold=1.5):
         """
@@ -279,98 +394,3 @@ class Evaluation:
         results.index.name = 'relation'
 
         return results
-
-    @ classmethod
-    def compute_detailled_score(cls, model, test_set, metrics, types_relations, device):
-
-        for step, (positive_sample, negative_sample, filter_bias, mode) in enumerate(test_set):
-
-            positive_sample = positive_sample.to(device)
-            negative_sample = negative_sample.to(device)
-            filter_bias = filter_bias.to(device)
-
-            score = model(negative_sample)
-            score += filter_bias
-
-            argsort = torch.argsort(score, dim=1, descending=True)
-
-            if mode == 'head-batch':
-                positive_arg = positive_sample[:, 0]
-
-            elif mode == 'tail-batch':
-                positive_arg = positive_sample[:, 2]
-
-            batch_size = positive_sample.size(0)
-
-            for i in range(batch_size):
-                # Notice that argsort is not ranking
-                ranking = (argsort[i, :] == positive_arg[i]).nonzero()
-                assert ranking.size(0) == 1
-
-                ranking = 1 + ranking.item()
-
-                type_relation = types_relations[positive_sample[:, 1][i]]
-
-                # ranking + 1 is the true ranking used in evaluation metrics
-                metrics[mode][type_relation]['MRR'].update(1.0/ranking)
-
-                metrics[mode][type_relation]['MR'].update(ranking)
-
-                metrics[mode][type_relation]['HITS@1'].update(
-                    1.0 if ranking <= 1 else 0.0)
-
-                metrics[mode][type_relation]['HITS@3'].update(
-                    1.0 if ranking <= 3 else 0.0)
-
-                metrics[mode][type_relation]['HITS@10'].update(
-                    1.0 if ranking <= 10 else 0.0)
-
-        return metrics
-
-    @ classmethod
-    def compute_score(cls, model, test_set, metrics, device):
-
-        for step, (positive_sample, negative_sample, filter_bias, mode) in enumerate(test_set):
-
-            positive_sample = positive_sample.to(device)
-            negative_sample = negative_sample.to(device)
-            filter_bias = filter_bias.to(device)
-
-            score = model(negative_sample)
-            score += filter_bias
-
-            argsort = torch.argsort(score, dim=1, descending=True)
-
-            if mode == 'head-batch':
-                positive_arg = positive_sample[:, 0]
-
-            if mode == 'relation-batch':
-                positive_arg = positive_sample[:, 1]
-
-            elif mode == 'tail-batch':
-                positive_arg = positive_sample[:, 2]
-
-            batch_size = positive_sample.size(0)
-
-            for i in range(batch_size):
-                # Notice that argsort is not ranking
-                ranking = (argsort[i, :] == positive_arg[i]).nonzero()
-                assert ranking.size(0) == 1
-
-                ranking = 1 + ranking.item()
-
-                # ranking + 1 is the true ranking used in evaluation metrics
-                metrics['MRR'].update(1.0/ranking)
-
-                metrics['MR'].update(ranking)
-
-                metrics['HITS@1'].update(
-                    1.0 if ranking <= 1 else 0.0)
-
-                metrics['HITS@3'].update(
-                    1.0 if ranking <= 3 else 0.0)
-
-                metrics['HITS@10'].update(
-                    1.0 if ranking <= 10 else 0.0)
-
-        return metrics

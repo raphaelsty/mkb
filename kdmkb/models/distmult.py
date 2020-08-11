@@ -34,10 +34,12 @@ class DistMult(base.BaseModel):
             Number of relations      2
 
         >>> model.embeddings['entities']
-        {0: tensor([ 0.7645,  0.8300, -0.2343]), 1: tensor([ 0.9186, -0.2191,  0.2018])}
+        {0: tensor([ 0.7645,  0.8300, -0.2343]),
+                   1: tensor([ 0.9186, -0.2191,  0.2018])}
 
         >>> model.embeddings['relations']
-        {0: tensor([-0.4869,  0.5873,  0.8815]), 1: tensor([-0.7336,  0.8692,  0.1872])}
+        {0: tensor([-0.4869,  0.5873,  0.8815]),
+                   1: tensor([-0.7336,  0.8692,  0.1872])}
 
     References:
         1. [Yang, Bishan, et al. "Embedding entities and relations for learning and inference in knowledge bases." arXiv preprint arXiv:1412.6575 (2014).](https://arxiv.org/pdf/1412.6575.pdf)
@@ -49,8 +51,18 @@ class DistMult(base.BaseModel):
         super().__init__(hidden_dim=hidden_dim, relation_dim=hidden_dim, entity_dim=hidden_dim,
                          n_entity=n_entity, n_relation=n_relation, gamma=gamma)
 
-    def forward(self, sample):
-        head, relation, tail, shape = self.batch(sample=sample)
-        score = (head * relation) * tail
+    def forward(self, sample, negative_sample=None, mode=None):
+        head, relation, tail, shape = self.batch(
+            sample=sample,
+            negative_sample=negative_sample,
+            mode=mode
+        )
+
+        if mode == 'head-batch':
+            score = head * (relation * tail)
+        else:
+            score = (head * relation) * tail
+
         score = score.sum(dim=2)
+
         return score.view(shape)

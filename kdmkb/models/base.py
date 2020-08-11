@@ -110,18 +110,50 @@ class BaseModel(nn.Module):
         )
 
     @classmethod
-    def format_sample(cls, sample):
+    def format_sample(cls, sample, negative_sample=None):
+        """Adapt input tensor to compute scores."""
         dim_sample = len(sample.shape)
 
         if dim_sample == 2:
-            return sample, (sample.size(0), 1)
+
+            if negative_sample is None:
+
+                return sample, (sample.size(0), 1)
+
+            else:
+
+                return sample, negative_sample.shape
 
         elif dim_sample == 3:
-            return sample.view(sample.size(0) * sample.size(1), 3), (sample.size(0), sample.size(1))
 
-    def batch(self, sample):
-        sample, shape = self.format_sample(sample=sample)
+            return (
+                sample.view(sample.size(0) * sample.size(1), 3),
+                (sample.size(0), sample.size(1))
+            )
 
+    def batch(self, sample, negative_sample=None, mode=None):
+        sample, shape = self.format_sample(
+            sample=sample,
+            negative_sample=negative_sample
+        )
+
+        if mode == 'head-batch':
+            head, relation, tail = self.head_batch(
+                sample=sample,
+                negative_sample=negative_sample
+            )
+
+        elif mode == 'tail-batch':
+            head, relation, tail = self.tail_batch(
+                sample=sample,
+                negative_sample=negative_sample
+            )
+        else:
+            head, relation, tail = self.default_batch(sample=sample)
+
+        return head, relation, tail, shape
+
+    def default_batch(self, sample):
         head = torch.index_select(
             self.entity_embedding,
             dim=0,
@@ -140,7 +172,57 @@ class BaseModel(nn.Module):
             index=sample[:, 2]
         ).unsqueeze(1)
 
-        return head, relation, tail, shape
+        return head, relation, tail
+
+    def head_batch(self, sample, negative_sample):
+        """Used to get faster when computing scores for negative samples."""
+        batch_size, negative_sample_size = negative_sample.size(
+            0), negative_sample.size(1)
+
+        head = torch.index_select(
+            self.entity_embedding,
+            dim=0,
+            index=negative_sample.view(-1)
+        ).view(batch_size, negative_sample_size, -1)
+
+        relation = torch.index_select(
+            self.relation_embedding,
+            dim=0,
+            index=sample[:, 1]
+        ).unsqueeze(1)
+
+        tail = torch.index_select(
+            self.entity_embedding,
+            dim=0,
+            index=sample[:, 2]
+        ).unsqueeze(1)
+
+        return head, relation, tail
+
+    def tail_batch(self, sample, negative_sample):
+        """Used to get faster when computing scores for negative samples."""
+        batch_size, negative_sample_size = negative_sample.size(
+            0), negative_sample.size(1)
+
+        head = torch.index_select(
+            self.entity_embedding,
+            dim=0,
+            index=sample[:, 0]
+        ).unsqueeze(1)
+
+        relation = torch.index_select(
+            self.relation_embedding,
+            dim=0,
+            index=sample[:, 1]
+        ).unsqueeze(1)
+
+        tail = torch.index_select(
+            self.entity_embedding,
+            dim=0,
+            index=negative_sample.view(-1)
+        ).view(batch_size, negative_sample_size, -1)
+
+        return head, relation, tail
 
     def _set_params(self, entities_embeddings, relations_embeddings, **kwargs):
         """Load pre-trained weights."""

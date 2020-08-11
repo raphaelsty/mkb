@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import Dataset
 
 
-__all__ = ['TestDataset', 'TrainDataset']
+__all__ = ['TestDataset', 'TestDatasetRelation', 'TrainDataset']
 
 
 class TrainDataset(Dataset):
@@ -73,7 +73,73 @@ class TrainDataset(Dataset):
 
 
 class TestDataset(Dataset):
-    """Test dataset loader.
+    """Test dataset loader dedicated to link prediction.
+
+    Parameters:
+        triples (list): Testing set.
+        true_triples (list): Triples to filter when validating the model.
+        entities (dict): Index of entities.
+        relations (dict): Index of relations.
+        mode (str): head-batch or tail-batch.
+
+    Attributes:
+        n_entity (int): Number of entities.
+        n_relation (int): Number of relations.
+        len (int): Number of training triplets.
+
+    References:
+        1. [Sun, Zhiqing, et al. "Rotate: Knowledge graph embedding by relational rotation in complex space." arXiv preprint arXiv:1902.10197 (2019).](https://arxiv.org/pdf/1902.10197.pdf)
+        2. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
+    """
+
+    def __init__(self, triples, true_triples, entities, relations, mode):
+        self.len = len(triples)
+        self.true_triples = set(true_triples)
+        self.triples = triples
+        self.n_entity = len(entities.keys())
+        self.n_relation = len(relations.keys())
+        self.mode = mode
+
+    def __len__(self):
+        return self.len
+
+    def __getitem__(self, idx):
+        head, relation, tail = self.triples[idx]
+
+        if self.mode == 'head-batch':
+
+            tmp = [(0, rand_head) if (rand_head, relation, tail) not in self.true_triples
+                   else (-1, head) for rand_head in range(self.n_entity)]
+            tmp[head] = (0, head)
+
+        elif self.mode == 'tail-batch':
+
+            tmp = [(0, rand_tail) if (head, relation, rand_tail) not in self.true_triples
+                   else (-1, tail) for rand_tail in range(self.n_entity)]
+            tmp[tail] = (0, tail)
+
+        tmp = torch.LongTensor(tmp)
+
+        filter_bias = tmp[:, 0].float()
+
+        negative_sample = tmp[:, 1]
+
+        positive_sample = torch.LongTensor((head, relation, tail))
+
+        return positive_sample, negative_sample, filter_bias, self.mode
+
+    @staticmethod
+    def collate_fn(data):
+        """Reshape output data when calling train dataset loader."""
+        positive_sample = torch.stack([_[0] for _ in data], dim=0)
+        negative_sample = torch.stack([_[1] for _ in data], dim=0)
+        filter_bias = torch.stack([_[2] for _ in data], dim=0)
+        mode = data[0][3]
+        return positive_sample, negative_sample, filter_bias, mode
+
+
+class TestDatasetRelation(Dataset):
+    """Test dataset loader for relation prediction.
 
     Parameters:
         triples (list): Testing set.
@@ -93,68 +159,37 @@ class TestDataset(Dataset):
 
     """
 
-    def __init__(self, triples, true_triples, entities, relations, mode):
+    def __init__(self, triples, true_triples, entities, relations):
         self.len = len(triples)
         self.true_triples = set(true_triples)
         self.triples = triples
         self.n_entity = len(entities.keys())
         self.n_relation = len(relations.keys())
-        self.mode = mode
 
     def __len__(self):
         return self.len
 
-    def __getitem__(self, idx):
+    @property
+    def mode(self):
+        return 'relation-batch'
 
+    def __getitem__(self, idx):
         head, relation, tail = self.triples[idx]
 
         positive_sample = torch.LongTensor((head, relation, tail))
 
-        # Negative sample computation
-        if self.mode == 'head-batch':
+        tensor_head = torch.tensor([head] * self.n_relation)
+        tensor_tail = torch.tensor([tail] * self.n_relation)
 
-            tensor_relation = torch.tensor([relation] * self.n_entity)
-            tensor_tail = torch.tensor([tail] * self.n_entity)
+        tmp = torch.LongTensor([
+            (0, random) if (head, random, tail) not in self.true_triples
+            else (-1, relation)
+            for random in range(self.n_relation)
+        ])
 
-            tmp = torch.LongTensor([
-                (0, random) if (random, relation, tail) not in self.true_triples
-                else (-1, head)
-                for random in range(self.n_entity)
-            ])
-
-            tensor_head = tmp[:, 1]
-            bias = tmp[:, 0]
-            bias[head] = 0
-
-        elif self.mode == 'relation-batch':
-
-            tensor_head = torch.tensor([head] * self.n_relation)
-            tensor_tail = torch.tensor([tail] * self.n_relation)
-
-            tmp = torch.LongTensor([
-                (0, random) if (head, random, tail) not in self.true_triples
-                else (-1, relation)
-                for random in range(self.n_relation)
-            ])
-
-            tensor_relation = tmp[:, 1]
-            bias = tmp[:, 0]
-            bias[relation] = 0
-
-        elif self.mode == 'tail-batch':
-
-            tensor_head = torch.tensor([head] * self.n_entity)
-            tensor_relation = torch.tensor([relation] * self.n_entity)
-
-            tmp = torch.LongTensor([
-                (0, random) if (head, relation, random) not in self.true_triples
-                else (-1, tail)
-                for random in range(self.n_entity)
-            ])
-
-            tensor_tail = tmp[:, 1]
-            bias = tmp[:, 0]
-            bias[tail] = 0
+        tensor_relation = tmp[:, 1]
+        bias = tmp[:, 0]
+        bias[relation] = 0
 
         negative_sample = torch.stack(
             [tensor_head, tensor_relation, tensor_tail], dim=- 1)

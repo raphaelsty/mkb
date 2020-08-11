@@ -71,19 +71,10 @@ class NegativeSampling:
                     [1, 0, 2]])
 
             >>> negative_sample
-            tensor([[[0, 0, 2],
-             [0, 0, 3],
-             [0, 0, 0],
-             [0, 0, 2],
-             [0, 0, 2]],
-            <BLANKLINE>
-            [[1, 0, 3],
-             [1, 0, 0],
-             [1, 0, 3],
-             [1, 0, 0],
-             [1, 0, 0]]])
+            tensor([[2, 3, 0, 2, 2],
+            [3, 0, 3, 0, 0]])
 
-            >>> model(negative_sample)
+            >>> model(positive_sample, negative_sample, mode)
             tensor([[ 1.0213, -3.4006, -3.1048,  1.0213,  1.0213],
             [-2.4555, -3.9517, -2.4555, -3.9517, -3.9517]], grad_fn=<ViewBackward>)
 
@@ -100,19 +91,10 @@ class NegativeSampling:
                     [1, 0, 2]])
 
             >>> negative_sample
-            tensor([[[2, 0, 1],
-             [2, 0, 1],
-             [2, 0, 1],
-             [2, 0, 1],
-             [2, 0, 1]],
-            <BLANKLINE>
-             [[2, 0, 2],
-             [2, 0, 2],
-             [2, 0, 2],
-             [2, 0, 2],
-             [3, 0, 2]]])
+            tensor([[2, 2, 2, 2, 2],
+            [2, 2, 2, 2, 3]])
 
-            >>> model(negative_sample)
+            >>> model(positive_sample, negative_sample, mode)
             tensor([[-2.3821, -2.3821, -2.3821, -2.3821, -2.3821],
             [-2.4623, -2.4623, -2.4623, -2.4623, -0.8139]], grad_fn=<ViewBackward>)
 
@@ -141,23 +123,6 @@ class NegativeSampling:
             train_triples)
 
         self._rng = np.random.RandomState(seed)  # pylint: disable=no-member
-
-        self.sample = torch.stack([
-            torch.zeros(self.size, dtype=int),
-            torch.zeros(self.size, dtype=int),
-            torch.zeros(self.size, dtype=int)
-        ], dim=1)
-
-    def _get_sample(self, head, relation, tail, negative_entities, mode):
-        if mode == 'head-batch':
-            self.sample[:, 0] = negative_entities
-            self.sample[:, 1] = relation
-            self.sample[:, 2] = tail
-        elif mode == 'tail-batch':
-            self.sample[:, 0] = head
-            self.sample[:, 1] = relation
-            self.sample[:, 2] = negative_entities
-        return self.sample.detach().clone()
 
     @classmethod
     def _filter_negative_sample(cls, negative_sample, record):
@@ -217,15 +182,7 @@ class NegativeSampling:
                 negative_entities_sample
             )
 
-            samples.append(
-                self._get_sample(
-                    head=head,
-                    relation=relation,
-                    tail=tail,
-                    negative_entities=negative_entities_sample,
-                    mode=mode
-                )
-            )
+            samples.append(negative_entities_sample)
 
         return torch.stack(samples, dim=0).long()
 
