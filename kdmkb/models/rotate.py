@@ -3,6 +3,8 @@ import torch.nn as nn
 
 from . import base
 
+from math import pi
+
 __all__ = ['RotatE']
 
 
@@ -54,7 +56,7 @@ class RotatE(base.BaseModel):
             hidden_dim=hidden_dim, relation_dim=hidden_dim, entity_dim=hidden_dim*2,
             n_entity=n_entity, n_relation=n_relation, gamma=gamma)
 
-        self.pi = 3.14159265358979323846
+        self.pi = pi
         self.modulus = nn.Parameter(torch.Tensor(
             [[0.5 * self.embedding_range.item()]]))
 
