@@ -120,13 +120,13 @@ class Evaluation:
             'HITS@3_relations': 1.0, 'HITS@10_relations': 1.0}
 
         >>> validation.detail_eval(model=model, dataset=test, treshold=1.5)
-                head                            tail
-                MRR   MR HITS@1 HITS@3 HITS@10  MRR   MR HITS@1 HITS@3 HITS@10
+                head                             tail
+                MRR   MR HITS@1 HITS@3 HITS@10   MRR   MR  HITS@1 HITS@3 HITS@10
         relation
-        1_1       0.25  4.0    0.0    0.0     1.0  0.5  2.0    0.0    1.0     1.0
-        1_M       1.00  1.0    1.0    1.0     1.0  1.0  1.0    1.0    1.0     1.0
-        M_1       0.00  0.0    0.0    0.0     0.0  0.0  0.0    0.0    0.0     0.0
-        M_M       0.00  0.0    0.0    0.0     0.0  0.0  0.0    0.0    0.0     0.0
+        1_1       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0
+        1_M       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0
+        M_1       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0
+        M_M       0.625  2.5    0.5    0.5     1.0  0.75  1.5    0.5    1.0     1.0
 
 
     References:
@@ -297,7 +297,9 @@ class Evaluation:
 
                 ranking = 1 + ranking.item()
 
-                type_relation = types_relations[positive_sample[:, 1][i]]
+                type_relation = types_relations[
+                    positive_sample[:, 1][i].item()
+                ]
 
                 # ranking + 1 is the true ranking used in evaluation metrics
                 metrics[mode][type_relation]['MRR'].update(1.0/ranking)
@@ -346,7 +348,7 @@ class Evaluation:
         mean_relations['type'] = mean_relations['head'] + \
             '_' + mean_relations['tail']
 
-        type_relation = mean_relations.to_dict()['type']
+        mapping_type_relations = mean_relations.to_dict()['type']
 
         types_relations = ['1_1', '1_M', 'M_1', 'M_M']
 
@@ -372,7 +374,7 @@ class Evaluation:
                     model=model,
                     test_set=test_set,
                     metrics=metrics,
-                    types_relations=types_relations,
+                    types_relations=mapping_type_relations,
                     device=self.device
                 )
 
