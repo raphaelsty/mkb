@@ -339,10 +339,10 @@ class Evaluation:
             [mean_head, mean_tail], axis='columns').reset_index()
 
         mean_relations['head'] = mean_relations['head'].apply(
-            lambda x: '1' if x < treshold else 'M')
+            lambda x: '1' if x <= treshold else 'M')
 
         mean_relations['tail'] = mean_relations['tail'].apply(
-            lambda x: '1' if x < treshold else 'M')
+            lambda x: '1' if x <= treshold else 'M')
 
         mean_relations['type'] = mean_relations['head'] + \
             '_' + mean_relations['tail']
