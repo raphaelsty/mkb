@@ -90,6 +90,7 @@ class KdmkbModel:
                             n_random_entities=n_random_entities[id_dataset_teacher],
                             n_random_relations=n_random_relations[id_dataset_teacher],
                             seed=seed,
+                            device=device,
                         ),
                         device=device,
                     )
@@ -135,12 +136,12 @@ class KdmkbModel:
                 mode=mode,
             )
 
-            # Store positive sample to distill it.
-            positive_samples[id_dataset] = positive_sample
-
             positive_sample = positive_sample.to(self.device)
             negative_sample = negative_sample.to(self.device)
             weight = weight.to(self.device)
+
+            # Store positive sample to distill it.
+            positive_samples[id_dataset] = positive_sample
 
             positive_score = models[id_dataset](positive_sample)
 
@@ -167,9 +168,7 @@ class KdmkbModel:
                     ].distill(
                         teacher=models[id_dataset_teacher],
                         student=models[id_dataset_student],
-                        positive_sample=positive_samples[
-                            id_dataset_teacher
-                        ].to(self.device)
+                        positive_sample=positive_samples[id_dataset_teacher]
                     )
 
         for id_dataset, _ in datasets.items():
