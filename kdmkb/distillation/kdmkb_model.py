@@ -248,7 +248,7 @@ class KdmkbModel:
 
                     self.print_metrics(
                         description='Relation:',
-                        metrics=scores_test
+                        metrics=scores_relations_test
                     )
 
                     # Save models
