@@ -199,9 +199,9 @@ class KdmkbModel:
 
             bar.set_description(text=str(metrics))
 
-            if step % eval_every == 0:
+            if (step + 1) % eval_every == 0:
 
-                for id_dataset, dataset in datasets:
+                for id_dataset, dataset in datasets.items():
 
                     models[id_dataset] = models[id_dataset].eval()
 
