@@ -135,11 +135,12 @@ class KdmkbModel:
                 mode=mode,
             )
 
+            # Store positive sample to distill it.
+            positive_samples[id_dataset] = positive_sample
+
             positive_sample = positive_sample.to(self.device)
             negative_sample = negative_sample.to(self.device)
             weight = weight.to(self.device)
-
-            positive_samples[id_dataset] = positive_sample
 
             positive_score = models[id_dataset](positive_sample)
 
@@ -166,7 +167,9 @@ class KdmkbModel:
                     ].distill(
                         teacher=models[id_dataset_teacher],
                         student=models[id_dataset_student],
-                        positive_sample=positive_samples[id_dataset_teacher]
+                        positive_sample=positive_samples[
+                            id_dataset_teacher
+                        ].to(self.device)
                     )
 
         for id_dataset, _ in datasets.items():
