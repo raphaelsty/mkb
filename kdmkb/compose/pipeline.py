@@ -147,7 +147,7 @@ class Pipeline:
 
     def learn(self, model, dataset, sampling, optimizer, loss, evaluation=None):
 
-        for step in self.bar():
+        for step in self.bar:
 
             positive_sample, weight, mode = next(dataset)
 

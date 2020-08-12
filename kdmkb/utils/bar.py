@@ -11,6 +11,12 @@ class Bar:
         update_every (int): Frequency of updates of tqdm bar.
         position (int): Position of the progress bar.
 
+
+    >>> from kdmkb import utils
+
+    >>> for _ in utils.Bar(step = 10, update_every = 2):
+    ...     pass
+
     """
 
     def __init__(self, step, update_every, position=0):
@@ -18,8 +24,8 @@ class Bar:
         self.update_every = update_every
         self.n = 0
 
-    def __call__(self, loss=None):
-        return self.bar
+    def __iter__(self, loss=None):
+        yield from self.bar
 
     def set_description(self, text):
         if self.n % self.update_every == 0:

@@ -1,13 +1,14 @@
-import torch
-from torch.utils import data
-
-import pandas as pd
-
-from creme import stats
-
 from ..datasets import base
 
 import collections
+
+from creme import stats
+
+from torch.utils import data
+
+import torch
+
+import pandas as pd
 
 
 __all__ = ['Evaluation']

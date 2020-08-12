@@ -24,8 +24,6 @@ class TransH(base.BaseModel):
         >>> import torch
         >>> _ = torch.manual_seed(42)
 
-        >>> from kdmkb import datasets
-
         >>> model = models.TransH(hidden_dim = 3, n_entity = 2, n_relation = 2, gamma = 1)
 
         >>> model

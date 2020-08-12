@@ -14,70 +14,24 @@ class KGEBoard:
 
     """
 
-    def __init__(self, log_dir, experiment, key_metric='HITS@3', bigger_is_better=True):
+    def __init__(self, log_dir, experiment):
         from torch.utils.tensorboard import SummaryWriter
 
         self.experiment = experiment
         self.path = os.path.join(log_dir, experiment)
         self.writer = SummaryWriter(log_dir=self.path)
-        self.key_metric = key_metric
 
-        if bigger_is_better:
-            self.comparison = operator.le
-        else:
-            self.comparison = operator.ge
-
-        if self.key_metric:
-            self.best_params = collections.defaultdict(
-                lambda: collections.defaultdict(float))
-
-    def update(self, step, metrics, **description):
-        """
-        """
-        description = f'{self._description(**description)}'
+    def update(self, step, metrics, model_id):
+        model_id = f'{self._model_id(model_id)}'
 
         for m, s in metrics.items():
-            self.writer.add_scalars(main_tag=f'{self.experiment}_{m}',
-                                    tag_scalar_dict={f'{description}': s}, global_step=step)
 
-        if self.key_metric in metrics:
-
-            if self.comparison(self.best_params[f'{self.experiment}_{description}'][self.key_metric],
-                               metrics[self.key_metric]):
-
-                for m, s in metrics.items():
-                    self.best_params[f'{self.experiment}_{description}'][m] = s
-
-                self.best_params[f'{self.experiment}_{description}']['step'] = step
-
-        return self
-
-    def export_best_scores(self, **description):
-        """
-        Export best scores founds for each model by default.
-        If model is specified, it export the best scores found for this model.
-        """
-        if model is not None:
-
-            description = self._description(**description)
-
-            self.writer.add_text(
-                tag=f'{self.experiment}_{description}',
-                text_string=self._description(
-                    **self.best_params[f'{self.experiment}_{description}']),
-                global_step=self.best_params[f'{self.experiment}_{description}']['step']
+            self.writer.add_scalars(
+                main_tag=f'{self.experiment}_{m}',
+                tag_scalar_dict={f'{model_id}': s},
+                global_step=step
             )
 
-        else:
-            for model, scores in self.best_params.items():
-                self.writer.add_text(
-                    tag=f'{self.experiment}_{model}',
-                    text_string=self._description(**scores),
-                    global_step=scores['step']
-                )
-
-        return self
-
     @classmethod
-    def _description(cls, **x):
-        return ', '.join([f'{xi}: {yi}' for xi, yi in x.items()])
+    def _model_id(cls, model_id):
+        return ', '.join([f'{xi}: {yi}' for xi, yi in model_id.items()])
