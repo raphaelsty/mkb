@@ -197,7 +197,7 @@ class KdmkbModel:
 
             metrics = self.forward(datasets, models)
 
-            bar.set_description(text=metrics)
+            bar.set_description(text=str(metrics))
 
             if step % eval_every == 0:
 
