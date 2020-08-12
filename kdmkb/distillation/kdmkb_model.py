@@ -201,6 +201,8 @@ class KdmkbModel:
 
                 for id_dataset, dataset in datasets:
 
+                    models[id_dataset] = models[id_dataset].eval()
+
                     scores_valid = self.validation[id_dataset].eval(
                         model=models[id_dataset],
                         dataset=dataset.valid
@@ -223,6 +225,8 @@ class KdmkbModel:
                         model=models[id_dataset],
                         dataset=dataset.test
                     )
+
+                    models[id_dataset] = models[id_dataset].train()
 
                     scores_relations_test = collections.OrderedDict({
                         f'test_{metric}': score for metric, score in scores_relation.items()
@@ -248,8 +252,12 @@ class KdmkbModel:
                     # Save models
                     if save_path is not None:
                         name_model = f'{id_dataset}_{scores_valid}.pickle'
-                        with open(os.path.join(save_path, name_model), 'wb') as output_model:
-                            pickle.dump(models[id_dataset])
+                        with open(os.path.join(save_path, name_model), 'wb') as handle:
+                            pickle.dump(
+                                models[id_dataset],
+                                handle,
+                                protocol=pickle.HIGHEST_PROTOCOL
+                            )
         return self
 
     @classmethod
