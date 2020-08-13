@@ -1,5 +1,6 @@
 from .distillation import Distillation
-from .top_k_sampling import TopKSampling
+#from .top_k_sampling import TopKSampling
+from .uniform_sampling import UniformSampling
 from ..sampling import NegativeSampling
 from ..losses import Adversarial
 from ..evaluation import Evaluation
@@ -80,17 +81,10 @@ class KdmkbModel:
                         teacher_relations=dataset_teacher.relations,
                         student_entities=dataset_student.entities,
                         student_relations=dataset_student.relations,
-                        sampling=TopKSampling(
-                            teacher_relations=dataset_teacher.relations,
-                            teacher_entities=dataset_teacher.entities,
-                            student_entities=dataset_student.entities,
-                            student_relations=dataset_student.relations,
+                        sampling=UniformSampling(
                             batch_size_entity=batch_size_entity[id_dataset_teacher],
                             batch_size_relation=batch_size_relation[id_dataset_teacher],
-                            n_random_entities=n_random_entities[id_dataset_teacher],
-                            n_random_relations=n_random_relations[id_dataset_teacher],
                             seed=seed,
-                            device=device,
                         ),
                         device=device,
                     )
