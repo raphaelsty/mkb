@@ -197,8 +197,13 @@ class TopKSampling:
             if r in student_relations
         })
 
-        self.entities_teacher = torch.tensor(
-            [e for e, _ in self.mapping_entities.items()], dtype=int
+        self.entities_teacher_prediction = torch.tensor([
+            [e for e, _ in self.mapping_entities.items()]
+        ], dtype=int)
+
+        self.entities_teacher_selection = torch.tensor(
+            [e for e, _ in self.mapping_entities.items()],
+            dtype=int
         )
 
         self.entities_student = torch.tensor(
@@ -213,24 +218,13 @@ class TopKSampling:
             [r for _, r in self.mapping_relations.items()], dtype=int
         )
 
-        self.default_heads_teacher_e = torch.zeros(
-            len(self.mapping_entities), dtype=int
-        )
-
-        self.default_relations_teacher_e = torch.zeros(
-            len(self.mapping_entities), dtype=int
-        )
-
-        self.default_tails_teacher_e = torch.zeros(
-            len(self.mapping_entities), dtype=int
-        )
-
-        self.default_heads_teacher_r = torch.zeros(
-            len(self.mapping_relations), dtype=int
-        )
-
-        self.default_tails_teacher_r = torch.zeros(
-            len(self.mapping_relations), dtype=int
+        self.tensor_relations_teacher = torch.stack(
+            [
+                torch.zeros(len(self.mapping_relations), dtype=int),
+                self.relations_teacher,
+                torch.zeros(len(self.mapping_relations), dtype=int),
+            ],
+            dim=1
         )
 
     @property
@@ -259,65 +253,36 @@ class TopKSampling:
 
             head, relation, tail = head.item(), relation.item(), tail.item()
 
-            # Entities
-            self.default_heads_teacher_e[:] = head
-            self.default_relations_teacher_e[:] = relation
-            self.default_tails_teacher_e[:] = tail
+            self.tensor_relations_teacher[:, 0] = head
+            self.tensor_relations_teacher[:, 2] = tail
 
-            # Relations
-            self.default_heads_teacher_r[:] = head
-            self.default_tails_teacher_r[:] = tail
-
-            tensor_heads_teacher = torch.stack(
-                [
-                    self.entities_teacher,
-                    self.default_relations_teacher_e,
-                    self.default_tails_teacher_e,
-                ],
-                dim=1
-            )
-
-            tensor_relations_teacher = torch.stack(
-                [
-                    self.default_heads_teacher_r,
-                    self.relations_teacher,
-                    self.default_tails_teacher_r,
-                ],
-                dim=1
-            )
-
-            tensor_tails_teacher = torch.stack(
-                [
-                    self.default_heads_teacher_e,
-                    self.default_relations_teacher_e,
-                    self.entities_teacher,
-                ],
-                dim=1
-            )
-
-            rank_heads = self._get_rank(
+            rank_heads = self._get_rank_entities(
                 teacher=teacher,
-                sample=tensor_heads_teacher,
+                sample=torch.tensor([[head, relation, tail]]),
+                mode='head-batch',
+                entities=self.entities_teacher_prediction,
                 batch_size=self.batch_size_entity_top_k,
                 device=self.device
             )
 
-            rank_relations = self._get_rank(
+            rank_relations = self._get_rank_relations(
                 teacher=teacher,
-                sample=tensor_relations_teacher,
+                sample=self.tensor_relations_teacher,
                 batch_size=self.batch_size_relation_top_k,
                 device=self.device
             )
 
-            rank_tails = self._get_rank(
+            rank_tails = self._get_rank_entities(
                 teacher=teacher,
-                sample=tensor_tails_teacher,
+                sample=torch.tensor([[head, relation, tail]]),
+                mode='tail-batch',
+                entities=self.entities_teacher_prediction,
                 batch_size=self.batch_size_entity_top_k,
                 device=self.device
             )
 
             head_distribution_teacher.append(
-                self.entities_teacher[rank_heads]
+                self.entities_teacher_selection[rank_heads]
             )
 
             head_distribution_student.append(
@@ -333,7 +298,7 @@ class TopKSampling:
             )
 
             tail_distribution_teacher.append(
-                self.entities_teacher[rank_tails]
+                self.entities_teacher_selection[rank_tails]
             )
 
             tail_distribution_student.append(
@@ -391,13 +356,27 @@ class TopKSampling:
                 head_distribution_student, relation_distribution_student, tail_distribution_student)
 
     @classmethod
-    def _get_rank(cls, teacher, sample, batch_size, device):
+    def _get_rank_relations(cls, teacher, sample, batch_size, device):
         with torch.no_grad():
             return torch.argsort(
                 teacher(sample.to(device)),
                 descending=True,
                 dim=0
             ).flatten()[:batch_size]
+
+    @classmethod
+    def _get_rank_entities(cls, teacher, sample, entities, mode, batch_size, device):
+        """Speed up computation of best candidates entities using negative sample mechanism."""
+        with torch.no_grad():
+            return torch.argsort(
+                teacher(
+                    sample.to(device),
+                    entities.to(device),
+                    mode
+                ),
+                dim=1,
+                descending=True
+            )[:, 0:batch_size].flatten()
 
 
 class TopKSamplingTransE:
