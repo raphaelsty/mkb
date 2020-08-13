@@ -183,13 +183,15 @@ class KdmkbModel:
 
         return self.metrics
 
-    def train(self, log_dir, experiment, models, datasets, max_step, eval_every=2000,
-              update_every=10, save_path=None):
+    def learn(self, models, datasets, max_step, eval_every=2000,
+              update_every=10, log_dir=None, experiment=None, save_path=None):
 
-        self.board = KGEBoard(
-            log_dir=log_dir,
-            experiment=experiment,
-        )
+        if log_dir is not None and experiment is not None:
+
+            board = KGEBoard(
+                log_dir=log_dir,
+                experiment=experiment,
+            )
 
         bar = Bar(step=max_step, update_every=update_every)
 
@@ -255,7 +257,19 @@ class KdmkbModel:
                         metrics=scores_relations_test
                     )
 
-                    # Save models
+                    # Export results to tensorboard
+                    if log_dir is not None and experiment is not None:
+
+                        board.update(
+                            step=step,
+                            metrics=dict(
+                                **scores_valid, **scores_test,
+                                **scores_relations_test
+                            ),
+                            model_id=id_dataset,
+                        )
+
+                        # Save models
                     if save_path is not None:
 
                         scores_to_str = ', '.join(
