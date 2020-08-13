@@ -191,7 +191,11 @@ class KdmkbModel:
 
             metrics = self.forward(datasets, models)
 
-            bar.set_description(text=str(metrics))
+            bar.set_description(
+                text=', '.join(
+                    [f'{model}: {loss}' for model, loss in metrics.items()]
+                )
+            )
 
             if (step + 1) % eval_every == 0:
 
@@ -247,7 +251,14 @@ class KdmkbModel:
 
                     # Save models
                     if save_path is not None:
-                        name_model = f'{id_dataset}_{scores_valid}.pickle'
+
+                        scores_to_str = ', '.join(
+                            [f'{metric}: {x}' for metric,
+                                x in scores_valid.items()]
+                        )
+
+                        name_model = f'{id_dataset}_{scores_to_str}.pickle'
+
                         with open(os.path.join(save_path, name_model), 'wb') as handle:
                             pickle.dump(
                                 models[id_dataset],
