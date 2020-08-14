@@ -78,7 +78,8 @@ class Evaluation:
         ...    entities = entities,
         ...    relations = relations,
         ...    batch_size = 2,
-        ...    seed = 42
+        ...    seed = 42,
+        ...    shuffle = False,
         ... )
 
         >>> negative_sampling = sampling.NegativeSampling(

@@ -43,8 +43,8 @@ class TopKSampling:
 
         >>> _ = torch.manual_seed(42)
 
-        >>> dataset_teacher = datasets.CountriesS1(batch_size = 2, seed = 42)
-        >>> dataset_student = datasets.CountriesS2(batch_size = 2, seed = 42)
+        >>> dataset_teacher = datasets.CountriesS1(batch_size = 2, seed = 42, shuffle=False)
+        >>> dataset_student = datasets.CountriesS2(batch_size = 2, seed = 42, shuffle=False)
 
         >>> teacher = models.RotatE(
         ...     n_entity = dataset_teacher.n_entity,

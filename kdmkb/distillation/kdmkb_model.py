@@ -113,13 +113,13 @@ class KdmkbModel:
         Model: dataset_1, step 1
             Validation:
                     valid_MRR: 0.0
-                    valid_MR: 36195.25
+                    valid_MR: 36195.0
                     valid_HITS@1: 0.0
                     valid_HITS@3: 0.0
                     valid_HITS@10: 0.0
             Test:
                     test_MRR: 0.0001
-                    test_MR: 20965.0
+                    test_MR: 20965.5
                     test_HITS@1: 0.0
                     test_HITS@3: 0.0
                     test_HITS@10: 0.0
@@ -133,13 +133,13 @@ class KdmkbModel:
         Model: dataset_2, step 1
             Validation:
                     valid_MRR: 0.0
-                    valid_MR: 37456.75
+                    valid_MR: 37457.0
                     valid_HITS@1: 0.0
                     valid_HITS@3: 0.0
                     valid_HITS@10: 0.0
             Test:
                     test_MRR: 0.0
-                    test_MR: 22757.0
+                    test_MR: 22758.0
                     test_HITS@1: 0.0
                     test_HITS@3: 0.0
                     test_HITS@10: 0.0

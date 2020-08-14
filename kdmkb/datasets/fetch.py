@@ -79,7 +79,7 @@ class Fetch:
             Batch size          1
             Entities            6
             Relations           2
-            Shuffle             False
+            Shuffle             True
             Train triples       3
             Validation triples  0
             Test triples        2
@@ -88,9 +88,9 @@ class Fetch:
         >>> for _ in range(3):
         ...     positive_sample, weight, mode = next(dataset)
         ...     print(positive_sample, weight, mode)
-        tensor([[0, 0, 1]]) tensor([0.3536]) tail-batch
-        tensor([[0, 0, 1]]) tensor([0.3536]) head-batch
         tensor([[1, 1, 2]]) tensor([0.3536]) tail-batch
+        tensor([[1, 1, 2]]) tensor([0.3536]) head-batch
+        tensor([[0, 0, 1]]) tensor([0.3536]) tail-batch
 
     References:
         1. [Sun, Zhiqing, et al. "Rotate: Knowledge graph embedding by relational rotation in complex space." arXiv preprint arXiv:1902.10197 (2019).](https://arxiv.org/pdf/1902.10197.pdf)
@@ -99,7 +99,7 @@ class Fetch:
     """
 
     def __init__(
-            self, train, entities, relations, batch_size, valid=None, test=None, shuffle=False,
+            self, train, entities, relations, batch_size, valid=None, test=None, shuffle=True,
             num_workers=1, seed=None, classification_valid=None, classification_test=None):
         self.train = train
         self.valid = valid

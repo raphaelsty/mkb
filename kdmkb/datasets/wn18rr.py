@@ -66,7 +66,7 @@ class Wn18rr(Fetch):
 
     """
 
-    def __init__(self, batch_size, shuffle=False, num_workers=1, seed=None):
+    def __init__(self, batch_size, shuffle=True, num_workers=1, seed=None):
 
         self.filename = 'wn18rr'
 
