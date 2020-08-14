@@ -79,8 +79,12 @@ class BaseModel(nn.Module):
         return {'entities': entities_embeddings, 'relations': relations_embeddings}
 
     @property
+    def name(self):
+        return self.__class__.__name__
+
+    @property
     def _repr_title(self):
-        return f'{self.__class__.__name__} model'
+        return f'{self.name} model'
 
     @property
     def _repr_content(self):
