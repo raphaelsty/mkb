@@ -431,7 +431,12 @@ class KdmkbModel:
                                 **scores_valid, **scores_test,
                                 **scores_relations_test
                             ),
-                            model_id=id_dataset,
+                            metadata={
+                                'kdmkb': models[id_dataset].name,
+                                'hidden_dim': models[id_dataset].hidden_dim,
+                                'gamma': models[id_dataset].gamma,
+
+                            },
                         )
 
                     # Save models

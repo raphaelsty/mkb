@@ -21,17 +21,17 @@ class KGEBoard:
         self.path = os.path.join(log_dir, experiment)
         self.writer = SummaryWriter(log_dir=self.path)
 
-    def update(self, step, metrics, model_id):
-        model_id = f'{self._model_id(model_id)}'
+    def update(self, step, metrics, metadata):
+        metadata = f'{self._format_metadata(metadata)}'
 
         for m, s in metrics.items():
 
             self.writer.add_scalars(
                 main_tag=f'{self.experiment}_{m}',
-                tag_scalar_dict={f'{model_id}': s},
+                tag_scalar_dict={f'{metadata}': s},
                 global_step=step
             )
 
     @classmethod
-    def _model_id(cls, model_id):
-        return ', '.join([f'{xi}: {yi}' for xi, yi in model_id.items()])
+    def _format_metadata(cls, metadata):
+        return ', '.join([f'{xi}: {yi}' for xi, yi in metadata.items()])
