@@ -133,8 +133,12 @@ class Fetch:
         return data
 
     @property
+    def name(self):
+        return self.__class__.__name__
+
+    @property
     def _repr_title(self):
-        return f'{self.__class__.__name__} dataset'
+        return f'{self.name} dataset'
 
     @property
     def _repr_content(self):

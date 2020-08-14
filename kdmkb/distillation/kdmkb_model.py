@@ -433,7 +433,7 @@ class KdmkbModel:
                             ),
                             metadata={
                                 'kdmkb': models[id_dataset].name,
-                                'dataset': id_dataset,
+                                'dataset': dataset.name,
                                 'hidden_dim': models[id_dataset].hidden_dim,
                                 'gamma': models[id_dataset].gamma.item(),
 
