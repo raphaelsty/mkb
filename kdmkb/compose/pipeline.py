@@ -104,25 +104,25 @@ class Pipeline:
         <BLANKLINE>
         Step: 4.
         <BLANKLINE>
-        Validation scores - {'MRR': 0.0001, 'MR': 13862.375, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
+        Validation scores - {'MRR': 0.0001, 'MR': 13861.75, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
         <BLANKLINE>
         Test scores - {'MRR': 0.0001, 'MR': 13842.125, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
         <BLANKLINE>
         <BLANKLINE>
         Step: 9.
         <BLANKLINE>
-        Validation scores - {'MRR': 0.0001, 'MR': 13866.125, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
+        Validation scores - {'MRR': 0.0001, 'MR': 13864.75, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
         <BLANKLINE>
-        Test scores - {'MRR': 0.0001, 'MR': 13847.0, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
+        Test scores - {'MRR': 0.0001, 'MR': 13844.625, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
         <BLANKLINE>
         <BLANKLINE>
         Step: 9.
         <BLANKLINE>
         <BLANKLINE>
-        Validation scores - {'MRR': 0.0001, 'MR': 13866.125, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
+        Validation scores - {'MRR': 0.0001, 'MR': 13864.75, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
         <BLANKLINE>
         <BLANKLINE>
-        Test scores - {'MRR': 0.0001, 'MR': 13847.0, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
+        Test scores - {'MRR': 0.0001, 'MR': 13844.625, 'HITS@1': 0.0, 'HITS@3': 0.0, 'HITS@10': 0.0, 'MRR_relations': 0.4062, 'MR_relations': 3.5, 'HITS@1_relations': 0.0, 'HITS@3_relations': 0.75, 'HITS@10_relations': 1.0}
         <BLANKLINE>
 
     """
@@ -173,6 +173,8 @@ class Pipeline:
             error.backward()
 
             _ = optimizer.step()
+
+            optimizer.zero_grad()
 
             self.metric_loss.update(error.item())
 
