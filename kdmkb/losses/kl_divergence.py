@@ -19,9 +19,9 @@ class KlDivergence(nn.Module):
     def __init__(self):
         pass
 
-    def __call__(self, student_score, teacher_score):
+    def __call__(self, student_score, teacher_score, T=1):
         return torch.mean(F.kl_div(
-            F.log_softmax(student_score, dim=1),
-            F.softmax(teacher_score, dim=1),
+            F.log_softmax(student_score / T, dim=1),
+            F.softmax(teacher_score / T, dim=1),
             reduction='none')
         )
