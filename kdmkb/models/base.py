@@ -238,4 +238,9 @@ class BaseModel(nn.Module):
 
     def save(self, path):
         import pickle
-        pickle.dump(self, open(path, 'wb'))
+        with open(path, 'wb') as handle:
+            pickle.dump(
+                self,
+                handle,
+                protocol=pickle.HIGHEST_PROTOCOL
+            )
