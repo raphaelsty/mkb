@@ -310,7 +310,7 @@ class KdmkbModel:
                         teacher=models[id_dataset_teacher],
                         student=models[id_dataset_student],
                         positive_sample=positive_samples[id_dataset_teacher]
-                    )
+                    ) * self.alpha_kl
 
         for id_dataset, _ in datasets.items():
 
