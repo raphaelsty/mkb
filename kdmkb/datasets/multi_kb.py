@@ -53,6 +53,16 @@ class MultiKb(Fetch):
         >>> assert len(dataset.classification_valid['X']) == len(dataset.valid) * 2
         >>> assert len(dataset.classification_test['X']) == len(dataset.test) * 2
 
+        All train triples are used to filter existing triples when initializing negative
+        sampling with MultiKb.
+        >>> len(dataset.train_triples)
+        86834
+
+        All true triples are used to filter existing triples when evaluating filtered metrics
+        with MultiKb.
+        >>> len(dataset.true_triples)
+        93001
+
     """
 
     def __init__(self, dataset, id_set, n_part, aligned_entities=1.):
@@ -63,13 +73,15 @@ class MultiKb(Fetch):
         self.filename = dataset.filename
         self.dataset_name = dataset.name
 
+        train, self.excluded_triples = self.split_train(
+            train=dataset.train,
+            n_part=n_part,
+            id_set=id_set,
+            seed=dataset.seed
+        )
+
         super().__init__(
-            train=self.split_train(
-                train=dataset.train,
-                n_part=n_part,
-                id_set=id_set,
-                seed=dataset.seed
-            ),
+            train=train,
             valid=dataset.valid,
             test=dataset.test,
             entities=self.corrupt_entities(
@@ -84,6 +96,18 @@ class MultiKb(Fetch):
             classification_valid=dataset.classification_valid,
             classification_test=dataset.classification_test,
         )
+
+    @property
+    def true_triples(self):
+        """Set of triples used dedicated to filtering to evualuate models."""
+        return self.train + self.excluded_triples + self.test + self.valid
+
+    @property
+    def train_triples(self):
+        """Filter all train triples in negative sampling even those that are excluded from the train
+        set.
+        """
+        return self.train + self.excluded_triples
 
     @property
     def name(self):
@@ -113,9 +137,24 @@ class MultiKb(Fetch):
 
     @classmethod
     def split_train(cls, train, n_part, id_set, seed=42):
+        """
+        Split train into n_part. Returns selected part and excluded triples.
+        """
         train = copy.deepcopy(train)
         random.Random(seed).shuffle(train)
-        return np.array_split(train, n_part)[id_set].tolist()
+        excluded_triples = []
+        for i, frame in enumerate(np.array_split(train, n_part)):
+
+            if i == id_set:
+                train = cls.format_triples(frame)
+            else:
+                excluded_triples += cls.format_triples(frame)
+
+        return train, excluded_triples
+
+    @staticmethod
+    def format_triples(x):
+        return [(h, r, t) for h, r, t in x]
 
     def corrupt_entities(self, entities, seed):
         n_entities = len(entities)

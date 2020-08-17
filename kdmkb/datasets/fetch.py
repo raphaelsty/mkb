@@ -133,6 +133,14 @@ class Fetch:
         return data
 
     @property
+    def true_triples(self):
+        return self.train + self.test + self.valid
+
+    @property
+    def train_triples(self):
+        return self.train
+
+    @property
     def name(self):
         return self.__class__.__name__
 

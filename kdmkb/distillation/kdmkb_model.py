@@ -221,7 +221,7 @@ class KdmkbModel:
                 size=negative_sampling_size[id_dataset],
                 entities=dataset.entities,
                 relations=dataset.relations,
-                train_triples=dataset.train,
+                train_triples=dataset.train_triples,
                 seed=seed
             )
 
@@ -229,7 +229,7 @@ class KdmkbModel:
                 entities=dataset.entities,
                 relations=dataset.relations,
                 batch_size=2,
-                true_triples=dataset.train + dataset.valid + dataset.test,
+                true_triples=dataset.true_triples,
                 device=device,
             )
 
