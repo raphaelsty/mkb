@@ -72,9 +72,14 @@ class MultiKb(Fetch):
             valid=dataset.valid,
             test=dataset.test,
             entities=self.corrupt_entities(
-                entities=dataset.entities, seed=dataset.seed),
+                entities=dataset.entities,
+                seed=dataset.seed
+            ),
             relations=dataset.relations,
-            batch_size=dataset.batch_size, shuffle=dataset.shuffle, num_workers=dataset.num_workers, seed=dataset.seed,
+            batch_size=dataset.batch_size,
+            shuffle=dataset.shuffle,
+            num_workers=dataset.num_workers,
+            seed=dataset.seed,
             classification_valid=dataset.classification_valid,
             classification_test=dataset.classification_test,
         )
