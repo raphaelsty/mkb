@@ -28,7 +28,7 @@ class MultiKb(Fetch):
         ... )
 
         >>> dataset
-            Wn18rr_1_2 dataset
+            Wn18rr_1_2_80 dataset
             Batch size          1
             Entities            40923
             Relations           11
@@ -38,6 +38,7 @@ class MultiKb(Fetch):
             Test triples        3134
             Wn18rr cutted in    2
             Wn18rr set          1
+            Aligned entities    80.0%
 
         >>> for _ in range(3):
         ...     positive_sample, weight, mode = next(dataset)
@@ -86,7 +87,7 @@ class MultiKb(Fetch):
 
     @property
     def name(self):
-        return f'{self.dataset_name}_{self.id_set + 1}_{self.n_part}'
+        return f'{self.dataset_name}_{self.id_set + 1}_{self.n_part}_{round(self.aligned_entities * 100)}'
 
     @property
     def _repr_title(self):
@@ -106,7 +107,8 @@ class MultiKb(Fetch):
             'Validation triples': f'{len(self.valid) if self.valid else 0}',
             'Test triples': f'{len(self.test) if self.test else 0}',
             f'{self.dataset_name} cutted in': f'{self.n_part}',
-            f'{self.dataset_name} set': f'{self.id_set + 1}'
+            f'{self.dataset_name} set': f'{self.id_set + 1}',
+            'Aligned entities': f'{self.aligned_entities * 100}%'
         }
 
     @classmethod
