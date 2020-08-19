@@ -1,9 +1,11 @@
+from ..utils import FetchToPredict
+from ..utils import make_prediction
+
 import torch
 
 import numpy as np
 
-from ..utils import FetchToPredict
-from ..utils import make_prediction
+import tqdm
 
 
 __all__ = ['find_treshold', 'accuracy']
@@ -237,7 +239,7 @@ def _compute_best_treshold(y_pred, positive, negative):
     best_accuracy = 0
     best_treshold = None
 
-    for threshold in y_pred:
+    for threshold in tqdm.tqdm(y_pred, position=0):
 
         accuracy = _accuracy(
             positive=positive,
