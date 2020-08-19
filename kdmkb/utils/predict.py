@@ -72,7 +72,7 @@ class FetchToPredict(Dataset):
         return torch.stack(data, dim=0)
 
 
-def make_prediction(model, dataset, batch_size, num_workers=1):
+def make_prediction(model, dataset, batch_size, num_workers=1, device='cuda'):
     """Compute predicion for given model and tripets.
 
     Parameters:
@@ -104,6 +104,7 @@ def make_prediction(model, dataset, batch_size, num_workers=1):
         ...     model = model,
         ...     dataset = dataset.test[:3], # Only compute scores for 3 samples of the test set.
         ...     batch_size = 20,
+        ...     device = 'cpu',
         ... )
         tensor([-2.4270, -2.1356, -2.4053])
 
@@ -113,6 +114,7 @@ def make_prediction(model, dataset, batch_size, num_workers=1):
         y_pred = []
 
         for x in FetchToPredict(dataset=dataset, batch_size=batch_size, num_workers=num_workers):
-            y_pred.append(model(x))
+
+            y_pred.append(model(x.to(device)))
 
         return torch.cat(y_pred).flatten()

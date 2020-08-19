@@ -9,7 +9,7 @@ from ..utils import make_prediction
 __all__ = ['find_treshold', 'accuracy']
 
 
-def find_treshold(model, X, y, batch_size, num_workers=1):
+def find_treshold(model, X, y, batch_size, num_workers=1, device='cuda'):
     """Computes best threshold and associated accuracy for triplet prediction task.
 
     Parameters:
@@ -43,6 +43,7 @@ def find_treshold(model, X, y, batch_size, num_workers=1):
         ...     X = dataset.classification_valid['X'],
         ...     y = dataset.classification_valid['y'],
         ...     batch_size = 10,
+        ...     device = 'cpu',
         ... )
         {'threshold': 1.924787, 'accuracy': 0.513803}
 
@@ -52,6 +53,7 @@ def find_treshold(model, X, y, batch_size, num_workers=1):
         ...     y = dataset.classification_valid['y'],
         ...     threshold = 1.924787,
         ...     batch_size = 10,
+        ...     device = 'cpu',
         ... )
         0.513803
 
@@ -61,6 +63,7 @@ def find_treshold(model, X, y, batch_size, num_workers=1):
         ...     y = dataset.classification_test['y'],
         ...     threshold = 1.924787,
         ...     batch_size = 10,
+        ...     device = 'cpu',
         ... )
         0.499243
 
@@ -72,7 +75,8 @@ def find_treshold(model, X, y, batch_size, num_workers=1):
             model=model,
             dataset=X,
             batch_size=batch_size,
-            num_workers=num_workers
+            num_workers=num_workers,
+            device=device,
         )
 
         positive, negative = _get_positive_negative(
@@ -83,7 +87,7 @@ def find_treshold(model, X, y, batch_size, num_workers=1):
         return _compute_best_treshold(y_pred=y_pred.numpy(), positive=positive, negative=negative)
 
 
-def accuracy(model, X, y, threshold, batch_size, num_workers=1):
+def accuracy(model, X, y, threshold, batch_size, num_workers=1, device='cuda'):
     """Find the threshold which maximize accuracy given inputs parameters.
 
     Parameters:
@@ -118,6 +122,7 @@ def accuracy(model, X, y, threshold, batch_size, num_workers=1):
         ...     X = dataset.classification_valid['X'],
         ...     y = dataset.classification_valid['y'],
         ...     batch_size = 10,
+        ...     device = 'cpu',
         ... )
         {'threshold': 1.924787, 'accuracy': 0.513803}
 
@@ -127,6 +132,7 @@ def accuracy(model, X, y, threshold, batch_size, num_workers=1):
         ...     y = dataset.classification_valid['y'],
         ...     threshold = 1.924787,
         ...     batch_size = 10,
+        ...     device = 'cpu',
         ... )
         0.513803
 
@@ -136,6 +142,7 @@ def accuracy(model, X, y, threshold, batch_size, num_workers=1):
         ...     y = dataset.classification_test['y'],
         ...     threshold = 1.924787,
         ...     batch_size = 10,
+        ...     device = 'cpu',
         ... )
         0.499243
 
@@ -147,7 +154,8 @@ def accuracy(model, X, y, threshold, batch_size, num_workers=1):
             model=model,
             dataset=X,
             batch_size=batch_size,
-            num_workers=num_workers
+            num_workers=num_workers,
+            device=device,
         )
 
         positive, negative = _get_positive_negative(
