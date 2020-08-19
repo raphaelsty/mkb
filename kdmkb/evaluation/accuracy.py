@@ -84,7 +84,7 @@ def find_treshold(model, X, y, batch_size, num_workers=1, device='cuda'):
             y_true=y
         )
 
-        return _compute_best_treshold(y_pred=y_pred.numpy(), positive=positive, negative=negative)
+        return _compute_best_treshold(y_pred=y_pred.cpu().numpy(), positive=positive, negative=negative)
 
 
 def accuracy(model, X, y, threshold, batch_size, num_workers=1, device='cuda'):
