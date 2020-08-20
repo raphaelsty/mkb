@@ -8,85 +8,7 @@ import numpy as np
 import tqdm
 
 
-__all__ = ['find_treshold', 'accuracy']
-
-
-def find_treshold(model, X, y, batch_size, num_workers=1, device='cuda'):
-    """Computes best threshold and associated accuracy for triplet prediction task.
-
-    Parameters:
-
-        model (kdmkb.models): Model.
-        X (list): Triplets.
-        y (list): Label set to 1 if the triplet exists.
-        batch_size (int): Size of the batch.
-        num_workers (int): Number of worker to load input dataset.
-
-    Example:
-
-        >>> from kdmkb import evaluation
-        >>> from kdmkb import datasets
-        >>> from kdmkb import models
-
-        >>> import torch
-        >>> _ = torch.manual_seed(42)
-
-        >>> dataset = datasets.Umls(batch_size=2)
-
-        >>> model = models.TransE(
-        ...     n_entity = dataset.n_entity,
-        ...     n_relation = dataset.n_relation,
-        ...     hidden_dim = 3,
-        ...     gamma = 6
-        ... )
-
-        >>> evaluation.find_treshold(
-        ...     model = model,
-        ...     X = dataset.classification_valid['X'],
-        ...     y = dataset.classification_valid['y'],
-        ...     batch_size = 10,
-        ...     device = 'cpu',
-        ... )
-        {'threshold': 1.924787, 'accuracy': 0.513803}
-
-        >>> evaluation.accuracy(
-        ...     model = model,
-        ...     X = dataset.classification_valid['X'],
-        ...     y = dataset.classification_valid['y'],
-        ...     threshold = 1.924787,
-        ...     batch_size = 10,
-        ...     device = 'cpu',
-        ... )
-        0.513803
-
-        >>> evaluation.accuracy(
-        ...     model = model,
-        ...     X = dataset.classification_test['X'],
-        ...     y = dataset.classification_test['y'],
-        ...     threshold = 1.924787,
-        ...     batch_size = 10,
-        ...     device = 'cpu',
-        ... )
-        0.499243
-
-    """
-
-    with torch.no_grad():
-
-        y_pred = make_prediction(
-            model=model,
-            dataset=X,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            device=device,
-        )
-
-        positive, negative = _get_positive_negative(
-            y_pred=y_pred,
-            y_true=y
-        )
-
-        return _compute_best_treshold(y_pred=y_pred.cpu().numpy(), positive=positive, negative=negative)
+__all__ = ['find_threshold', 'accuracy']
 
 
 def accuracy(model, X, y, threshold, batch_size, num_workers=1, device='cuda'):
@@ -97,7 +19,7 @@ def accuracy(model, X, y, threshold, batch_size, num_workers=1, device='cuda'):
         model (kdmkb.models): Model.
         X (list): Triplets.
         y (list): Label set to 1 if the triplet exists.
-        threshold (float): Treshold to classify a triplet as existing or not.
+        threshold (float): threshold to classify a triplet as existing or not.
         batch_size (int): Size of the batch.
         num_workers (int): Number of worker to load input dataset.
 
@@ -119,34 +41,34 @@ def accuracy(model, X, y, threshold, batch_size, num_workers=1, device='cuda'):
         ...     gamma = 6
         ... )
 
-        >>> evaluation.find_treshold(
+        >>> evaluation.find_threshold(
         ...     model = model,
         ...     X = dataset.classification_valid['X'],
         ...     y = dataset.classification_valid['y'],
         ...     batch_size = 10,
         ...     device = 'cpu',
         ... )
-        {'threshold': 1.924787, 'accuracy': 0.513803}
+        1.9384804
 
         >>> evaluation.accuracy(
         ...     model = model,
         ...     X = dataset.classification_valid['X'],
         ...     y = dataset.classification_valid['y'],
-        ...     threshold = 1.924787,
+        ...     threshold = 1.9384804,
         ...     batch_size = 10,
         ...     device = 'cpu',
         ... )
-        0.513803
+        0.5130368098159509
 
         >>> evaluation.accuracy(
         ...     model = model,
         ...     X = dataset.classification_test['X'],
         ...     y = dataset.classification_test['y'],
-        ...     threshold = 1.924787,
+        ...     threshold = 1.9384804,
         ...     batch_size = 10,
         ...     device = 'cpu',
         ... )
-        0.499243
+        0.49924357034795763
 
 
     """
@@ -160,95 +82,80 @@ def accuracy(model, X, y, threshold, batch_size, num_workers=1, device='cuda'):
             device=device,
         )
 
-        positive, negative = _get_positive_negative(
-            y_pred=y_pred,
-            y_true=y
-        )
+        y_pred = y_pred.cpu().numpy()
 
         return _accuracy(
-            positive=positive,
-            negative=negative,
-            threshold=threshold
+            y_true=y,
+            y_pred=y_pred,
+            threshold=threshold,
         )
 
 
-def _accuracy(positive, negative, threshold):
-    """Computes accuracy.
+def find_threshold(model, X, y, batch_size, num_workers=1, device='cuda'):
+    """Find the best treshold according to input model and dataset.
 
-    Example:
+    >>> from sklearn import metrics
 
-        >>> import numpy as np
+    >>> y_true = [-1, -1, -1, -1, -1, 1, 1, 1, 1, 1]
+    >>> y_pred = [1, 2, 3, 4, 5, 5, 6, 7, 8, 9]
 
-        >>> negative = np.array([1, 2, 3, 4, 5])
-        >>> positive = np.array([5, 6, 7, 8, 9])
+    >>> false_positive_rates, true_positive_rates, tresholds = metrics.roc_curve(
+    ...    y_true=y_true,
+    ...    y_score=y_pred
+    ... )
 
-        >>> _accuracy(positive, negative, threshold = 5)
-        0.9
-
-    """
-    tp = np.count_nonzero(positive >= threshold)
-    tn = np.count_nonzero(negative < threshold)
-    return (tp + tn) / (len(positive) + len(negative))
-
-
-def _get_positive_negative(y_true, y_pred):
-    """Splits the output scores of the model according to the target variable.
-
-    Example:
-
-        >>> y_pred = [1, 2, 3, 4, 5]
-        >>> y_true = [-1, -1, -1, 1., 1, 1]
-
-        >>> positive, negative = _get_positive_negative(y_true=y_true, y_pred=y_pred)
-
-        >>> positive
-        array([4, 5])
-
-        >>> negative
-        array([1, 2, 3])
+    >>> tresholds[np.argmax(true_positive_rates - false_positive_rates)]
+    6
 
     """
-    positive = []
-    negative = []
+    from sklearn import metrics
 
-    for pred, label in zip(y_pred, y_true):
-        if label == 1:
-            positive.append(pred)
-        else:
-            negative.append(pred)
+    with torch.no_grad():
 
-    return np.array(positive), np.array(negative)
+        y_pred = make_prediction(
+            model=model,
+            dataset=X,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            device=device,
+        )
+
+        y_pred = y_pred.cpu().numpy()
+
+    false_positive_rates, true_positive_rates, tresholds = metrics.roc_curve(
+        y_true=y,
+        y_score=y_pred
+    )
+
+    return tresholds[np.argmax(true_positive_rates - false_positive_rates)]
 
 
-def _compute_best_treshold(y_pred, positive, negative):
-    """Find the best treshold for triplet classification. Every triplets with a score >= treshold
+def _accuracy(y_pred, y_true, threshold):
+    """Find the best threshold for triplet classification. Every triplets with a score >= threshold
     can be considered as existing triplets.
 
     Example:
 
+        #>>> from kdmkb import evaluation
         >>> import numpy as np
 
-        >>> y_pred = np.array([1, 2, 3, 4, 5])
-        >>> positive = np.array([4, 5])
-        >>> negative = np.array([1, 2, 3])
+        >>> y_true = np.array([-1, -1, -1, -1, -1, 1, 1, 1, 1, 1])
+        >>> y_pred = np.array([1, 2, 3, 4, 5, 5, 6, 7, 8, 9])
 
-        >>> _compute_best_treshold(y_pred=y_pred, positive=positive, negative=negative)
-        {'threshold': 4, 'accuracy': 1.0}
+        >>> _accuracy(y_pred = y_pred, y_true = y_true, threshold = 5)
+        0.9
 
     """
-    best_accuracy = 0
-    best_treshold = None
+    accuracy = 0
 
-    for threshold in tqdm.tqdm(y_pred, position=0):
+    for i in range(len(y_pred)):
 
-        accuracy = _accuracy(
-            positive=positive,
-            negative=negative,
-            threshold=threshold
-        )
+        if y_pred[i] >= threshold and y_true[i] > 0:
 
-        if accuracy > best_accuracy:
-            best_treshold = threshold
-            best_accuracy = accuracy
+            accuracy += 1
 
-    return {'threshold': best_treshold, 'accuracy': best_accuracy}
+        if y_pred[i] < threshold and y_true[i] <= 0:
+
+            accuracy += 1
+
+    return accuracy / len(y_pred)
