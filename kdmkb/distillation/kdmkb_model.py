@@ -431,9 +431,9 @@ class KdmkbModel:
                                 **scores_valid, **scores_test,
                                 **scores_relations_test
                             ),
+                            model_name=models[id_dataset].name,
+                            dataset_name=dataset.name,
                             metadata={
-                                'kdmkb': models[id_dataset].name,
-                                'dataset': dataset.name,
                                 'hidden_dim': models[id_dataset].hidden_dim,
                                 'gamma': models[id_dataset].gamma.item(),
 
