@@ -9,6 +9,7 @@ from .kinship import Kinship
 from .nations import Nations
 from .nell995 import Nell995
 from .multi_kb import MultiKb
+from .semanlink import Semanlink
 from .umls import Umls
 from .wn11 import Wn11
 from .wn18 import Wn18
@@ -28,6 +29,7 @@ __all__ = [
     'Nations',
     'Nell995',
     'MultiKb',
+    'Semanlink',
     'Umls',
     'Wn11',
     'Wn18',

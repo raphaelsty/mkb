@@ -1,0 +1,10 @@
+{
+    "skos:broader": 0,
+    "sl:tag": 1,
+    "rdf:type": 2,
+    "foaf:homepage": 3,
+    "sl:sameAs": 4,
+    "sl:bookmarkOf": 5,
+    "skos:related": 6,
+    "sl:describedBy": 7
+}

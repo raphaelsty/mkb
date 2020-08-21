@@ -35,6 +35,8 @@ setuptools.setup(
             'datasets/nations/*.json',
             'datasets/nell995/*.csv',
             'datasets/nell995/*.json',
+            'datasets/semanlink/*.csv',
+            'datasets/semanlink/*.json',
             'datasets/umls/*.csv',
             'datasets/umls/*.json',
             'datasets/wn11/*.csv',
