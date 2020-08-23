@@ -109,10 +109,10 @@ class Pipeline:
                  HITS@1: 0.0
                  HITS@3: 0.0
                  HITS@10: 0.0
-                 MRR_relations: 0.4062
-                 MR_relations: 3.5
+                 MRR_relations: 0.3
+                 MR_relations: 4.0
                  HITS@1_relations: 0.0
-                 HITS@3_relations: 0.75
+                 HITS@3_relations: 0.5
                  HITS@10_relations: 1.0
             Test:
                  MRR: 0.0001
@@ -133,10 +133,10 @@ class Pipeline:
                  HITS@1: 0.0
                  HITS@3: 0.0
                  HITS@10: 0.0
-                 MRR_relations: 0.4062
-                 MR_relations: 3.5
+                 MRR_relations: 0.3
+                 MR_relations: 4.0
                  HITS@1_relations: 0.0
-                 HITS@3_relations: 0.75
+                 HITS@3_relations: 0.5
                  HITS@10_relations: 1.0
             Test:
                  MRR: 0.0001
@@ -242,7 +242,7 @@ class Pipeline:
                             model=model, dataset=dataset.valid)
 
                         self.valid_scores.update(evaluation.eval_relations(
-                            model=model, dataset=dataset.test))
+                            model=model, dataset=dataset.valid))
 
                         self.print_metrics(
                             description='Validation:',
