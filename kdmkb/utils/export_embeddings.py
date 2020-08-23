@@ -17,10 +17,12 @@ def export_embeddings(folder, dataset, model):
     relations = {value: key for key, value in dataset.relations.items()}
 
     embeddings_e = {
-        entities[key]: value.tolist() for key, value in model.embeddings['entities'].items()}
+        entities[key]: value.tolist() for key, value in model.embeddings['entities'].items()
+    }
 
     embeddings_r = {
-        entities[key]: value.tolist() for key, value in model.embeddings['relations'].items()}
+        relations[key]: value.tolist() for key, value in model.embeddings['relations'].items()
+    }
 
     with open(os.path.join(f'{folder}/entities.json'), 'w') as output:
         json.dump(embeddings_e, output, indent=4)
