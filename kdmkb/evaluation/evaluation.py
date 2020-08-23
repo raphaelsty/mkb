@@ -121,7 +121,7 @@ class Evaluation:
         {'MRR_relations': 1.0, 'MR_relations': 1.0, 'HITS@1_relations': 1.0,
             'HITS@3_relations': 1.0, 'HITS@10_relations': 1.0}
 
-        >>> validation.detail_eval(model=model, dataset=test, treshold=1.5)
+        >>> validation.detail_eval(model=model, dataset=test, threshold=1.5)
                     head                             tail                             metadata
                     MRR   MR HITS@1 HITS@3 HITS@10   MRR   MR HITS@1 HITS@3 HITS@10 frequency
         relation
@@ -129,6 +129,9 @@ class Evaluation:
         1_M       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0       0.0
         M_1       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0       0.0
         M_M       0.625  2.5    0.5    0.5     1.0  0.75  1.5    0.5    1.0     1.0       1.0
+
+        >>> validation.types_relations(model = model, dataset=test, threshold=1.5)
+        {0: 'M_M', 1: 'M_M'}
 
     References:
         1. [RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
@@ -318,14 +321,10 @@ class Evaluation:
 
         return metrics
 
-    def detail_eval(self, model, dataset, treshold=1.5):
+    def types_relations(self, model, dataset, threshold):
         """
         Divide input dataset relations into different categories (i.e. ONE-TO-ONE, ONE-TO-MANY,
         MANY-TO-ONE and MANY-TO-MANY) according to the mapping properties of relationships.
-
-        Reference:
-            1. [Bordes, Antoine, et al. "Translating embeddings for modeling multi-relational data." Advances in neural information processing systems. 2013.](http://papers.nips.cc/paper/5071-translating-embeddings-for-modeling-multi-relational-data.pdf)
-
         """
         stat_df = pd.DataFrame(self.true_triples)
 
@@ -341,15 +340,32 @@ class Evaluation:
             [mean_head, mean_tail], axis='columns').reset_index()
 
         mean_relations['head'] = mean_relations['head'].apply(
-            lambda x: '1' if x <= treshold else 'M')
+            lambda x: '1' if x <= threshold else 'M')
 
         mean_relations['tail'] = mean_relations['tail'].apply(
-            lambda x: '1' if x <= treshold else 'M')
+            lambda x: '1' if x <= threshold else 'M')
 
         mean_relations['type'] = mean_relations['head'] + \
             '_' + mean_relations['tail']
 
         mapping_type_relations = mean_relations.to_dict()['type']
+
+        return mapping_type_relations
+
+    def detail_eval(self, model, dataset, threshold=1.5):
+        """
+        Divide input dataset relations into different categories (i.e. ONE-TO-ONE, ONE-TO-MANY,
+        MANY-TO-ONE and MANY-TO-MANY) according to the mapping properties of relationships.
+
+        Reference:
+            1. [Bordes, Antoine, et al. "Translating embeddings for modeling multi-relational data." Advances in neural information processing systems. 2013.](http://papers.nips.cc/paper/5071-translating-embeddings-for-modeling-multi-relational-data.pdf)
+
+        """
+        mapping_type_relations = self.types_relations(
+            model=model,
+            dataset=dataset,
+            threshold=threshold
+        )
 
         types_relations = ['1_1', '1_M', 'M_1', 'M_M']
 
