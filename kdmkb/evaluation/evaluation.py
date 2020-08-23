@@ -131,7 +131,7 @@ class Evaluation:
         M_M       0.625  2.5    0.5    0.5     1.0  0.75  1.5    0.5    1.0     1.0       1.0
 
         >>> validation.types_relations(model = model, dataset=test, threshold=1.5)
-        {0: 'M_M', 1: 'M_M'}
+        {'r0': 'M_M', 'r1': 'M_M'}
 
     References:
         1. [RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
@@ -321,7 +321,7 @@ class Evaluation:
 
         return metrics
 
-    def types_relations(self, model, dataset, threshold):
+    def types_relations(self, model, dataset, threshold=1.5):
         """
         Divide input dataset relations into different categories (i.e. ONE-TO-ONE, ONE-TO-MANY,
         MANY-TO-ONE and MANY-TO-MANY) according to the mapping properties of relationships.
@@ -350,7 +350,11 @@ class Evaluation:
 
         mapping_type_relations = mean_relations.to_dict()['type']
 
-        return mapping_type_relations
+        relations_id = {value: key for key, value in self.relations.items()}
+
+        return {
+            relations_id[key]: value for key, value in mapping_type_relations.items()
+        }
 
     def detail_eval(self, model, dataset, threshold=1.5):
         """
@@ -366,6 +370,10 @@ class Evaluation:
             dataset=dataset,
             threshold=threshold
         )
+
+        mapping_type_relations = {
+            self.relations[key]: value for key, value in mapping_type_relations.items()
+        }
 
         types_relations = ['1_1', '1_M', 'M_1', 'M_M']
 
