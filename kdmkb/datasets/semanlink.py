@@ -51,9 +51,9 @@ class Semanlink(Fetch):
         >>> for _ in range(3):
         ...     positive_sample, weight, mode = next(dataset)
         ...     print(positive_sample, weight, mode)
-        tensor([[4462,    0, 4463]]) tensor([0.3162]) tail-batch
-        tensor([[3913,    2,   11]]) tensor([0.0167]) head-batch
-        tensor([[9274,    2,   11]]) tensor([0.0167]) tail-batch
+        tensor([[684,   2,  35]]) tensor([0.2236]) tail-batch
+        tensor([[ 5379,     6, 11930]]) tensor([0.3536]) head-batch
+        tensor([[9922,    0, 1503]]) tensor([0.1213]) tail-batch
 
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
