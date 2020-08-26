@@ -40,20 +40,21 @@ class Wn18rr(Fetch):
         >>> wn18rr
         Wn18rr dataset
             Batch size          1
-            Entities            40923
+            Entities            40943
             Relations           11
             Shuffle             True
-            Train triples       86834
-            Validation triples  3033
+            Train triples       86835
+            Validation triples  3034
             Test triples        3134
 
 
         >>> for _ in range(3):
         ...     positive_sample, weight, mode = next(wn18rr)
         ...     print(positive_sample, weight, mode)
-        tensor([[2699,    4, 2010]]) tensor([0.1622]) tail-batch
-        tensor([[ 9667,     5, 15434]]) tensor([0.1302]) head-batch
-        tensor([[ 9023,     0, 25815]]) tensor([0.2357]) tail-batch
+        tensor([[12241,     4, 33028]]) tensor([0.3333]) tail-batch
+        tensor([[2635,    1, 6885]]) tensor([0.2500]) head-batch
+        tensor([[ 1479,     0, 32588]]) tensor([0.3333]) tail-batch
+
 
         >>> assert len(wn18rr.classification_valid['X']) == len(wn18rr.classification_valid['y'])
         >>> assert len(wn18rr.classification_test['X']) == len(wn18rr.classification_test['y'])
