@@ -19,7 +19,12 @@ class Wn18(Fetch):
 
     Parameters:
         batch_size (int): Size of the batch.
+        classification (bool): Must be set to True when using ConvE model to optimize BCELoss.
         shuffle (bool): Whether to shuffle the dataset or not.
+        pre_compute (bool): Pre-compute parameters such as weights when using translationnal model
+            (TransE, DistMult, RotatE, pRotatE, ComplEx). When using ConvE, pre-compute target
+            matrix. When pre_compute is set to True, the model training is faster but it needs more
+            memory.
         num_workers (int): Number of workers dedicated to iterate on the dataset.
         seed (int): Random state.
 
@@ -36,7 +41,7 @@ class Wn18(Fetch):
 
         >>> from kdmkb import datasets
 
-        >>> dataset = datasets.Wn18(batch_size=1, shuffle=True, seed=42)
+        >>> dataset = datasets.Wn18(batch_size=1, shuffle=True, pre_compute=False, seed=42)
 
         >>> dataset
         Wn18 dataset
@@ -67,7 +72,8 @@ class Wn18(Fetch):
 
     """
 
-    def __init__(self, batch_size, shuffle=True, num_workers=1, seed=None):
+    def __init__(self, batch_size, classification=False, shuffle=True, pre_compute=True,
+                 num_workers=1, seed=None):
 
         self.filename = 'wn18'
 
@@ -79,7 +85,9 @@ class Wn18(Fetch):
             test=read_csv(file_path=f'{path}/test.csv'),
             entities=read_json(f'{path}/entities.json'),
             relations=read_json(f'{path}/relations.json'),
-            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed,
+            batch_size=batch_size, shuffle=shuffle, classification=classification,
+            pre_compute=pre_compute,
+            num_workers=num_workers, seed=seed,
             classification_valid=read_csv_classification(
                 f'{path}/classification_valid.csv'),
             classification_test=read_csv_classification(

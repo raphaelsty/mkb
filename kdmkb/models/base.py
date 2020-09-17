@@ -3,10 +3,59 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-__all__ = ['BaseModel']
+__all__ = ['BaseModel', 'BaseConvE']
 
 
-class BaseModel(nn.Module):
+class Base(nn.Module):
+
+    def __init__(self):
+        super(Base, self).__init__()
+
+    @property
+    def name(self):
+        return self.__class__.__name__
+
+    @property
+    def _repr_title(self):
+        return f'{self.name} model'
+
+    def __repr__(self):
+        l_len = max(map(len, self._repr_content.keys()))
+        r_len = max(map(len, self._repr_content.values()))
+
+        return (
+            f'{self._repr_title}\n' +
+            '\n'.join(
+                k.rjust(l_len) + '  ' + v.ljust(r_len)
+                for k, v in self._repr_content.items()
+            )
+        )
+
+    def save(self, path):
+        import pickle
+
+        with open(path, 'wb') as handle:
+            pickle.dump(
+                self.cpu().eval(),
+                handle,
+                protocol=pickle.HIGHEST_PROTOCOL
+            )
+
+    def forward(self):
+        pass
+
+    def distill(self):
+        pass
+
+    @property
+    def _repr_content(self):
+        """The items that are displayed in the __repr__ method.
+        This property can be overriden in order to modify the output of the __repr__ method.
+        """
+        return {}
+
+
+class BaseModel(Base):
     """Knowledge graph embedding base model class.
 
     Parameters:
@@ -24,7 +73,7 @@ class BaseModel(nn.Module):
     """
 
     def __init__(self, n_entity, n_relation, hidden_dim, entity_dim, relation_dim, gamma):
-        super(BaseModel, self).__init__()
+        super().__init__()
 
         self.n_entity = n_entity
         self.n_relation = n_relation
@@ -79,14 +128,6 @@ class BaseModel(nn.Module):
         return {'entities': entities_embeddings, 'relations': relations_embeddings}
 
     @property
-    def name(self):
-        return self.__class__.__name__
-
-    @property
-    def _repr_title(self):
-        return f'{self.name} model'
-
-    @property
     def _repr_content(self):
         """The items that are displayed in the __repr__ method.
         This property can be overriden in order to modify the output of the __repr__ method.
@@ -99,19 +140,6 @@ class BaseModel(nn.Module):
             'Number of entities': f'{self.n_entity}',
             'Number of relations': f'{self.n_relation}'
         }
-
-    def __repr__(self):
-
-        l_len = max(map(len, self._repr_content.keys()))
-        r_len = max(map(len, self._repr_content.values()))
-
-        return (
-            f'{self._repr_title}\n' +
-            '\n'.join(
-                k.rjust(l_len) + '  ' + v.ljust(r_len)
-                for k, v in self._repr_content.items()
-            )
-        )
 
     @classmethod
     def format_sample(cls, sample, negative_sample=None):
@@ -236,11 +264,100 @@ class BaseModel(nn.Module):
             self._parameters[parameter].data.copy_(weights)
         return self
 
-    def save(self, path):
-        import pickle
-        with open(path, 'wb') as handle:
-            pickle.dump(
-                self,
-                handle,
-                protocol=pickle.HIGHEST_PROTOCOL
-            )
+    def distill(self, sample, negative_sample=None, mode=None):
+        """Default distillation method"""
+        return self(sample=sample, negative_sample=negative_sample, mode=mode)
+
+
+class BaseConvE(Base):
+    """ConvE base model class.
+
+    Parameters:
+        hiddem_dim (int): Embedding size of relations and entities.
+        entity_dim (int): Final embedding size of entities.
+        relation_dim (int): Final embedding size of relations.
+        n_entity (int): Number of entities to consider.
+        n_relation (int): Number of relations to consider.
+        gamma (float): A higher gamma parameter increases the upper and lower bounds of the latent
+            space and vice-versa.
+
+    Reference:
+        1. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
+
+    """
+
+    def __init__(
+        self,
+        n_entity,
+        n_relation,
+        hidden_dim_w,
+        hidden_dim_h,
+        channels,
+        kernel_size,
+        embedding_dropout,
+        feature_map_dropout,
+        layer_dropout,
+    ):
+        super().__init__()
+
+        self.n_entity = n_entity
+        self.n_relation = n_relation
+        self.hidden_dim_w = hidden_dim_w
+        self.hidden_dim_h = hidden_dim_h
+        self.channels = channels
+        self.kernel_size = kernel_size
+        self.embedding_dropout = embedding_dropout
+        self.feature_map_dropout = feature_map_dropout
+        self.layer_dropout = layer_dropout
+
+        self.hidden_dim = hidden_dim_h * hidden_dim_w
+
+        self.flattened_size = (
+            (self.hidden_dim_w * 2 - self.kernel_size + 1) *
+            (self.hidden_dim_h - self.kernel_size + 1) * self.channels
+        )
+
+        self.entity_embedding = nn.Embedding(
+            self.n_entity,
+            self.hidden_dim,
+            padding_idx=0
+        )
+
+        self.relation_embedding = nn.Embedding(
+            self.n_relation,
+            self.hidden_dim,
+            padding_idx=0
+        )
+
+    @property
+    def embeddings(self):
+        """Extracts embeddings."""
+        entities_embeddings = {}
+
+        for i in range(self.n_entity):
+            entities_embeddings[i] = self.entity_embedding[i].detach()
+
+        relations_embeddings = {}
+
+        for i in range(self.n_relation):
+            relations_embeddings[i] = self.relation_embedding[i].detach()
+
+        return {'entities': entities_embeddings, 'relations': relations_embeddings}
+
+    @property
+    def _repr_content(self):
+        """The items that are displayed in the __repr__ method.
+        This property can be overriden in order to modify the output of the __repr__ method.
+        """
+
+        return {
+            'Entities embeddings dim': f'{self.hidden_dim}',
+            'Relations embeddings dim': f'{self.hidden_dim}',
+            'Number of entities': f'{self.n_entity}',
+            'Number of relations': f'{self.n_relation}',
+            'Channels': f'{self.channels}',
+            'Kernel size': f'{self.kernel_size}',
+            'Embeddings dropout': f'{self.embedding_dropout}',
+            'Feature map dropout': f'{self.feature_map_dropout}',
+            'Layer dropout': f'{self.layer_dropout}'
+        }

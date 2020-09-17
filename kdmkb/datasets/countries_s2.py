@@ -18,7 +18,12 @@ class CountriesS2(Fetch):
 
     Parameters:
         batch_size (int): Size of the batch.
+        classification (bool): Must be set to True when using ConvE model to optimize BCELoss.
         shuffle (bool): Whether to shuffle the dataset or not.
+        pre_compute (bool): Pre-compute parameters such as weights when using translationnal model
+            (TransE, DistMult, RotatE, pRotatE, ComplEx). When using ConvE, pre-compute target
+            matrix. When pre_compute is set to True, the model training is faster but it needs more
+            memory.
         num_workers (int): Number of workers dedicated to iterate on the dataset.
         seed (int): Random state.
 
@@ -54,6 +59,34 @@ class CountriesS2(Fetch):
         tensor([[216,   1, 246]]) tensor([0.2041]) head-batch
         tensor([[47,  0, 72]]) tensor([0.2294]) tail-batch
 
+        >>> import torch
+
+        >>> dataset = datasets.CountriesS2(batch_size=2, classification=False,
+        ...     pre_compute=False, shuffle=True, seed=42)
+
+        >>> for _ in range(10):
+        ...     positive_sample, weight, mode = next(dataset)
+        ...     assert positive_sample.shape == torch.Size([2, 3])
+        ...     assert weight.shape == torch.Size([2])
+
+        >>> dataset = datasets.CountriesS2(batch_size=2, classification=True,
+        ...     pre_compute=True, shuffle=True, seed=42)
+
+        >>> for _ in range(10):
+        ...     positive_sample, target, mode = next(dataset)
+        ...     assert positive_sample.shape == torch.Size([2, 2])
+        ...     assert target.shape == torch.Size([2, 271])
+        ...     assert mode == 'classification'
+
+        >>> dataset = datasets.CountriesS2(batch_size=2, classification=True,
+        ...     pre_compute=False, shuffle=True, seed=42)
+
+        >>> for _ in range(10):
+        ...     positive_sample, target, mode = next(dataset)
+        ...     assert positive_sample.shape == torch.Size([2, 2])
+        ...     assert target.shape == torch.Size([2, 271])
+        ...     assert mode == 'classification'
+
 
     References:
         1. [Bouchard, Guillaume, Sameer Singh, and Theo Trouillon. "On approximate reasoning capabilities of low-rank vector spaces." 2015 AAAI Spring Symposium Series. 2015.](https://www.aaai.org/ocs/index.php/SSS/SSS15/paper/view/10257/10026)
@@ -61,7 +94,8 @@ class CountriesS2(Fetch):
 
     """
 
-    def __init__(self, batch_size, shuffle=True, num_workers=1, seed=None):
+    def __init__(self, batch_size, classification=False, shuffle=True,  pre_compute=True,
+                 num_workers=1, seed=None):
 
         self.filename = 'countries_s2'
 
@@ -71,6 +105,8 @@ class CountriesS2(Fetch):
             train=read_csv(file_path=f'{path}/train.csv'),
             valid=read_csv(file_path=f'{path}/valid.csv'),
             test=read_csv(file_path=f'{path}/test.csv'),
+            classification=classification,
+            pre_compute=pre_compute,
             entities=read_json(f'{path}/entities.json'),
             relations=read_json(f'{path}/relations.json'),
             batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed

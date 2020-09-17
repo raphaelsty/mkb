@@ -62,7 +62,7 @@ class Fetch:
 
         >>> train = [
         ...     (0, 0, 1),
-        ...     (1, 1, 2),
+        ...     (0, 0, 2),
         ...     (2, 0, 4),
         ... ]
 
@@ -72,7 +72,7 @@ class Fetch:
         ... ]
 
         >>> dataset = datasets.Fetch(train=train, test=test, entities=entities, relations=relations,
-        ...     batch_size=1, seed=42)
+        ...     batch_size=1, classification=False, seed=42)
 
         >>> dataset
         Fetch dataset
@@ -88,9 +88,40 @@ class Fetch:
         >>> for _ in range(3):
         ...     positive_sample, weight, mode = next(dataset)
         ...     print(positive_sample, weight, mode)
-        tensor([[1, 1, 2]]) tensor([0.3536]) tail-batch
-        tensor([[1, 1, 2]]) tensor([0.3536]) head-batch
-        tensor([[0, 0, 1]]) tensor([0.3536]) tail-batch
+        tensor([[0, 0, 2]]) tensor([0.3333]) tail-batch
+        tensor([[0, 0, 2]]) tensor([0.3333]) head-batch
+        tensor([[0, 0, 1]]) tensor([0.3333]) tail-batch
+
+        >>> dataset = datasets.Fetch(train=train, test=test, entities=entities, relations=relations,
+        ...     batch_size=1, classification=False, pre_compute=False, seed=42)
+
+        >>> for _ in range(3):
+        ...     positive_sample, weight, mode = next(dataset)
+        ...     print(positive_sample, weight, mode)
+        tensor([[0, 0, 2]]) tensor([0.3333]) tail-batch
+        tensor([[0, 0, 2]]) tensor([0.3333]) head-batch
+        tensor([[0, 0, 1]]) tensor([0.3333]) tail-batch
+
+        >>> dataset = datasets.Fetch(train=train, test=test, entities=entities, relations=relations,
+        ...     batch_size=1, classification=True, seed=42)
+
+        >>> for _ in range(3):
+        ...     positive_sample, weight, mode = next(dataset)
+        ...     print(positive_sample, weight, mode)
+        tensor([[0, 0]]) tensor([[0., 1., 1., 0., 0., 0.]]) classification
+        tensor([[2, 0]]) tensor([[0., 0., 0., 0., 1., 0.]]) classification
+        tensor([[2, 0]]) tensor([[0., 0., 0., 0., 1., 0.]]) classification
+
+        >>> dataset = datasets.Fetch(train=train, test=test, entities=entities, relations=relations,
+        ...     batch_size=1, classification=True, pre_compute=False, seed=42)
+
+        >>> for _ in range(3):
+        ...     positive_sample, weight, mode = next(dataset)
+        ...     print(positive_sample, weight, mode)
+        tensor([[0, 0]]) tensor([[0., 1., 1., 0., 0., 0.]]) classification
+        tensor([[2, 0]]) tensor([[0., 0., 0., 0., 1., 0.]]) classification
+        tensor([[2, 0]]) tensor([[0., 0., 0., 0., 1., 0.]]) classification
+
 
     References:
         1. [Sun, Zhiqing, et al. "Rotate: Knowledge graph embedding by relational rotation in complex space." arXiv preprint arXiv:1902.10197 (2019).](https://arxiv.org/pdf/1902.10197.pdf)
@@ -99,8 +130,10 @@ class Fetch:
     """
 
     def __init__(
-            self, train, entities, relations, batch_size, valid=None, test=None, shuffle=True,
-            num_workers=1, seed=None, classification_valid=None, classification_test=None):
+        self, train, entities, relations, batch_size, valid=None, test=None, shuffle=True,
+        classification=False, pre_compute=True, num_workers=1, seed=None, classification_valid=None,
+        classification_test=None
+    ):
         self.train = train
         self.valid = valid
         self.test = test
@@ -108,15 +141,23 @@ class Fetch:
         self.relations = relations
         self.batch_size = batch_size
         self.shuffle = shuffle
+        self.classification = classification
+        self.pre_compute = pre_compute
         self.num_workers = num_workers
         self.seed = seed
-        self.step = 0
 
         self.n_entity = len(entities)
         self.n_relation = len(relations)
 
-        self.fetch_head = self.fetch(self.get_train_loader(mode='head-batch'))
-        self.fetch_tail = self.fetch(self.get_train_loader(mode='tail-batch'))
+        if classification:
+            self.fetch_classification = self.fetch(
+                self.get_train_loader(mode='classification'))
+        else:
+            self.step = 0
+            self.fetch_head = self.fetch(
+                self.get_train_loader(mode='head-batch'))
+            self.fetch_tail = self.fetch(
+                self.get_train_loader(mode='tail-batch'))
 
         self.classification_valid = classification_valid
         self.classification_test = classification_test
@@ -125,11 +166,14 @@ class Fetch:
             torch.manual_seed(self.seed)
 
     def __next__(self):
-        self.step += 1
-        if self.step % 2 == 0:
-            data = next(self.fetch_head)
+        if self.classification:
+            data = next(self.fetch_classification)
         else:
-            data = next(self.fetch_tail)
+            self.step += 1
+            if self.step % 2 == 0:
+                data = next(self.fetch_head)
+            else:
+                data = next(self.fetch_tail)
         return data
 
     @property
@@ -200,11 +244,16 @@ class Fetch:
     def get_train_loader(self, mode):
         dataset = TrainDataset(
             triples=self.train, entities=self.entities, relations=self.relations, mode=mode,
-            seed=self.seed)
+            pre_compute=self.pre_compute, seed=self.seed)
+
+        if mode == 'classification':
+            collate_fn = TrainDataset.collate_fn_classification
+        else:
+            collate_fn = TrainDataset.collate_fn
 
         return data.DataLoader(
             dataset=dataset, batch_size=self.batch_size, shuffle=self.shuffle,
-            num_workers=self.num_workers, collate_fn=TrainDataset.collate_fn)
+            num_workers=self.num_workers, collate_fn=collate_fn)
 
     def _get_test_loader(self, triples, batch_size, mode):
         test_dataset = TestDataset(

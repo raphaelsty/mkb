@@ -11,10 +11,11 @@ __all__ = ['MultiKb']
 class MultiKb(Fetch):
     """Split input dataset into multiples parts and control fraction of aligned entities.
 
-    dataset (kdmkb.datasets): Dataset to split into multiple kg.
-    id_set (int): Selected part of the splitted dataset.
-    n_part (int): Number of splits of the input dataset.
-    aligned_entities (float): Fraction of aligned entities between datasets.
+    Parameters:
+        dataset (kdmkb.datasets): Dataset to split into multiple kg.
+        id_set (int): Selected part of the splitted dataset.
+        n_part (int): Number of splits of the input dataset.
+        aligned_entities (float): Fraction of aligned entities between datasets.
 
     Example:
 
@@ -30,11 +31,11 @@ class MultiKb(Fetch):
         >>> dataset
             Wn18rr_1_2_80 dataset
             Batch size          1
-            Entities            40923
+            Entities            40943
             Relations           11
             Shuffle             True
-            Train triples       43417
-            Validation triples  3033
+            Train triples       43418
+            Validation triples  3034
             Test triples        3134
             Wn18rr cutted in    2
             Wn18rr set          1
@@ -43,9 +44,9 @@ class MultiKb(Fetch):
         >>> for _ in range(3):
         ...     positive_sample, weight, mode = next(dataset)
         ...     print(positive_sample, weight, mode)
-        tensor([[6399,    1, 4978]]) tensor([0.3015]) tail-batch
-        tensor([[39467,     0, 24602]]) tensor([0.3333]) head-batch
-        tensor([[4054,    9, 6759]]) tensor([0.3536]) tail-batch
+        tensor([[2504,    1, 7370]]) tensor([0.2887]) tail-batch
+        tensor([[13073,     0, 18762]]) tensor([0.1667]) head-batch
+        tensor([[30703,     0,   620]]) tensor([0.3536]) tail-batch
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])
@@ -56,12 +57,12 @@ class MultiKb(Fetch):
         All train triples are used to filter existing triples when initializing negative
         sampling with MultiKb.
         >>> len(dataset.train_triples)
-        86834
+        86835
 
         All true triples are used to filter existing triples when evaluating filtered metrics
         with MultiKb.
         >>> len(dataset.true_triples)
-        93001
+        93003
 
     """
 

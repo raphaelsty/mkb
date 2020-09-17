@@ -461,7 +461,7 @@ class Distillation:
             ... )
 
             >>> loss_distillation
-            tensor(0.8563, grad_fn=<AddBackward0>)
+            tensor(1.6410, grad_fn=<AddBackward0>)
 
             >>> loss_distillation.backward()
 
@@ -508,7 +508,7 @@ class Distillation:
             ... )
 
             >>> loss_distillation
-            tensor(0.6122, grad_fn=<AddBackward0>)
+            tensor(0.5026, grad_fn=<AddBackward0>)
 
             >>> loss_distillation.backward()
 
