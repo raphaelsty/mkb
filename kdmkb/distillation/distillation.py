@@ -424,27 +424,27 @@ class Distillation:
             >>> from kdmkb import distillation
             >>> from kdmkb import models
 
-            >>> wn18rr = datasets.Wn18rr(batch_size=3, shuffle=True, seed=42)
+            >>> dataset = datasets.Umls(batch_size=3, shuffle=True, seed=42)
 
             >>> teacher = models.RotatE(
             ...    hidden_dim = 3,
-            ...    n_entity   = wn18rr.n_entity,
-            ...    n_relation = wn18rr.n_relation,
+            ...    n_entity   = dataset.n_entity,
+            ...    n_relation = dataset.n_relation,
             ...    gamma      = 6
             ... )
 
             >>> student = models.RotatE(
             ...    hidden_dim = 3,
-            ...    n_entity   = wn18rr.n_entity,
-            ...    n_relation = wn18rr.n_relation,
+            ...    n_entity   = dataset.n_entity,
+            ...    n_relation = dataset.n_relation,
             ...    gamma      = 6
             ... )
 
             >>> distillation_process = distillation.Distillation(
-            ...     teacher_entities  = wn18rr.entities,
-            ...     student_entities  = wn18rr.entities,
-            ...     teacher_relations = wn18rr.relations,
-            ...     student_relations = wn18rr.relations,
+            ...     teacher_entities  = dataset.entities,
+            ...     student_entities  = dataset.entities,
+            ...     teacher_relations = dataset.relations,
+            ...     student_relations = dataset.relations,
             ...     sampling          = distillation.UniformSampling(
             ...         batch_size_entity   = 3,
             ...         batch_size_relation = 3,
@@ -452,7 +452,7 @@ class Distillation:
             ...     ),
             ... )
 
-            >>> positive_sample, weight, mode = next(wn18rr)
+            >>> positive_sample, weight, mode = next(dataset)
 
             >>> loss_distillation = distillation_process.distill(
             ...     teacher = teacher,
@@ -461,35 +461,35 @@ class Distillation:
             ... )
 
             >>> loss_distillation
-            tensor(1.6410, grad_fn=<AddBackward0>)
+            tensor(1.9474, grad_fn=<AddBackward0>)
 
             >>> loss_distillation.backward()
 
             # Tok K sampling:
             >>> teacher = models.TransE(
             ...    hidden_dim = 3,
-            ...    n_entity   = wn18rr.n_entity,
-            ...    n_relation = wn18rr.n_relation,
+            ...    n_entity   = dataset.n_entity,
+            ...    n_relation = dataset.n_relation,
             ...    gamma      = 6
             ... )
 
             >>> student = models.TransE(
             ...    hidden_dim = 3,
-            ...    n_entity   = wn18rr.n_entity,
-            ...    n_relation = wn18rr.n_relation,
+            ...    n_entity   = dataset.n_entity,
+            ...    n_relation = dataset.n_relation,
             ...    gamma      = 6
             ... )
 
             >>> distillation_process = distillation.Distillation(
-            ...     teacher_entities  = wn18rr.entities,
-            ...     student_entities  = wn18rr.entities,
-            ...     teacher_relations = wn18rr.relations,
-            ...     student_relations = wn18rr.relations,
+            ...     teacher_entities  = dataset.entities,
+            ...     student_entities  = dataset.entities,
+            ...     teacher_relations = dataset.relations,
+            ...     student_relations = dataset.relations,
             ...     sampling = distillation.TopKSamplingTransE(
-            ...         teacher_entities    = wn18rr.entities,
-            ...         student_entities    = wn18rr.entities,
-            ...         teacher_relations   = wn18rr.relations,
-            ...         student_relations   = wn18rr.relations,
+            ...         teacher_entities    = dataset.entities,
+            ...         student_entities    = dataset.entities,
+            ...         teacher_relations   = dataset.relations,
+            ...         student_relations   = dataset.relations,
             ...         teacher             = teacher,
             ...         batch_size_entity   = 3,
             ...         batch_size_relation = 3,
@@ -499,7 +499,7 @@ class Distillation:
             ...     ),
             ... )
 
-            >>> positive_sample, weight, mode = next(wn18rr)
+            >>> positive_sample, weight, mode = next(dataset)
 
             >>> loss_distillation = distillation_process.distill(
             ...     teacher = teacher,
@@ -508,7 +508,7 @@ class Distillation:
             ... )
 
             >>> loss_distillation
-            tensor(0.5026, grad_fn=<AddBackward0>)
+            tensor(0.6358, grad_fn=<AddBackward0>)
 
             >>> loss_distillation.backward()
 

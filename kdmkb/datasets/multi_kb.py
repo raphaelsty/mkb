@@ -22,31 +22,31 @@ class MultiKb(Fetch):
         >>> from kdmkb import datasets
 
         >>> dataset = datasets.MultiKb(
-        ...     dataset = datasets.Wn18rr(batch_size = 1, shuffle = True, seed = 42),
+        ...     dataset = datasets.Umls(batch_size = 1, shuffle = True, seed = 42),
         ...     id_set = 0,
         ...     n_part = 2,
         ...     aligned_entities = 0.8,
         ... )
 
         >>> dataset
-            Wn18rr_1_2_80 dataset
-            Batch size          1
-            Entities            40943
-            Relations           11
-            Shuffle             True
-            Train triples       43418
-            Validation triples  3034
-            Test triples        3134
-            Wn18rr cutted in    2
-            Wn18rr set          1
-            Aligned entities    80.0%
+        Umls_1_2_80 dataset
+            Batch size  1
+            Entities  135
+            Relations  46
+            Shuffle  True
+            Train triples  2608
+            Validation triples  652
+            Test triples  661
+            Umls cutted in  2
+            Umls set  1
+            Aligned entities  80.0%
 
         >>> for _ in range(3):
         ...     positive_sample, weight, mode = next(dataset)
         ...     print(positive_sample, weight, mode)
-        tensor([[2504,    1, 7370]]) tensor([0.2887]) tail-batch
-        tensor([[13073,     0, 18762]]) tensor([0.1667]) head-batch
-        tensor([[30703,     0,   620]]) tensor([0.3536]) tail-batch
+        tensor([[ 26,  13, 107]]) tensor([0.2000]) tail-batch
+        tensor([[67,  5, 55]]) tensor([0.2500]) head-batch
+        tensor([[ 9,  3, 17]]) tensor([0.1690]) tail-batch
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])
@@ -57,12 +57,12 @@ class MultiKb(Fetch):
         All train triples are used to filter existing triples when initializing negative
         sampling with MultiKb.
         >>> len(dataset.train_triples)
-        86835
+        5216
 
         All true triples are used to filter existing triples when evaluating filtered metrics
         with MultiKb.
         >>> len(dataset.true_triples)
-        93003
+        6529
 
     """
 

@@ -53,11 +53,11 @@ class KdmkbModel:
 
         >>> max_step = 2
 
-        >>> dataset_1 = datasets.Wn18rr(batch_size = 2, seed = 42)
+        >>> dataset_1 = datasets.Umls(batch_size = 2, seed = 42)
         >>> dataset_1.valid = dataset_1.valid[:2]
         >>> dataset_1.test = dataset_1.test[:2]
 
-        >>> dataset_2 = datasets.Wn18rr(batch_size = 2, seed = 42)
+        >>> dataset_2 = datasets.Umls(batch_size = 2, seed = 42)
         >>> dataset_2.valid = dataset_2.valid[:2]
         >>> dataset_2.test = dataset_2.test[:2]
 
@@ -112,43 +112,43 @@ class KdmkbModel:
         <BLANKLINE>
         Model: dataset_1, step 1
             Validation:
-                    valid_MRR: 0.0001
-                    valid_MR: 22704.5
+                    valid_MRR: 0.0104
+                    valid_MR: 98.25
                     valid_HITS@1: 0.0
                     valid_HITS@3: 0.0
                     valid_HITS@10: 0.0
             Test:
-                    test_MRR: 0.0007
-                    test_MR: 8102.5
+                    test_MRR: 0.0125
+                    test_MR: 90.25
                     test_HITS@1: 0.0
                     test_HITS@3: 0.0
                     test_HITS@10: 0.0
             Relation:
-                    test_MRR_relations: 0.5
-                    test_MR_relations: 2.0
+                    test_MRR_relations: 0.0272
+                    test_MR_relations: 38.0
                     test_HITS@1_relations: 0.0
-                    test_HITS@3_relations: 1.0
-                    test_HITS@10_relations: 1.0
+                    test_HITS@3_relations: 0.0
+                    test_HITS@10_relations: 0.0
         <BLANKLINE>
         Model: dataset_2, step 1
             Validation:
-                    valid_MRR: 0.0001
-                    valid_MR: 24176.5
+                    valid_MRR: 0.0184
+                    valid_MR: 58.0
                     valid_HITS@1: 0.0
                     valid_HITS@3: 0.0
                     valid_HITS@10: 0.0
             Test:
-                    test_MRR: 0.0001
-                    test_MR: 15013.25
+                    test_MRR: 0.0102
+                    test_MR: 100.0
                     test_HITS@1: 0.0
                     test_HITS@3: 0.0
                     test_HITS@10: 0.0
             Relation:
-                    test_MRR_relations: 0.1389
-                    test_MR_relations: 7.5
+                    test_MRR_relations: 0.0274
+                    test_MR_relations: 36.5
                     test_HITS@1_relations: 0.0
                     test_HITS@3_relations: 0.0
-                    test_HITS@10_relations: 1.0
+                    test_HITS@10_relations: 0.0
 
     """
 

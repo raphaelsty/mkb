@@ -42,7 +42,7 @@ class Pipeline:
 
         >>> device = 'cpu'
 
-        >>> dataset  = datasets.Wn18rr(batch_size = 2, shuffle = True, seed = 42)
+        >>> dataset  = datasets.Umls(batch_size = 2, shuffle = True, seed = 42)
 
         # Do not reproduce at home the code below this comment.
         # To run tests faster I chosse to select a sub part of test and valid datasets.
@@ -104,77 +104,76 @@ class Pipeline:
         <BLANKLINE>
         Step: 4.
             Validation:
-                    MRR: 0.0
-                    MR: 27703.375
+                    MRR: 0.1283
+                    MR: 31.125
                     HITS@1: 0.0
-                    HITS@3: 0.0
-                    HITS@10: 0.0
-                    MRR_relations: 0.1572
-                    MR_relations: 7.0
+                    HITS@3: 0.125
+                    HITS@10: 0.375
+                    MRR_relations: 0.2236
+                    MR_relations: 11.25
                     HITS@1_relations: 0.0
-                    HITS@3_relations: 0.0
-                    HITS@10_relations: 1.0
-            Test:
-                    MRR: 0.0001
-                    MR: 18718.875
-                    HITS@1: 0.0
-                    HITS@3: 0.0
-                    HITS@10: 0.0
-                    MRR_relations: 0.3769
-                    MR_relations: 5.5
-                    HITS@1_relations: 0.25
                     HITS@3_relations: 0.25
                     HITS@10_relations: 0.75
+            Test:
+                    MRR: 0.0208
+                    MR: 61.5
+                    HITS@1: 0.0
+                    HITS@3: 0.0
+                    HITS@10: 0.0
+                    MRR_relations: 0.0471
+                    MR_relations: 22.25
+                    HITS@1_relations: 0.0
+                    HITS@3_relations: 0.0
+                    HITS@10_relations: 0.0
         <BLANKLINE>
         Step: 9.
             Validation:
-                    MRR: 0.0
-                    MR: 27703.625
+                    MRR: 0.1283
+                    MR: 31.125
                     HITS@1: 0.0
-                    HITS@3: 0.0
-                    HITS@10: 0.0
-                    MRR_relations: 0.1572
-                    MR_relations: 7.0
+                    HITS@3: 0.125
+                    HITS@10: 0.375
+                    MRR_relations: 0.2236
+                    MR_relations: 11.25
                     HITS@1_relations: 0.0
-                    HITS@3_relations: 0.0
-                    HITS@10_relations: 1.0
-            Test:
-                    MRR: 0.0001
-                    MR: 18718.625
-                    HITS@1: 0.0
-                    HITS@3: 0.0
-                    HITS@10: 0.0
-                    MRR_relations: 0.3769
-                    MR_relations: 5.5
-                    HITS@1_relations: 0.25
                     HITS@3_relations: 0.25
                     HITS@10_relations: 0.75
+            Test:
+                    MRR: 0.0208
+                    MR: 61.5
+                    HITS@1: 0.0
+                    HITS@3: 0.0
+                    HITS@10: 0.0
+                    MRR_relations: 0.0471
+                    MR_relations: 22.25
+                    HITS@1_relations: 0.0
+                    HITS@3_relations: 0.0
+                    HITS@10_relations: 0.0
         <BLANKLINE>
         Step: 9.
         <BLANKLINE>
             Validation:
-                    MRR: 0.0
-                    MR: 27703.625
+                    MRR: 0.1283
+                    MR: 31.125
                     HITS@1: 0.0
-                    HITS@3: 0.0
-                    HITS@10: 0.0
-                    MRR_relations: 0.1572
-                    MR_relations: 7.0
+                    HITS@3: 0.125
+                    HITS@10: 0.375
+                    MRR_relations: 0.2236
+                    MR_relations: 11.25
                     HITS@1_relations: 0.0
-                    HITS@3_relations: 0.0
-                    HITS@10_relations: 1.0
-            Test:
-                    MRR: 0.0001
-                    MR: 18718.625
-                    HITS@1: 0.0
-                    HITS@3: 0.0
-                    HITS@10: 0.0
-                    MRR_relations: 0.3769
-                    MR_relations: 5.5
-                    HITS@1_relations: 0.25
                     HITS@3_relations: 0.25
                     HITS@10_relations: 0.75
-
+            Test:
+                    MRR: 0.0208
+                    MR: 61.5
+                    HITS@1: 0.0
+                    HITS@3: 0.0
+                    HITS@10: 0.0
+                    MRR_relations: 0.0471
+                    MR_relations: 22.25
+                    HITS@1_relations: 0.0
+                    HITS@3_relations: 0.0
+                    HITS@10_relations: 0.0
 
     """
 
