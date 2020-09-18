@@ -123,7 +123,8 @@ class ConvE(base.BaseConvE):
 
     References:
         1. [Convolutional 2D Knowledge Graph Embeddings, Dettmers, Tim and Pasquale, Minervini and Pontus, Stenetorp and Riedel, Sebastian](https://arxiv.org/abs/1707.01476)
-        2. [Implementation of ConvE](https://github.com/magnusja/ConvE/blob/master/model.py)
+        2. [Convolutional 2D Knowledge Graph Embeddings resources.](https://github.com/TimDettmers/ConvE)
+        3. [Implementation of ConvE](https://github.com/magnusja/ConvE/blob/master/model.py)
 
     """
 
