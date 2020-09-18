@@ -47,24 +47,79 @@ class ConvE(base.BaseConvE):
 
         >>> sample, weights, mode = next(dataset)
 
-        >>> sample
-        tensor([[  0,   0, 266],
-                [  1,   1,  56],
-                [  1,   1,  14]])
+        >>> sample = torch.tensor([
+        ...    [0, 0],
+        ...    [1, 1],
+        ...    [1, 1]
+        ... ])
 
-        >>> sample = torch.tensor([[0, 0, 266]])
-
-        >>> model = model.eval()
-
-        For each input sample, ConvE computes probability distribution for each target.
         >>> y_pred = model(sample)
 
-        >>> y_pred.shape
-        torch.Size([1, 271])
+        >>> assert y_pred.shape == torch.Size([3, 271])
 
-        >>> y_pred[0][:10]
-        tensor([ 0.0000, -0.0717,  0.0243, -0.0185, -0.0627, -0.0075, -0.1589, -0.1653,
-            -0.0657, -0.0612], grad_fn=<SliceBackward>)
+        ConvE needs to be in evaluation mode to make predictions.
+        >>> model = model.eval()
+
+        >>> sample = torch.tensor([[0, 0]])
+
+        >>> y_pred = model(sample)
+
+        >>> assert y_pred.shape == torch.Size([1, 271])
+
+        >>> y_pred[0][266]
+        tensor(-0.0716, grad_fn=<SelectBackward>)
+
+        >>> sample = torch.tensor([[0, 0], [1, 1], [1, 1]])
+
+        >>> y_pred = model(sample)
+
+        >>> y_pred[0][266]
+        tensor(-0.0716, grad_fn=<SelectBackward>)
+
+        >>> y_pred[1][56]
+        tensor(0.1779, grad_fn=<SelectBackward>)
+
+        >>> y_pred[2][14]
+        tensor(-0.0048, grad_fn=<SelectBackward>)
+
+        >>> sample = torch.tensor([
+        ...    [  0,   0, 266],
+        ...    [  1,   1,  56],
+        ...    [  1,   1,  14]
+        ... ])
+
+        >>> negative_sample = torch.tensor([
+        ...    [266, 266], [56, 56], [14, 14]
+        ... ])
+
+        >>> model(sample, negative_sample, mode = 'tail-batch')
+        tensor([[-0.0716, -0.0716],
+                [ 0.1779,  0.1779],
+                [-0.0048, -0.0048]], grad_fn=<ViewBackward>)
+
+        >>> model(sample, negative_sample, mode = 'tail-batch')
+        tensor([[-0.0716, -0.0716],
+                [ 0.1779,  0.1779],
+                [-0.0048, -0.0048]], grad_fn=<ViewBackward>)
+
+        >>> negative_sample = torch.tensor([
+        ...    [0, 0], [1, 1], [1, 1]
+        ... ])
+
+        >>> model(sample, negative_sample, mode = 'head-batch')
+        tensor([[-0.0716, -0.0716],
+                [ 0.1779,  0.1779],
+                [-0.0048, -0.0048]], grad_fn=<ViewBackward>)
+
+        >>> sample = torch.tensor([
+        ...     [[0, 0, 266], [0, 0, 266]],
+        ...     [[1, 1, 56 ], [1, 1, 56]]
+        ... ])
+
+        >>> model(sample, mode = 'default')
+        tensor([[-0.0716, -0.0716],
+                [ 0.1779,  0.1779]], grad_fn=<ViewBackward>)
+
 
     References:
         1. [Convolutional 2D Knowledge Graph Embeddings, Dettmers, Tim and Pasquale, Minervini and Pontus, Stenetorp and Riedel, Sebastian](https://arxiv.org/abs/1707.01476)
@@ -116,9 +171,14 @@ class ConvE(base.BaseConvE):
             nn.Dropout(p=self.layer_dropout)
         )
 
-    def forward(self, sample):
-        head = self.entity_embedding(sample[:, 0])
-        relation = self.relation_embedding(sample[:, 1])
+    def forward(self, sample, negative_sample=None, mode='default'):
+        # Classification mode, returns probability distribution(s) of tails given head(s) and
+        # relation(s). It is the mode dedicated to optimize BCELoss.
+        if len(sample.shape) == 2 and sample.shape[1] == 2 and negative_sample is None:
+            mode = 'classification'
+
+        head, relation, tail, shape = self.batch(
+            sample=sample, negative_sample=negative_sample, mode=mode)
 
         head = head.view(
             -1,
@@ -136,4 +196,9 @@ class ConvE(base.BaseConvE):
 
         scores = self.conv_e(input_nn)
 
-        return scores.mm(self.entity_embedding.weight.t())
+        if mode == 'classification':
+            scores = scores.mm(self.entity_embedding.weight.t())
+        else:
+            scores = scores.unsqueeze(1).bmm(tail)
+
+        return scores.view(shape)

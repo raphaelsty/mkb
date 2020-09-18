@@ -38,6 +38,18 @@ class TransE(base.BaseModel):
         >>> model.embeddings['relations']
         {0: tensor([-0.4869,  0.5873,  0.8815]), 1: tensor([-0.7336,  0.8692,  0.1872])}
 
+        >>> sample = torch.tensor([[0, 0, 0], [1, 1, 1]])
+        >>> y_pred = model(sample)
+        >>> y_pred
+        tensor([[-0.9557],
+                [-0.7900]], grad_fn=<ViewBackward>)
+        >>> y_pred.shape
+        torch.Size([2, 1])
+
+        >>> sample = torch.tensor([[[0, 0, 0], [0, 0, 0]], [[1, 1, 1], [1, 1, 1]]])
+        >>> y_pred = model(sample)
+        >>> y_pred.shape
+        torch.Size([2, 2])
 
     References:
         1. [Bordes, Antoine, et al. "Translating embeddings for modeling multi-relational data." Advances in neural information processing systems. 2013.](http://papers.nips.cc/paper/5071-translating-embeddings-for-modeling-multi-relational-data.pdf)

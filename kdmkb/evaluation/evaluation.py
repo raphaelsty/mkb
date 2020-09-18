@@ -1,14 +1,11 @@
-from ..datasets import base
+from creme import stats
+import pandas as pd
+from torch.utils import data
+import torch
 
 import collections
 
-from creme import stats
-
-from torch.utils import data
-
-import torch
-
-import pandas as pd
+from ..datasets import base
 
 
 __all__ = ['Evaluation']
@@ -211,6 +208,11 @@ class Evaluation:
     @classmethod
     def compute_score(cls, model, test_set, metrics, device):
 
+        training = False
+        if model.training:
+            model = model.eval()
+            training = True
+
         for step, (positive_sample, negative_sample, filter_bias, mode) in enumerate(test_set):
 
             positive_sample = positive_sample.to(device)
@@ -265,10 +267,18 @@ class Evaluation:
                 metrics['HITS@10'].update(
                     1.0 if ranking <= 10 else 0.0)
 
+        if training:
+            model = model.train()
+
         return metrics
 
     @classmethod
     def compute_detailled_score(cls, model, test_set, metrics, types_relations, device):
+
+        training = False
+        if model.training:
+            model = model.eval()
+            training = True
 
         for step, (positive_sample, negative_sample, filter_bias, mode) in enumerate(test_set):
 
@@ -318,6 +328,9 @@ class Evaluation:
 
                 metrics[mode][type_relation]['HITS@10'].update(
                     1.0 if ranking <= 10 else 0.0)
+
+        if training:
+            model = model.train()
 
         return metrics
 

@@ -141,8 +141,8 @@ class BaseModel(Base):
             'Number of relations': f'{self.n_relation}'
         }
 
-    @classmethod
-    def format_sample(cls, sample, negative_sample=None):
+    @staticmethod
+    def format_sample(sample, negative_sample=None):
         """Adapt input tensor to compute scores."""
         dim_sample = len(sample.shape)
 
@@ -281,9 +281,6 @@ class BaseConvE(Base):
         gamma (float): A higher gamma parameter increases the upper and lower bounds of the latent
             space and vice-versa.
 
-    Reference:
-        1. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
-
     """
 
     def __init__(
@@ -335,16 +332,20 @@ class BaseConvE(Base):
         entities_embeddings = {}
 
         for i in range(self.n_entity):
-            entities_embeddings[i] = self.entity_embedding[i].detach()
+            entities_embeddings[i] = self.entity_embedding(
+                torch.tensor([[i]])
+            ).flatten().detach()
 
         relations_embeddings = {}
 
         for i in range(self.n_relation):
-            relations_embeddings[i] = self.relation_embedding[i].detach()
+            relations_embeddings[i] = self.relation_embedding(
+                torch.tensor([[i]])
+            ).flatten().detach()
 
         return {'entities': entities_embeddings, 'relations': relations_embeddings}
 
-    @property
+    @ property
     def _repr_content(self):
         """The items that are displayed in the __repr__ method.
         This property can be overriden in order to modify the output of the __repr__ method.
@@ -361,3 +362,82 @@ class BaseConvE(Base):
             'Feature map dropout': f'{self.feature_map_dropout}',
             'Layer dropout': f'{self.layer_dropout}'
         }
+
+    def format_sample(self, sample, negative_sample=None):
+        """Adapt input tensor to compute scores."""
+        dim_sample = len(sample.shape)
+
+        if dim_sample == 2:
+            # Classification mode, output a probability distribution.
+            if sample.shape[1] == 2 and negative_sample is None:
+                return sample, (sample.size(0), self.n_entity)
+
+            # Default mode, compute score for input samples.
+            elif negative_sample is None:
+                return sample, (sample.size(0), 1)
+
+            # head-batch or tail-batch mode.
+            else:
+                return sample, negative_sample.shape
+
+        # Distillation mode.
+        elif dim_sample == 3:
+
+            return (
+                sample.view(sample.size(0) * sample.size(1), 3),
+                (sample.size(0), sample.size(1))
+            )
+
+    def batch(self, sample, negative_sample, mode):
+        sample, shape = self.format_sample(
+            sample=sample,
+            negative_sample=negative_sample,
+        )
+
+        if mode == 'classification':
+            head, relation = self.classification_batch(sample=sample)
+            tail = None
+
+        elif mode == 'head-batch':
+            head, relation, tail = self.head_batch(
+                sample=sample, negative_sample=negative_sample)
+
+        elif mode == 'tail-batch':
+            head, relation, tail = self.tail_batch(
+                sample=sample, negative_sample=negative_sample)
+
+        elif mode == 'default':
+            head, relation, tail = self.default_batch(sample=sample)
+
+        return head, relation, tail, shape
+
+    def head_batch(self, sample, negative_sample):
+        head = self.entity_embedding(negative_sample)
+        relation = self.relation_embedding(sample[:, 1])
+        tail = self.entity_embedding(sample[:, 2])
+
+        relation = torch.stack(
+            [relation for _ in range(negative_sample.shape[1])], dim=1)
+
+        tail = torch.stack(
+            [tail for _ in range(negative_sample.shape[1])], dim=1)
+        tail = tail.view(tail.shape[0] * tail.shape[1], tail.shape[2], 1)
+
+        return head, relation, tail
+
+    def tail_batch(self, sample, negative_sample):
+        head = self.entity_embedding(sample[:, 0])
+        relation = self.relation_embedding(sample[:, 1])
+        tail = self.entity_embedding(negative_sample).transpose(1, 2)
+        return head, relation, tail
+
+    def default_batch(self, sample):
+        head = self.entity_embedding(sample[:, 0])
+        relation = self.relation_embedding(sample[:, 1])
+        tail = self.entity_embedding(sample[:, 2]).unsqueeze(-1)
+        return head, relation, tail
+
+    def classification_batch(self, sample):
+        head = self.entity_embedding(sample[:, 0])
+        relation = self.relation_embedding(sample[:, 1])
+        return head, relation
