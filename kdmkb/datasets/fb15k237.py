@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from .fetch import Fetch
+from .dataset import Dataset
 
 from ..utils import read_csv
 from ..utils import read_csv_classification
@@ -11,7 +11,7 @@ from ..utils import read_json
 __all__ = ['Fb15k237']
 
 
-class Fb15k237(Fetch):
+class Fb15k237(Dataset):
     """Fb15k237 dataset.
 
     Fb15k237 aim to iterate over the associated dataset. It provide positive samples, corresponding
@@ -41,9 +41,9 @@ class Fb15k237(Fetch):
 
         >>> from kdmkb import datasets
 
-        >>> fb15k237 = datasets.Fb15k237(batch_size=1, shuffle=True, pre_compute=False, seed=42)
+        >>> dataset = datasets.Fb15k237(batch_size=1, shuffle=True, pre_compute=False, seed=42)
 
-        >>> fb15k237
+        >>> dataset
         Fb15k237 dataset
             Batch size  1
             Entities  14541
@@ -53,18 +53,16 @@ class Fb15k237(Fetch):
             Validation triples  17535
             Test triples  20466
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(fb15k237)
-        ...     print(positive_sample, weight, mode)
-        tensor([[5222,   24, 1165]]) tensor([0.2887]) tail-batch
-        tensor([[8615,   12, 2350]]) tensor([0.3333]) head-batch
-        tensor([[  16,   15, 4726]]) tensor([0.0343]) tail-batch
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[5222,   24, 1165]]), 'weight': tensor([0.2887]), 'mode': 'head-batch'}
 
-        >>> assert len(fb15k237.classification_valid['X']) == len(fb15k237.classification_valid['y'])
-        >>> assert len(fb15k237.classification_test['X']) == len(fb15k237.classification_test['y'])
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
+        >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])
 
-        >>> assert len(fb15k237.classification_valid['X']) == len(fb15k237.valid) * 2
-        >>> assert len(fb15k237.classification_test['X']) == len(fb15k237.test) * 2
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.valid) * 2
+        >>> assert len(dataset.classification_test['X']) == len(dataset.test) * 2
 
     References:
         1. [Toutanova, Kristina, et al. "Representing text for joint embedding of text and knowledge bases." Proceedings of the 2015 conference on empirical methods in natural language processing. 2015.](https://www.aclweb.org/anthology/D15-1174.pdf)

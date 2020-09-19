@@ -87,20 +87,20 @@ class TrainDataset(Dataset):
     @ staticmethod
     def collate_fn(data):
         """Reshape output data when calling train dataset loader."""
-        return (
-            torch.stack([_[0] for _ in data], dim=0),
-            torch.cat([_[1] for _ in data], dim=0),
-            data[0][2]
-        )
+        return {
+            'sample': torch.stack([_[0] for _ in data], dim=0),
+            'weight': torch.cat([_[1] for _ in data], dim=0),
+            'mode': data[0][2]
+        }
 
     @ staticmethod
     def collate_fn_classification(data):
         """Reshape output data when calling train dataset loader."""
-        return (
-            torch.stack([_[0] for _ in data], dim=0),
-            torch.stack([_[1] for _ in data], dim=0),
-            data[0][2]
-        )
+        return {
+            'sample': torch.stack([_[0] for _ in data], dim=0),
+            'y': torch.stack([_[1] for _ in data], dim=0),
+            'mode': data[0][2]
+        }
 
     @staticmethod
     def get_frequencies(triples, start=3):
@@ -220,18 +220,19 @@ class TestDataset(Dataset):
 
         negative_sample = tmp[:, 1]
 
-        positive_sample = torch.LongTensor((head, relation, tail))
+        sample = torch.LongTensor((head, relation, tail))
 
-        return positive_sample, negative_sample, filter_bias, self.mode
+        return sample, negative_sample, filter_bias, self.mode
 
     @ staticmethod
     def collate_fn(data):
         """Reshape output data when calling train dataset loader."""
-        positive_sample = torch.stack([_[0] for _ in data], dim=0)
-        negative_sample = torch.stack([_[1] for _ in data], dim=0)
-        filter_bias = torch.stack([_[2] for _ in data], dim=0)
-        mode = data[0][3]
-        return positive_sample, negative_sample, filter_bias, mode
+        return {
+            'sample': torch.stack([_[0] for _ in data], dim=0),
+            'negative_sample': torch.stack([_[1] for _ in data], dim=0),
+            'filter_bias': torch.stack([_[2] for _ in data], dim=0),
+            'mode': data[0][3],
+        }
 
 
 class TestDatasetRelation(TestDataset):
@@ -267,7 +268,7 @@ class TestDatasetRelation(TestDataset):
     def __getitem__(self, idx):
         head, relation, tail = self.triples[idx]
 
-        positive_sample = torch.LongTensor((head, relation, tail))
+        sample = torch.LongTensor((head, relation, tail))
 
         tensor_head = torch.tensor([head] * self.n_relation)
         tensor_tail = torch.tensor([tail] * self.n_relation)
@@ -279,10 +280,10 @@ class TestDatasetRelation(TestDataset):
         ])
 
         tensor_relation = tmp[:, 1]
-        bias = tmp[:, 0]
-        bias[relation] = 0
+        filter_bias = tmp[:, 0]
+        filter_bias[relation] = 0
 
         negative_sample = torch.stack(
             [tensor_head, tensor_relation, tensor_tail], dim=- 1)
 
-        return positive_sample, negative_sample, bias, self.mode
+        return sample, negative_sample, filter_bias, self.mode

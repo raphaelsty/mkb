@@ -6,7 +6,8 @@ from ..models import TransE
 from ..sampling import NegativeSampling
 from .top_k_sampling import TopKSampling
 from .top_k_sampling import TopKSamplingTransE
-from ..utils import Bar
+from ..utils import BarRange
+from ..datasets import Dataset
 
 import collections
 import os
@@ -19,6 +20,16 @@ import torch
 
 
 __all__ = ['KdmkbModel']
+
+
+class NextDataset(Dataset):
+    def __init__(self, dataset):
+        super().__init__(
+            self,
+            entities=dataset.entities,
+            relations=dataset.relations,
+            batch_size=dataset.batch_size
+        )
 
 
 class KdmkbModel:
@@ -270,24 +281,26 @@ class KdmkbModel:
 
         for id_dataset, dataset in datasets.items():
 
-            positive_sample, weight, mode = next(dataset)
+            data = next(dataset)
+
+            sample = data['sample'].to(self.device)
+            weight = data['weight'].to(self.device)
+            mode = data['mode']
 
             negative_sample = self.negative_sampling[id_dataset].generate(
-                positive_sample=positive_sample,
+                sample=sample,
                 mode=mode,
             )
 
-            positive_sample = positive_sample.to(self.device)
             negative_sample = negative_sample.to(self.device)
-            weight = weight.to(self.device)
 
             # Store positive sample to distill it.
-            positive_samples[id_dataset] = positive_sample
+            positive_samples[id_dataset] = sample
 
-            positive_score = models[id_dataset](positive_sample)
+            positive_score = models[id_dataset](sample)
 
             negative_score = models[id_dataset](
-                positive_sample,
+                sample,
                 negative_sample,
                 mode=mode
             )
@@ -309,7 +322,7 @@ class KdmkbModel:
                     ].distill(
                         teacher=models[id_dataset_teacher],
                         student=models[id_dataset_student],
-                        positive_sample=positive_samples[id_dataset_teacher]
+                        sample=positive_samples[id_dataset_teacher]
                     ) * self.alpha_kl
 
         for id_dataset, _ in datasets.items():
@@ -358,7 +371,7 @@ class KdmkbModel:
                 experiment=experiment,
             )
 
-        bar = Bar(step=max_step, update_every=update_every)
+        bar = BarRange(step=max_step, update_every=update_every)
 
         for step in bar:
 

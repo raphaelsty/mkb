@@ -41,7 +41,7 @@ class NegativeSampling:
             ... (3, 0, 1),
             ... ]
 
-            >>> dataset = datasets.Fetch(
+            >>> dataset = datasets.Dataset(
             ...    train = train,
             ...    entities = entities,
             ...    relations = relations,
@@ -58,16 +58,16 @@ class NegativeSampling:
             ...    seed = 42,
             ... )
 
-            Generate fake tails:
+            >>> for data in dataset:
+            ...     sample, weight, mode = data['sample'], data['weight'], data['mode']
+            ...     break
 
-            >>> positive_sample, weight, mode = next(dataset)
-
-            >>> negative_sample = negative_sampling.generate(positive_sample, mode='tail-batch')
+            >>> negative_sample = negative_sampling.generate(sample, mode='tail-batch')
 
             >>> mode
-            'tail-batch'
+            'head-batch'
 
-            >>> positive_sample
+            >>> sample
             tensor([[0, 0, 1],
                     [1, 0, 2]])
 
@@ -75,19 +75,18 @@ class NegativeSampling:
             tensor([[2, 3, 0, 2, 2],
             [3, 0, 3, 0, 0]])
 
-            >>> model(positive_sample, negative_sample, mode)
+            >>> model(sample, negative_sample, mode='tail-batch')
             tensor([[ 1.0213, -3.4006, -3.1048,  1.0213,  1.0213],
             [-2.4555, -3.9517, -2.4555, -3.9517, -3.9517]], grad_fn=<ViewBackward>)
 
-            Generate fake heads:
-            >>> positive_sample, weight, mode = next(dataset)
+            >>> for i, data in enumerate(dataset):
+            ...     sample, weight, mode = data['sample'], data['weight'], data['mode']
+            ...     if (i + 1) % 2 == 0:
+            ...         break
 
-            >>> negative_sample = negative_sampling.generate(positive_sample, mode)
+            >>> negative_sample = negative_sampling.generate(sample, mode='head-batch')
 
-            >>> mode
-            'head-batch'
-
-            >>> positive_sample
+            >>> sample
             tensor([[0, 0, 1],
                     [1, 0, 2]])
 
@@ -95,7 +94,7 @@ class NegativeSampling:
             tensor([[2, 2, 2, 2, 2],
             [2, 2, 2, 2, 3]])
 
-            >>> model(positive_sample, negative_sample, mode)
+            >>> model(sample, negative_sample, mode='head-batch')
             tensor([[-2.3821, -2.3821, -2.3821, -2.3821, -2.3821],
             [-2.4623, -2.4623, -2.4623, -2.4623, -0.8139]], grad_fn=<ViewBackward>)
 
@@ -135,7 +134,7 @@ class NegativeSampling:
         )
         return negative_sample[mask]
 
-    def generate(self, positive_sample, mode):
+    def generate(self, sample, mode):
         """Generate negative samples from a head, relation tail
 
         If the mode is set to head-batch, this method will generate a tensor of fake heads.
@@ -148,7 +147,7 @@ class NegativeSampling:
             size=self.size * 2
         )
 
-        for head, relation, tail in positive_sample:
+        for head, relation, tail in sample:
 
             head, relation, tail = head.item(), relation.item(), tail.item()
 

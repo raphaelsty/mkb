@@ -1,19 +1,19 @@
 from torch.utils import data
 import torch
 
-import pathlib
-
 from .base import TrainDataset
 from .base import TestDataset
 
+import pathlib
 
-__all__ = ['Fetch']
+
+__all__ = ['Dataset']
 
 
-class Fetch:
+class Dataset:
     """Iter over a dataset.
 
-    The Fetch class allows to iterate on the data of a dataset. Fetch takes entities as input,
+    The Dataset class allows to iterate on the data of a dataset. Dataset takes entities as input,
     relations, training data and optional validation and test data. Training data, validation and
     testing must be organized in the form of a triplet list. Entities and relations must be in a
     dictionary where the key is the label of the entity or relationship and the value must be the
@@ -64,6 +64,7 @@ class Fetch:
         ...     (0, 0, 1),
         ...     (0, 0, 2),
         ...     (2, 0, 4),
+        ...     (3, 1, 0),
         ... ]
 
         >>> test = [
@@ -71,57 +72,55 @@ class Fetch:
         ...    (4, 1, 5),
         ... ]
 
-        >>> dataset = datasets.Fetch(train=train, test=test, entities=entities, relations=relations,
-        ...     batch_size=1, classification=False, seed=42)
+        >>> dataset = datasets.Dataset(train=train, test=test, entities=entities, relations=relations,
+        ...     batch_size=2, classification=False, seed=42)
 
         >>> dataset
-        Fetch dataset
-            Batch size          1
+        Dataset dataset
+            Batch size          2
             Entities            6
             Relations           2
             Shuffle             True
-            Train triples       3
+            Train triples       4
             Validation triples  0
             Test triples        2
 
-        # Iterate over the first three samples of the input training set:
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     print(positive_sample, weight, mode)
-        tensor([[0, 0, 2]]) tensor([0.3333]) tail-batch
-        tensor([[0, 0, 2]]) tensor([0.3333]) head-batch
-        tensor([[0, 0, 1]]) tensor([0.3333]) tail-batch
-
-        >>> dataset = datasets.Fetch(train=train, test=test, entities=entities, relations=relations,
-        ...     batch_size=1, classification=False, pre_compute=False, seed=42)
-
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     print(positive_sample, weight, mode)
-        tensor([[0, 0, 2]]) tensor([0.3333]) tail-batch
-        tensor([[0, 0, 2]]) tensor([0.3333]) head-batch
-        tensor([[0, 0, 1]]) tensor([0.3333]) tail-batch
-
-        >>> dataset = datasets.Fetch(train=train, test=test, entities=entities, relations=relations,
+        >>> dataset = datasets.Dataset(train=train, test=test, entities=entities, relations=relations,
         ...     batch_size=1, classification=True, seed=42)
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     print(positive_sample, weight, mode)
-        tensor([[0, 0]]) tensor([[0., 1., 1., 0., 0., 0.]]) classification
-        tensor([[2, 0]]) tensor([[0., 0., 0., 0., 1., 0.]]) classification
-        tensor([[2, 0]]) tensor([[0., 0., 0., 0., 1., 0.]]) classification
+        >>> for _ in range(2):
+        ...      for data in dataset:
+        ...          print(data)
+        {'sample': tensor([[2, 0]]), 'y': tensor([[0., 0., 0., 0., 1., 0.]]), 'mode': 'classification'}
+        {'sample': tensor([[0, 0]]), 'y': tensor([[0., 1., 1., 0., 0., 0.]]), 'mode': 'classification'}
+        {'sample': tensor([[3, 1]]), 'y': tensor([[1., 0., 0., 0., 0., 0.]]), 'mode': 'classification'}
+        {'sample': tensor([[2, 0]]), 'y': tensor([[0., 0., 0., 0., 1., 0.]]), 'mode': 'classification'}
+        {'sample': tensor([[0, 0]]), 'y': tensor([[0., 1., 1., 0., 0., 0.]]), 'mode': 'classification'}
+        {'sample': tensor([[3, 1]]), 'y': tensor([[1., 0., 0., 0., 0., 0.]]), 'mode': 'classification'}
 
-        >>> dataset = datasets.Fetch(train=train, test=test, entities=entities, relations=relations,
-        ...     batch_size=1, classification=True, pre_compute=False, seed=42)
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     print(positive_sample, weight, mode)
-        tensor([[0, 0]]) tensor([[0., 1., 1., 0., 0., 0.]]) classification
-        tensor([[2, 0]]) tensor([[0., 0., 0., 0., 1., 0.]]) classification
-        tensor([[2, 0]]) tensor([[0., 0., 0., 0., 1., 0.]]) classification
+        >>> dataset = datasets.Dataset(train=train, test=test, entities=entities, relations=relations,
+        ...     batch_size=1, classification=False, seed=42)
 
+        >>> for _ in range(2):
+        ...     for data in dataset:
+        ...         print(data)
+        {'sample': tensor([[0, 0, 1]]), 'weight': tensor([0.3333]), 'mode': 'head-batch'}
+        {'sample': tensor([[0, 0, 1]]), 'weight': tensor([0.3333]), 'mode': 'tail-batch'}
+        {'sample': tensor([[2, 0, 4]]), 'weight': tensor([0.3536]), 'mode': 'head-batch'}
+        {'sample': tensor([[2, 0, 4]]), 'weight': tensor([0.3536]), 'mode': 'tail-batch'}
+        {'sample': tensor([[0, 0, 2]]), 'weight': tensor([0.3333]), 'mode': 'head-batch'}
+        {'sample': tensor([[3, 1, 0]]), 'weight': tensor([0.3536]), 'mode': 'tail-batch'}
+        {'sample': tensor([[3, 1, 0]]), 'weight': tensor([0.3536]), 'mode': 'head-batch'}
+        {'sample': tensor([[0, 0, 2]]), 'weight': tensor([0.3333]), 'mode': 'tail-batch'}
+        {'sample': tensor([[2, 0, 4]]), 'weight': tensor([0.3536]), 'mode': 'head-batch'}
+        {'sample': tensor([[3, 1, 0]]), 'weight': tensor([0.3536]), 'mode': 'tail-batch'}
+        {'sample': tensor([[0, 0, 2]]), 'weight': tensor([0.3333]), 'mode': 'head-batch'}
+        {'sample': tensor([[0, 0, 2]]), 'weight': tensor([0.3333]), 'mode': 'tail-batch'}
+        {'sample': tensor([[3, 1, 0]]), 'weight': tensor([0.3536]), 'mode': 'head-batch'}
+        {'sample': tensor([[2, 0, 4]]), 'weight': tensor([0.3536]), 'mode': 'tail-batch'}
+        {'sample': tensor([[0, 0, 1]]), 'weight': tensor([0.3333]), 'mode': 'head-batch'}
+        {'sample': tensor([[0, 0, 1]]), 'weight': tensor([0.3333]), 'mode': 'tail-batch'}
 
     References:
         1. [Sun, Zhiqing, et al. "Rotate: Knowledge graph embedding by relational rotation in complex space." arXiv preprint arXiv:1902.10197 (2019).](https://arxiv.org/pdf/1902.10197.pdf)
@@ -149,15 +148,18 @@ class Fetch:
         self.n_entity = len(entities)
         self.n_relation = len(relations)
 
-        if classification:
-            self.fetch_classification = self.fetch(
-                self.get_train_loader(mode='classification'))
+        if self.classification:
+            self.dataset = self.get_train_loader(mode='classification')
+            self.len = int(len(self.dataset.dataset) / self.batch_size)
+
         else:
             self.step = 0
-            self.fetch_head = self.fetch(
-                self.get_train_loader(mode='head-batch'))
-            self.fetch_tail = self.fetch(
-                self.get_train_loader(mode='tail-batch'))
+            self.dataset_head = self.get_train_loader(mode='head-batch')
+            self.dataset_tail = self.get_train_loader(mode='tail-batch')
+            self.len = int((
+                len(self.dataset_head.dataset) +
+                len(self.dataset_tail.dataset)
+            ) / self.batch_size)
 
         self.classification_valid = classification_valid
         self.classification_test = classification_test
@@ -165,16 +167,22 @@ class Fetch:
         if self.seed:
             torch.manual_seed(self.seed)
 
-    def __next__(self):
+        self.state = self.__iter__()
+
+    def __iter__(self):
         if self.classification:
-            data = next(self.fetch_classification)
+            yield from self.dataset
         else:
-            self.step += 1
-            if self.step % 2 == 0:
-                data = next(self.fetch_head)
-            else:
-                data = next(self.fetch_tail)
-        return data
+            for head, tail in zip(*[self.dataset_head, self.dataset_tail]):
+                yield head
+                yield tail
+
+    def __next__(self):
+        """Kdmkb models need next functionnality"""
+        return next(self.state)
+
+    def __len__(self):
+        return self.len
 
     @property
     def true_triples(self):
@@ -229,8 +237,7 @@ class Fetch:
 
     @ staticmethod
     def fetch(dataloader):
-        while True:
-            yield from dataloader
+        return dataloader
 
     def test_stream(self, triples, batch_size):
         head_loader = self._get_test_loader(

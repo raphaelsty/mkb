@@ -1,4 +1,5 @@
 from .bar import Bar
+from .bar import BarRange
 from .export_embeddings import export_embeddings
 from .predict import FetchToPredict
 from .predict import make_prediction
@@ -9,7 +10,8 @@ from .top_k import TopK
 
 
 __all__ = [
-    'bar',
+    'Bar',
+    'BarRange',
     'export_embeddings',
     'FetchToPredict',
     'make_prediction',

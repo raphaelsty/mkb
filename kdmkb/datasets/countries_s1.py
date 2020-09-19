@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from .fetch import Fetch
+from .dataset import Dataset
 
 from ..utils import read_csv
 from ..utils import read_json
@@ -10,7 +10,7 @@ from ..utils import read_json
 __all__ = ['CountriesS1']
 
 
-class CountriesS1(Fetch):
+class CountriesS1(Dataset):
     """CountriesS1 dataset.
 
     countriesS1 aim to iterate over the associated dataset. It provide positive samples, corresponding
@@ -40,9 +40,9 @@ class CountriesS1(Fetch):
 
         >>> from kdmkb import datasets
 
-        >>> countries = datasets.CountriesS1(batch_size=1, pre_compute=True, shuffle=True, seed=42)
+        >>> dataset = datasets.CountriesS1(batch_size=1, pre_compute=True, shuffle=True, seed=42)
 
-        >>> countries
+        >>> dataset
         CountriesS1 dataset
             Batch size  1
             Entities  271
@@ -52,42 +52,38 @@ class CountriesS1(Fetch):
             Validation triples  24
             Test triples  24
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(countries)
-        ...     print(positive_sample, weight, mode)
-        tensor([[171,   0, 109]]) tensor([0.1925]) tail-batch
-        tensor([[247,   1, 237]]) tensor([0.2357]) head-batch
-        tensor([[ 91,   0, 270]]) tensor([0.1374]) tail-batch
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[171,   0, 109]]), 'weight': tensor([0.1925]), 'mode': 'head-batch'}
 
         >>> import torch
 
         >>> dataset = datasets.CountriesS1(batch_size=2, classification=False,
         ...     pre_compute=False, shuffle=True, seed=42)
 
-        >>> for _ in range(10):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     assert positive_sample.shape == torch.Size([2, 3])
-        ...     assert weight.shape == torch.Size([2])
+        >>> for data in dataset:
+        ...     assert data['sample'].shape == torch.Size([2, 3])
+        ...     assert data['weight'].shape == torch.Size([2])
+        ...     break
 
         >>> dataset = datasets.CountriesS1(batch_size=2, classification=True,
         ...     pre_compute=True, shuffle=True, seed=42)
 
-        >>> for _ in range(10):
-        ...     positive_sample, target, mode = next(dataset)
-        ...     assert positive_sample.shape == torch.Size([2, 2])
-        ...     assert target.shape == torch.Size([2, 271])
-        ...     assert mode == 'classification'
+        >>> for data in dataset:
+        ...     assert data['sample'].shape == torch.Size([2, 2])
+        ...     assert data['y'].shape == torch.Size([2, 271])
+        ...     assert data['mode'] == 'classification'
+        ...     break
 
         >>> dataset = datasets.CountriesS1(batch_size=2, classification=True,
         ...     pre_compute=False, shuffle=True, seed=42)
 
-        >>> for _ in range(10):
-        ...     positive_sample, target, mode = next(dataset)
-        ...     assert positive_sample.shape == torch.Size([2, 2])
-        ...     assert target.shape == torch.Size([2, 271])
-        ...     assert mode == 'classification'
-
-
+        >>> for data in dataset:
+        ...     assert data['sample'].shape == torch.Size([2, 2])
+        ...     assert data['y'].shape == torch.Size([2, 271])
+        ...     assert data['mode'] == 'classification'
+        ...     break
 
     References:
         1. [Bouchard, Guillaume, Sameer Singh, and Theo Trouillon. "On approximate reasoning capabilities of low-rank vector spaces." 2015 AAAI Spring Symposium Series. 2015.](https://www.aaai.org/ocs/index.php/SSS/SSS15/paper/view/10257/10026)

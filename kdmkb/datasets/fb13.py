@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from .fetch import Fetch
+from .dataset import Dataset
 
 from ..utils import read_csv
 from ..utils import read_csv_classification
@@ -11,7 +11,7 @@ from ..utils import read_json
 __all__ = ['Fb13']
 
 
-class Fb13(Fetch):
+class Fb13(Dataset):
     """Fb13 dataset.
 
     Fb13 aim to iterate over the associated dataset. It provide positive samples, corresponding
@@ -53,13 +53,10 @@ class Fb13(Fetch):
             Validation triples  5908
             Test triples        23733
 
-
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     print(positive_sample, weight, mode)
-        tensor([[43252,     4, 73563]]) tensor([0.2774]) tail-batch
-        tensor([[18750,     8, 67427]]) tensor([0.0370]) head-batch
-        tensor([[40007,     6, 67431]]) tensor([0.0175]) tail-batch
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[43252, 4, 73563]]), 'weight': tensor([0.2774]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

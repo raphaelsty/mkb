@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from .fetch import Fetch
+from .dataset import Dataset
 
 from ..utils import read_csv
 from ..utils import read_csv_classification
@@ -11,7 +11,7 @@ from ..utils import read_json
 __all__ = ['Wn11']
 
 
-class Wn11(Fetch):
+class Wn11(Dataset):
     """Wn11 dataset.
 
     Wn11 aim to iterate over the associated dataset. It provide positive samples, corresponding
@@ -53,12 +53,10 @@ class Wn11(Fetch):
             Validation triples  2609
             Test triples       10544
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     print(positive_sample, weight, mode)
-        tensor([[29798,     2, 16107]]) tensor([0.3162]) tail-batch
-        tensor([[36732,     2,   563]]) tensor([0.3333]) head-batch
-        tensor([[ 4115,     0, 20415]]) tensor([0.3015]) tail-batch
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[29798,     2, 16107]]), 'weight': tensor([0.3162]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

@@ -1,4 +1,4 @@
-from . import Fetch
+from .dataset import Dataset
 
 import numpy as np
 import random
@@ -8,7 +8,7 @@ import copy
 __all__ = ['MultiKb']
 
 
-class MultiKb(Fetch):
+class MultiKb(Dataset):
     """Split input dataset into multiples parts and control fraction of aligned entities.
 
     Parameters:
@@ -41,12 +41,10 @@ class MultiKb(Fetch):
             Umls set  1
             Aligned entities  80.0%
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     print(positive_sample, weight, mode)
-        tensor([[ 26,  13, 107]]) tensor([0.2000]) tail-batch
-        tensor([[67,  5, 55]]) tensor([0.2500]) head-batch
-        tensor([[ 9,  3, 17]]) tensor([0.1690]) tail-batch
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[ 26,  13, 107]]), 'weight': tensor([0.2000]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

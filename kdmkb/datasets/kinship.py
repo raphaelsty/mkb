@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from .fetch import Fetch
+from .dataset import Dataset
 
 from ..utils import read_csv
 from ..utils import read_csv_classification
@@ -11,7 +11,7 @@ from ..utils import read_json
 __all__ = ['Kinship']
 
 
-class Kinship(Fetch):
+class Kinship(Dataset):
     """Kinship dataset.
 
     Kinship aim to iterate over the associated dataset. It provide positive samples, corresponding
@@ -53,12 +53,10 @@ class Kinship(Fetch):
             Validation triples 1069
             Test triples        1069
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     print(positive_sample, weight, mode)
-        tensor([[79, 18, 40]]) tensor([0.1925]) tail-batch
-        tensor([[76, 20, 98]]) tensor([0.2673]) head-batch
-        tensor([[52, 10, 61]]) tensor([0.1925]) tail-batch
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[79, 18, 40]]), 'weight': tensor([0.1925]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

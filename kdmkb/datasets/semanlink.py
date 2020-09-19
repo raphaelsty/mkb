@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from .fetch import Fetch
+from .dataset import Dataset
 
 from ..utils import read_csv
 from ..utils import read_csv_classification
@@ -11,7 +11,7 @@ from ..utils import read_json
 __all__ = ['Semanlink']
 
 
-class Semanlink(Fetch):
+class Semanlink(Dataset):
     """Semanlink dataset.
 
     Semanlink aim to iterate over the associated dataset. It provide positive samples, corresponding
@@ -53,13 +53,10 @@ class Semanlink(Fetch):
                 Validation triples  2027
                 Test triples        2027
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     print(positive_sample, weight, mode)
-        tensor([[684,   2,  35]]) tensor([0.2236]) tail-batch
-        tensor([[ 5379,     6, 11930]]) tensor([0.3536]) head-batch
-        tensor([[9922,    0, 1503]]) tensor([0.1213]) tail-batch
-
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[684,   2,  35]]), 'weight': tensor([0.2236]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

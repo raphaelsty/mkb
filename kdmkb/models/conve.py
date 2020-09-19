@@ -23,7 +23,7 @@ class ConvE(base.BaseConvE):
 
         >>> import torch
 
-        >>> _ = torch.manual_seed(0)
+        >>> _ = torch.manual_seed(42)
 
         >>> dataset = datasets.CountriesS1(3, shuffle = False)
 
@@ -45,8 +45,6 @@ class ConvE(base.BaseConvE):
         Feature map dropout      0.2
         Layer dropout            0.3
 
-        >>> sample, weights, mode = next(dataset)
-
         >>> sample = torch.tensor([
         ...    [0, 0],
         ...    [1, 1],
@@ -67,20 +65,20 @@ class ConvE(base.BaseConvE):
         >>> assert y_pred.shape == torch.Size([1, 271])
 
         >>> y_pred[0][266]
-        tensor(-0.0716, grad_fn=<SelectBackward>)
+        tensor(0.0561, grad_fn=<SelectBackward>)
 
         >>> sample = torch.tensor([[0, 0], [1, 1], [1, 1]])
 
         >>> y_pred = model(sample)
 
         >>> y_pred[0][266]
-        tensor(-0.0716, grad_fn=<SelectBackward>)
+        tensor(0.0561, grad_fn=<SelectBackward>)
 
         >>> y_pred[1][56]
-        tensor(0.1779, grad_fn=<SelectBackward>)
+        tensor(0.6604, grad_fn=<SelectBackward>)
 
         >>> y_pred[2][14]
-        tensor(-0.0048, grad_fn=<SelectBackward>)
+        tensor(-0.2499, grad_fn=<SelectBackward>)
 
         >>> sample = torch.tensor([
         ...    [  0,   0, 266],
@@ -93,23 +91,25 @@ class ConvE(base.BaseConvE):
         ... ])
 
         >>> model(sample, negative_sample, mode = 'tail-batch')
-        tensor([[-0.0716, -0.0716],
-                [ 0.1779,  0.1779],
-                [-0.0048, -0.0048]], grad_fn=<ViewBackward>)
+        tensor([[ 0.0561,  0.0561],
+                [ 0.6604,  0.6604],
+                [-0.2499, -0.2499]], grad_fn=<ViewBackward>)
 
         >>> model(sample, negative_sample, mode = 'tail-batch')
-        tensor([[-0.0716, -0.0716],
-                [ 0.1779,  0.1779],
-                [-0.0048, -0.0048]], grad_fn=<ViewBackward>)
+        tensor([[ 0.0561,  0.0561],
+                [ 0.6604,  0.6604],
+                [-0.2499, -0.2499]], grad_fn=<ViewBackward>)
+
 
         >>> negative_sample = torch.tensor([
         ...    [0, 0], [1, 1], [1, 1]
         ... ])
 
         >>> model(sample, negative_sample, mode = 'head-batch')
-        tensor([[-0.0716, -0.0716],
-                [ 0.1779,  0.1779],
-                [-0.0048, -0.0048]], grad_fn=<ViewBackward>)
+        tensor([[ 0.0561,  0.0561],
+                [ 0.6604,  0.6604],
+                [-0.2499, -0.2499]], grad_fn=<ViewBackward>)
+
 
         >>> sample = torch.tensor([
         ...     [[0, 0, 266], [0, 0, 266]],
@@ -117,8 +117,8 @@ class ConvE(base.BaseConvE):
         ... ])
 
         >>> model(sample, mode = 'default')
-        tensor([[-0.0716, -0.0716],
-                [ 0.1779,  0.1779]], grad_fn=<ViewBackward>)
+        tensor([[0.0561, 0.0561],
+                [0.6604, 0.6604]], grad_fn=<ViewBackward>)
 
 
     References:

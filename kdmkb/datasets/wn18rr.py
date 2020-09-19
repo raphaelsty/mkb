@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from .fetch import Fetch
+from .dataset import Dataset
 
 from ..utils import read_csv
 from ..utils import read_csv_classification
@@ -10,7 +10,7 @@ from ..utils import read_json
 __all__ = ['Wn18rr']
 
 
-class Wn18rr(Fetch):
+class Wn18rr(Dataset):
     """Wn18rr dataset.
 
     Wn18rr aim to iterate over the associated dataset. It provide positive samples, corresponding
@@ -40,9 +40,9 @@ class Wn18rr(Fetch):
 
         >>> from kdmkb import datasets
 
-        >>> wn18rr = datasets.Wn18rr(batch_size=1, shuffle=True, pre_compute=False, seed=42)
+        >>> dataset = datasets.Wn18rr(batch_size=1, shuffle=True, pre_compute=False, seed=42)
 
-        >>> wn18rr
+        >>> dataset
         Wn18rr dataset
             Batch size          1
             Entities            40943
@@ -52,20 +52,16 @@ class Wn18rr(Fetch):
             Validation triples  3034
             Test triples        3134
 
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[12241,     4, 33028]]), 'weight': tensor([0.3333]), 'mode': 'head-batch'}
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(wn18rr)
-        ...     print(positive_sample, weight, mode)
-        tensor([[12241,     4, 33028]]) tensor([0.3333]) tail-batch
-        tensor([[2635,    1, 6885]]) tensor([0.2500]) head-batch
-        tensor([[ 1479,     0, 32588]]) tensor([0.3333]) tail-batch
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
+        >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])
 
-
-        >>> assert len(wn18rr.classification_valid['X']) == len(wn18rr.classification_valid['y'])
-        >>> assert len(wn18rr.classification_test['X']) == len(wn18rr.classification_test['y'])
-
-        >>> assert len(wn18rr.classification_valid['X']) == len(wn18rr.valid) * 2
-        >>> assert len(wn18rr.classification_test['X']) == len(wn18rr.test) * 2
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.valid) * 2
+        >>> assert len(dataset.classification_test['X']) == len(dataset.test) * 2
 
     References:
         1. [Dettmers, Tim, et al. "Convolutional 2d knowledge graph embeddings." Thirty-Second AAAI Conference on Artificial Intelligence. 2018.](https://arxiv.org/pdf/1707.01476.pdf)

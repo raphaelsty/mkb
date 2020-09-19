@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from .fetch import Fetch
+from .dataset import Dataset
 
 from ..utils import read_csv
 from ..utils import read_csv_classification
@@ -11,7 +11,7 @@ from ..utils import read_json
 __all__ = ['Fb15k']
 
 
-class Fb15k(Fetch):
+class Fb15k(Dataset):
     """Fb15k dataset.
 
     Fb15k aim to iterate over the associated dataset. It provide positive samples, corresponding
@@ -53,12 +53,10 @@ class Fb15k(Fetch):
             Validation triples 50000
             Test triples       59071
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     print(positive_sample, weight, mode)
-        tensor([[1548,  247, 7753]]) tensor([0.1043]) tail-batch
-        tensor([[4625,   53, 6478]]) tensor([0.2425]) head-batch
-        tensor([[135,  52, 170]]) tensor([0.0902]) tail-batch
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[1548,  247, 7753]]), 'weight': tensor([0.1043]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

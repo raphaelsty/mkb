@@ -1,5 +1,7 @@
 from creme import stats
+
 import pandas as pd
+
 from torch.utils import data
 import torch
 
@@ -22,8 +24,8 @@ class Evaluation:
         entities (dict): Entities of the dataset.
         relations (dict): Relations of the dataset.
         batch_size (int): Size of the batch.
-        true_triples (list): Available triplets to filter metrics. If not specified, `Evaluation`
-            will mesure raw metrics. Usually we filter triplets based on train, validation and test
+        true_triples (list): Available triplets to filter_bias metrics. If not specified, `Evaluation`
+            will mesure raw metrics. Usually we filter_bias triplets based on train, validation and test
             datasets.
         device (str): cpu or cuda.
         num_workers (str): Number of workers for pytorch dataset.
@@ -69,8 +71,9 @@ class Evaluation:
         ... 'r1': 1,
         ... }
 
-        >>> dataset = datasets.Fetch(
+        >>> dataset = datasets.Dataset(
         ...    train = train,
+        ...    valid = valid,
         ...    test = test,
         ...    entities = entities,
         ...    relations = relations,
@@ -97,14 +100,14 @@ class Evaluation:
 
         >>> loss = losses.Adversarial(alpha=0.5)
 
-        >>> for _ in range(10):
-        ...     positive_sample, weight, mode=next(dataset)
-        ...     positive_score = model(positive_sample)
-        ...     negative_sample = negative_sampling.generate(positive_sample=positive_sample,
-        ...         mode=mode)
-        ...     negative_score = model(positive_sample, negative_sample, mode)
-        ...     loss(positive_score, negative_score, weight).backward()
-        ...     _ = optimizer.step()
+        >>> for _ in range(5):
+        ...     for data in dataset:
+        ...         sample, weight, mode = data['sample'], data['weight'], data['mode']
+        ...         positive_score = model(sample)
+        ...         negative_sample = negative_sampling.generate(sample=sample, mode=mode)
+        ...         negative_score = model(sample, negative_sample, mode)
+        ...         loss(positive_score, negative_score, weight).backward()
+        ...         _ = optimizer.step()
 
         >>> model = model.eval()
 
@@ -112,20 +115,19 @@ class Evaluation:
         ...     entities=entities, relations=relations, batch_size=2)
 
         >>> validation.eval(model=model, dataset=test)
-        {'MRR': 0.6875, 'MR': 2.0, 'HITS@1': 0.5, 'HITS@3': 0.75, 'HITS@10': 1.0}
+        {'MRR': 0.5417, 'MR': 2.25, 'HITS@1': 0.25, 'HITS@3': 1.0, 'HITS@10': 1.0}
 
         >>> validation.eval_relations(model=model, dataset=test)
-        {'MRR_relations': 1.0, 'MR_relations': 1.0, 'HITS@1_relations': 1.0,
-            'HITS@3_relations': 1.0, 'HITS@10_relations': 1.0}
+        {'MRR_relations': 1.0, 'MR_relations': 1.0, 'HITS@1_relations': 1.0, 'HITS@3_relations': 1.0, 'HITS@10_relations': 1.0}
 
         >>> validation.detail_eval(model=model, dataset=test, threshold=1.5)
-                    head                             tail                             metadata
-                    MRR   MR HITS@1 HITS@3 HITS@10   MRR   MR HITS@1 HITS@3 HITS@10 frequency
+                head                               tail                             metadata
+                MRR   MR HITS@1 HITS@3 HITS@10     MRR   MR HITS@1 HITS@3 HITS@10 frequency
         relation
-        1_1       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0       0.0
-        1_M       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0       0.0
-        M_1       0.000  0.0    0.0    0.0     0.0  0.00  0.0    0.0    0.0     0.0       0.0
-        M_M       0.625  2.5    0.5    0.5     1.0  0.75  1.5    0.5    1.0     1.0       1.0
+        1_1       0.0000  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0       0.0
+        1_M       0.0000  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0       0.0
+        M_1       0.0000  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0       0.0
+        M_M       0.6667  2.0    0.5    1.0     1.0  0.4167  2.5    0.0    1.0     1.0       1.0
 
         >>> validation.types_relations(model = model, dataset=test, threshold=1.5)
         {'r0': 'M_M', 'r1': 'M_M'}
@@ -213,16 +215,17 @@ class Evaluation:
             model = model.eval()
             training = True
 
-        for step, (positive_sample, negative_sample, filter_bias, mode) in enumerate(test_set):
+        for data in test_set:
 
-            positive_sample = positive_sample.to(device)
-            negative_sample = negative_sample.to(device)
-            filter_bias = filter_bias.to(device)
+            sample = data['sample'].to(device)
+            negative_sample = data['negative_sample'].to(device)
+            filter_bias = data['filter_bias'].to(device)
+            mode = data['mode']
 
             if mode == 'head-batch' or mode == 'tail-batch':
 
                 score = model(
-                    sample=positive_sample,
+                    sample=sample,
                     negative_sample=negative_sample,
                     mode=mode
                 )
@@ -236,15 +239,15 @@ class Evaluation:
             argsort = torch.argsort(score, dim=1, descending=True)
 
             if mode == 'head-batch':
-                positive_arg = positive_sample[:, 0]
+                positive_arg = sample[:, 0]
 
             if mode == 'relation-batch':
-                positive_arg = positive_sample[:, 1]
+                positive_arg = sample[:, 1]
 
             elif mode == 'tail-batch':
-                positive_arg = positive_sample[:, 2]
+                positive_arg = sample[:, 2]
 
-            batch_size = positive_sample.size(0)
+            batch_size = sample.size(0)
 
             for i in range(batch_size):
                 # Notice that argsort is not ranking
@@ -280,14 +283,15 @@ class Evaluation:
             model = model.eval()
             training = True
 
-        for step, (positive_sample, negative_sample, filter_bias, mode) in enumerate(test_set):
+        for data in test_set:
 
-            positive_sample = positive_sample.to(device)
-            negative_sample = negative_sample.to(device)
-            filter_bias = filter_bias.to(device)
+            sample = data['sample'].to(device)
+            negative_sample = data['negative_sample'].to(device)
+            filter_bias = data['filter_bias'].to(device)
+            mode = data['mode']
 
             score = model(
-                sample=positive_sample,
+                sample=sample,
                 negative_sample=negative_sample,
                 mode=mode,
             )
@@ -297,12 +301,12 @@ class Evaluation:
             argsort = torch.argsort(score, dim=1, descending=True)
 
             if mode == 'head-batch':
-                positive_arg = positive_sample[:, 0]
+                positive_arg = sample[:, 0]
 
             elif mode == 'tail-batch':
-                positive_arg = positive_sample[:, 2]
+                positive_arg = sample[:, 2]
 
-            batch_size = positive_sample.size(0)
+            batch_size = sample.size(0)
 
             for i in range(batch_size):
                 # Notice that argsort is not ranking
@@ -312,7 +316,7 @@ class Evaluation:
                 ranking = 1 + ranking.item()
 
                 type_relation = types_relations[
-                    positive_sample[:, 1][i].item()
+                    sample[:, 1][i].item()
                 ]
 
                 # ranking + 1 is the true ranking used in evaluation metrics

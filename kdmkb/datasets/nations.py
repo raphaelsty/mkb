@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from .fetch import Fetch
+from .dataset import Dataset
 
 from ..utils import read_csv
 from ..utils import read_csv_classification
@@ -11,7 +11,7 @@ from ..utils import read_json
 __all__ = ['Nations']
 
 
-class Nations(Fetch):
+class Nations(Dataset):
     """Nations dataset.
 
     Nations aim to iterate over the associated dataset. It provide positive samples, corresponding
@@ -41,9 +41,9 @@ class Nations(Fetch):
 
         >>> from kdmkb import datasets
 
-        >>> nations = datasets.Nations(batch_size=1, shuffle=True, pre_compute=False, seed=42)
+        >>> dataset = datasets.Nations(batch_size=1, shuffle=True, pre_compute=False, seed=42)
 
-        >>> nations
+        >>> dataset
         Nations dataset
             Batch size           1
             Entities            14
@@ -53,19 +53,16 @@ class Nations(Fetch):
             Validation triples 202
             Test triples       203
 
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[ 6,  5, 13]]), 'weight': tensor([0.2085]), 'mode': 'head-batch'}
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(nations)
-        ...     print(positive_sample, weight, mode)
-        tensor([[ 6,  5, 13]]) tensor([0.2085]) tail-batch
-        tensor([[6, 0, 5]]) tensor([0.2182]) head-batch
-        tensor([[10,  8,  7]]) tensor([0.2085]) tail-batch
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
+        >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])
 
-        >>> assert len(nations.classification_valid['X']) == len(nations.classification_valid['y'])
-        >>> assert len(nations.classification_test['X']) == len(nations.classification_test['y'])
-
-        >>> assert len(nations.classification_valid['X']) == len(nations.valid) * 2
-        >>> assert len(nations.classification_test['X']) == len(nations.test) * 2
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.valid) * 2
+        >>> assert len(dataset.classification_test['X']) == len(dataset.test) * 2
 
 
     References:

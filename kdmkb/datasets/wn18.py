@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from .fetch import Fetch
+from .dataset import Dataset
 
 from ..utils import read_csv
 from ..utils import read_csv_classification
@@ -11,7 +11,7 @@ from ..utils import read_json
 __all__ = ['Wn18']
 
 
-class Wn18(Fetch):
+class Wn18(Dataset):
     """Wn18 dataset.
 
     Wn18 aim to iterate over the associated dataset. It provide positive samples, corresponding
@@ -53,12 +53,10 @@ class Wn18(Fetch):
             Validation triples 5000
             Test triples       5000
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     print(positive_sample, weight, mode)
-        tensor([[ 6609,    11, 37772]]) tensor([0.1890]) tail-batch
-        tensor([[ 8264,     1, 13467]]) tensor([0.1543]) head-batch
-        tensor([[ 107,    7, 4918]]) tensor([0.0603]) tail-batch
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[ 6609,    11, 37772]]), 'weight': tensor([0.1890]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

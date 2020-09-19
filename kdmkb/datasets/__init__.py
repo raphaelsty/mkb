@@ -4,7 +4,7 @@ from .countries_s3 import CountriesS3
 from .fb13 import Fb13
 from .fb15k import Fb15k
 from .fb15k237 import Fb15k237
-from .fetch import Fetch
+from .dataset import Dataset
 from .kinship import Kinship
 from .nations import Nations
 from .nell995 import Nell995
@@ -24,7 +24,7 @@ __all__ = [
     'Fb13',
     'Fb15k',
     'Fb15k237',
-    'Fetch',
+    'Dataset',
     'Kinship',
     'Nations',
     'Nell995',

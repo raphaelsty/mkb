@@ -410,13 +410,13 @@ class Distillation:
         return self._stack_sample(
             batch=batch, batch_size=self.sampling.batch_size_relation, device=device)
 
-    def distill(self, teacher, student, positive_sample):
+    def distill(self, teacher, student, sample):
         """Apply distillation between a teacher and a student from a batch of positive sample.
 
         Parameters:
             teacher (models.models): Model that play the role of the teacher.
             student (models.models): Model that play the role of the student.
-            positive_sample (torch.Tensor): Batch of positive samples.
+            sample (torch.Tensor): Batch of positive samples.
 
         Example:
 
@@ -452,12 +452,14 @@ class Distillation:
             ...     ),
             ... )
 
-            >>> positive_sample, weight, mode = next(dataset)
+
+            >>> iter_dataset = iter(dataset)
+            >>> data = next(iter_dataset)
 
             >>> loss_distillation = distillation_process.distill(
             ...     teacher = teacher,
             ...     student = student,
-            ...     positive_sample = positive_sample,
+            ...     sample = data['sample'],
             ... )
 
             >>> loss_distillation
@@ -499,16 +501,17 @@ class Distillation:
             ...     ),
             ... )
 
-            >>> positive_sample, weight, mode = next(dataset)
+            >>> data = next(iter_dataset)
+            >>> sample = data['sample']
 
             >>> loss_distillation = distillation_process.distill(
             ...     teacher = teacher,
             ...     student = student,
-            ...     positive_sample = positive_sample,
+            ...     sample = sample,
             ... )
 
             >>> loss_distillation
-            tensor(0.6358, grad_fn=<AddBackward0>)
+            tensor(0.4526, grad_fn=<AddBackward0>)
 
             >>> loss_distillation.backward()
 
@@ -525,14 +528,14 @@ class Distillation:
         (head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
             head_distribution_student, relation_distribution_student, tail_distribution_student
          ) = self.sampling.get(**{
-             'positive_sample': positive_sample,
+             'sample': sample,
              'mapping_entities': self.mapping_entities,
              'mapping_relations': self.mapping_relations,
-             'positive_sample_size': positive_sample.shape[0],
+             'positive_sample_size': sample.shape[0],
              'teacher': teacher,
          })
 
-        for i, (head, relation, tail) in enumerate(positive_sample):
+        for i, (head, relation, tail) in enumerate(sample):
 
             head, relation, tail = head.item(), relation.item(), tail.item()
 

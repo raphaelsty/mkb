@@ -5,8 +5,9 @@ from creme import stats
 
 import collections
 
-from ..utils import bar
-from ..losses import adversarial
+from ..losses import Adversarial
+from ..losses import BCEWithLogitsLoss
+from ..utils import Bar
 
 
 ___all___ = ['Pipeline']
@@ -19,12 +20,12 @@ class Pipeline:
         dataset (kdmkb.datasets): Dataset.
         model (kdmkb.models): Model.
         sampling (kdmkb.sampling): Negative sampling method.
-        max_step (int): Number of iteration to train the model.
+        epochs (int): Number of epochs to train the model.
         validation (kdmkb.evaluation): Validation process.
-        eval_every (int): Interval at which the model will be evaluated on the test / valid
+        eval_every (int): When eval_every is set to 1, the model will be evaluated at every epochs.
             datasets.
         early_stopping_rounds (int): Stops training when model did not improve scores during
-            `early_stopping_rounds` iterations.
+            `early_stopping_rounds` epochs.
         device (str): Device.
 
     Example:
@@ -42,15 +43,45 @@ class Pipeline:
 
         >>> device = 'cpu'
 
-        >>> dataset  = datasets.Umls(batch_size = 2, shuffle = True, seed = 42)
+        >>> train = [
+        ...     (0, 0, 1),
+        ...     (0, 1, 1),
+        ...     (2, 0, 3),
+        ...     (2, 1, 3),
+        ... ]
 
-        # Do not reproduce at home the code below this comment.
-        # To run tests faster I chosse to select a sub part of test and valid datasets.
+        >>> valid = [
+        ...     (0, 0, 1),
+        ...     (2, 1, 3),
+        ... ]
 
-        >>> dataset.valid = dataset.valid[:4]
-        >>> dataset.test = dataset.test[:4]
+        >>> test = [
+        ...     (0, 0, 1),
+        ...     (2, 1, 3),
+        ... ]
 
-        # Ok, now you can reproduce the code below at home.
+        >>> entities = {
+        ... 'e0': 0,
+        ... 'e1': 1,
+        ... 'e2': 2,
+        ... 'e3': 3,
+        ... }
+
+        >>> relations = {
+        ... 'r0': 0,
+        ... 'r1': 1,
+        ... }
+
+        >>> dataset = datasets.Dataset(
+        ...    train = train,
+        ...    valid = valid,
+        ...    test = test,
+        ...    entities = entities,
+        ...    relations = relations,
+        ...    batch_size = 2,
+        ...    seed = 42,
+        ...    shuffle = False,
+        ... )
 
         >>> sampling = sampling.NegativeSampling(
         ...        size          = 4,
@@ -87,9 +118,9 @@ class Pipeline:
         ... )
 
         >>> pipeline = compose.Pipeline(
-        ...     max_step   = 10, # Should be set to 80000.
-        ...     eval_every = 5,  # Should be set to 2000.
-        ...     early_stopping_rounds = 3,
+        ...     epochs = 3,
+        ...     eval_every = 1,
+        ...     early_stopping_rounds = 2,
         ...     device = 'cpu',
         ... )
 
@@ -102,88 +133,112 @@ class Pipeline:
         ...     loss       = losses.Adversarial(alpha=0.5),
         ... )
         <BLANKLINE>
-        Step: 4.
+        Epoch: 0.
             Validation:
-                    MRR: 0.1283
-                    MR: 31.125
-                    HITS@1: 0.0
-                    HITS@3: 0.125
-                    HITS@10: 0.375
-                    MRR_relations: 0.2236
-                    MR_relations: 11.25
-                    HITS@1_relations: 0.0
-                    HITS@3_relations: 0.25
-                    HITS@10_relations: 0.75
+                    MRR: 0.4375
+                    MR: 3.25
+                    HITS@1: 0.25
+                    HITS@3: 0.25
+                    HITS@10: 1.0
+                    MRR_relations: 1.0
+                    MR_relations: 1.0
+                    HITS@1_relations: 1.0
+                    HITS@3_relations: 1.0
+                    HITS@10_relations: 1.0
             Test:
-                    MRR: 0.0208
-                    MR: 61.5
-                    HITS@1: 0.0
-                    HITS@3: 0.0
-                    HITS@10: 0.0
-                    MRR_relations: 0.0471
-                    MR_relations: 22.25
-                    HITS@1_relations: 0.0
-                    HITS@3_relations: 0.0
-                    HITS@10_relations: 0.0
+                    MRR: 0.4375
+                    MR: 3.25
+                    HITS@1: 0.25
+                    HITS@3: 0.25
+                    HITS@10: 1.0
+                    MRR_relations: 1.0
+                    MR_relations: 1.0
+                    HITS@1_relations: 1.0
+                    HITS@3_relations: 1.0
+                    HITS@10_relations: 1.0
         <BLANKLINE>
-        Step: 9.
+        Epoch: 1.
             Validation:
-                    MRR: 0.1283
-                    MR: 31.125
-                    HITS@1: 0.0
-                    HITS@3: 0.125
-                    HITS@10: 0.375
-                    MRR_relations: 0.2236
-                    MR_relations: 11.25
-                    HITS@1_relations: 0.0
-                    HITS@3_relations: 0.25
-                    HITS@10_relations: 0.75
+                    MRR: 0.4375
+                    MR: 3.25
+                    HITS@1: 0.25
+                    HITS@3: 0.25
+                    HITS@10: 1.0
+                    MRR_relations: 1.0
+                    MR_relations: 1.0
+                    HITS@1_relations: 1.0
+                    HITS@3_relations: 1.0
+                    HITS@10_relations: 1.0
             Test:
-                    MRR: 0.0208
-                    MR: 61.5
-                    HITS@1: 0.0
-                    HITS@3: 0.0
-                    HITS@10: 0.0
-                    MRR_relations: 0.0471
-                    MR_relations: 22.25
-                    HITS@1_relations: 0.0
-                    HITS@3_relations: 0.0
-                    HITS@10_relations: 0.0
+                    MRR: 0.4375
+                    MR: 3.25
+                    HITS@1: 0.25
+                    HITS@3: 0.25
+                    HITS@10: 1.0
+                    MRR_relations: 1.0
+                    MR_relations: 1.0
+                    HITS@1_relations: 1.0
+                    HITS@3_relations: 1.0
+                    HITS@10_relations: 1.0
         <BLANKLINE>
-        Step: 9.
+        Epoch: 2.
+            Validation:
+                    MRR: 0.4375
+                    MR: 3.25
+                    HITS@1: 0.25
+                    HITS@3: 0.25
+                    HITS@10: 1.0
+                    MRR_relations: 1.0
+                    MR_relations: 1.0
+                    HITS@1_relations: 1.0
+                    HITS@3_relations: 1.0
+                    HITS@10_relations: 1.0
+            Test:
+                    MRR: 0.4375
+                    MR: 3.25
+                    HITS@1: 0.25
+                    HITS@3: 0.25
+                    HITS@10: 1.0
+                    MRR_relations: 1.0
+                    MR_relations: 1.0
+                    HITS@1_relations: 1.0
+                    HITS@3_relations: 1.0
+                    HITS@10_relations: 1.0
+        <BLANKLINE>
+        Epoch: 2.
         <BLANKLINE>
             Validation:
-                    MRR: 0.1283
-                    MR: 31.125
-                    HITS@1: 0.0
-                    HITS@3: 0.125
-                    HITS@10: 0.375
-                    MRR_relations: 0.2236
-                    MR_relations: 11.25
-                    HITS@1_relations: 0.0
-                    HITS@3_relations: 0.25
-                    HITS@10_relations: 0.75
+                    MRR: 0.4375
+                    MR: 3.25
+                    HITS@1: 0.25
+                    HITS@3: 0.25
+                    HITS@10: 1.0
+                    MRR_relations: 1.0
+                    MR_relations: 1.0
+                    HITS@1_relations: 1.0
+                    HITS@3_relations: 1.0
+                    HITS@10_relations: 1.0
             Test:
-                    MRR: 0.0208
-                    MR: 61.5
-                    HITS@1: 0.0
-                    HITS@3: 0.0
-                    HITS@10: 0.0
-                    MRR_relations: 0.0471
-                    MR_relations: 22.25
-                    HITS@1_relations: 0.0
-                    HITS@3_relations: 0.0
-                    HITS@10_relations: 0.0
+                    MRR: 0.4375
+                    MR: 3.25
+                    HITS@1: 0.25
+                    HITS@3: 0.25
+                    HITS@10: 1.0
+                    MRR_relations: 1.0
+                    MR_relations: 1.0
+                    HITS@1_relations: 1.0
+                    HITS@3_relations: 1.0
+                    HITS@10_relations: 1.0
 
     """
 
-    def __init__(self, max_step, eval_every=2000, early_stopping_rounds=3, device='cpu'):
+    def __init__(self, epochs, eval_every=2000, early_stopping_rounds=3, device='cpu'):
+        self.epochs = epochs
         self.eval_every = eval_every
         self.early_stopping_rounds = early_stopping_rounds
         self.device = device
 
-        self.loss = adversarial.Adversarial()
-        self.bar = bar.Bar(step=max_step, update_every=20, position=0)
+        self.loss = Adversarial()
         self.metric_loss = stats.RollingMean(1000)
 
         self.round_without_improvement_valid = 0
@@ -197,44 +252,47 @@ class Pipeline:
 
     def learn(self, model, dataset, sampling, optimizer, loss, evaluation=None):
 
-        for step in self.bar:
+        for epoch in range(self.epochs):
 
-            positive_sample, weight, mode = next(dataset)
+            bar = Bar(dataset=dataset, update_every=10)
 
-            negative_sample = sampling.generate(
-                positive_sample=positive_sample,
-                mode=mode
-            )
+            for data in bar:
 
-            positive_sample = positive_sample.to(self.device)
-            negative_sample = negative_sample.to(self.device)
-            weight = weight.to(self.device)
+                sample = data['sample'].to(self.device)
+                weight = data['weight'].to(self.device)
+                mode = data['mode']
 
-            positive_score = model(positive_sample)
+                negative_sample = sampling.generate(
+                    sample=sample,
+                    mode=mode,
+                )
 
-            negative_score = model(
-                sample=positive_sample,
-                negative_sample=negative_sample,
-                mode=mode
-            )
+                positive_score = model(sample)
 
-            error = self.loss(positive_score, negative_score, weight)
+                negative_score = model(
+                    sample=sample,
+                    negative_sample=negative_sample,
+                    mode=mode
+                )
 
-            error.backward()
+                error = self.loss(positive_score, negative_score, weight)
 
-            _ = optimizer.step()
+                error.backward()
 
-            optimizer.zero_grad()
+                _ = optimizer.step()
 
-            self.metric_loss.update(error.item())
+                optimizer.zero_grad()
 
-            self.bar.set_description(f'loss: {self.metric_loss.get():4f}')
+                self.metric_loss.update(error.item())
+
+                bar.set_description(
+                    f'Epoch: {epoch}, loss: {self.metric_loss.get():4f}')
 
             if evaluation is not None:
 
-                if (step + 1) % self.eval_every == 0:
+                if (epoch + 1) % self.eval_every == 0:
 
-                    print(f'\n Step: {step}.')
+                    print(f'\n Epoch: {epoch}.')
 
                     if dataset.valid:
 
@@ -279,7 +337,8 @@ class Pipeline:
                     if (self.round_without_improvement_valid == self.early_stopping_rounds or
                             self.round_without_improvement_test == self.early_stopping_rounds):
 
-                        print(f'\n Early stopping at {step} iteration.')
+                        print(
+                            f'\n Early stopping at epoch {epoch}.')
 
                         self.print_metrics(
                             description='Validation:',
@@ -293,7 +352,7 @@ class Pipeline:
 
                         return self
 
-        print(f'\n Step: {step}. \n')
+        print(f'\n Epoch: {epoch}. \n')
 
         if dataset.valid:
 

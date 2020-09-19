@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from .fetch import Fetch
+from .dataset import Dataset
 
 from ..utils import read_csv
 from ..utils import read_csv_classification
@@ -11,7 +11,7 @@ from ..utils import read_json
 __all__ = ['Nell995']
 
 
-class Nell995(Fetch):
+class Nell995(Dataset):
     """Nell995 dataset.
 
     Nell995 aim to iterate over the associated dataset. It provide positive samples, corresponding
@@ -53,19 +53,16 @@ class Nell995(Fetch):
             Validation triples 543
             Test triples       3992
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     print(positive_sample, weight, mode)
-        tensor([[23670,   124, 19128]]) tensor([0.0577]) tail-batch
-        tensor([[18308,   123, 25477]]) tensor([0.0379]) head-batch
-        tensor([[34369,   103, 23009]]) tensor([0.1796]) tail-batch
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[23670,   124, 19128]]), 'weight': tensor([0.0577]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.valid) * 2
         >>> assert len(dataset.classification_test['X']) == len(dataset.test) * 2
-
 
     References:
         1. [An Open-source Framework for Knowledge Embedding implemented with PyTorch.](https://github.com/thunlp/OpenKE)

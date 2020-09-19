@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from .fetch import Fetch
+from .dataset import Dataset
 
 from ..utils import read_csv
 from ..utils import read_json
@@ -10,7 +10,7 @@ from ..utils import read_json
 __all__ = ['CountriesS2']
 
 
-class CountriesS2(Fetch):
+class CountriesS2(Dataset):
     """CountriesS2 dataset.
 
     countriesS2 aim to iterate over the associated dataset. It provide positive samples, corresponding
@@ -40,9 +40,9 @@ class CountriesS2(Fetch):
 
         >>> from kdmkb import datasets
 
-        >>> countries = datasets.CountriesS2(batch_size=1, shuffle=True, seed=42)
+        >>> dataset = datasets.CountriesS2(batch_size=1, shuffle=True, seed=42)
 
-        >>> countries
+        >>> dataset
         CountriesS2 dataset
             Batch size         1
             Entities           271
@@ -52,40 +52,38 @@ class CountriesS2(Fetch):
             Validation triples 24
             Test triples       24
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(countries)
-        ...     print(positive_sample, weight, mode)
-        tensor([[229,   0, 269]]) tensor([0.1601]) tail-batch
-        tensor([[216,   1, 246]]) tensor([0.2041]) head-batch
-        tensor([[47,  0, 72]]) tensor([0.2294]) tail-batch
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[229,   0, 269]]), 'weight': tensor([0.1601]), 'mode': 'head-batch'}
 
         >>> import torch
 
         >>> dataset = datasets.CountriesS2(batch_size=2, classification=False,
         ...     pre_compute=False, shuffle=True, seed=42)
 
-        >>> for _ in range(10):
-        ...     positive_sample, weight, mode = next(dataset)
-        ...     assert positive_sample.shape == torch.Size([2, 3])
-        ...     assert weight.shape == torch.Size([2])
+        >>> for data in dataset:
+        ...     assert data['sample'].shape == torch.Size([2, 3])
+        ...     assert data['weight'].shape == torch.Size([2])
+        ...     break
 
         >>> dataset = datasets.CountriesS2(batch_size=2, classification=True,
         ...     pre_compute=True, shuffle=True, seed=42)
 
-        >>> for _ in range(10):
-        ...     positive_sample, target, mode = next(dataset)
-        ...     assert positive_sample.shape == torch.Size([2, 2])
-        ...     assert target.shape == torch.Size([2, 271])
-        ...     assert mode == 'classification'
+        >>> for data in dataset:
+        ...     assert data['sample'].shape == torch.Size([2, 2])
+        ...     assert data['y'].shape == torch.Size([2, 271])
+        ...     assert data['mode'] == 'classification'
+        ...     break
 
         >>> dataset = datasets.CountriesS2(batch_size=2, classification=True,
         ...     pre_compute=False, shuffle=True, seed=42)
 
-        >>> for _ in range(10):
-        ...     positive_sample, target, mode = next(dataset)
-        ...     assert positive_sample.shape == torch.Size([2, 2])
-        ...     assert target.shape == torch.Size([2, 271])
-        ...     assert mode == 'classification'
+        >>> for data in dataset:
+        ...     assert data['sample'].shape == torch.Size([2, 2])
+        ...     assert data['y'].shape == torch.Size([2, 271])
+        ...     assert data['mode'] == 'classification'
+        ...     break
 
 
     References:

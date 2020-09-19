@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from .fetch import Fetch
+from .dataset import Dataset
 
 from ..utils import read_csv
 from ..utils import read_csv_classification
@@ -11,7 +11,7 @@ from ..utils import read_json
 __all__ = ['Umls']
 
 
-class Umls(Fetch):
+class Umls(Dataset):
     """Umls dataset.
 
     Umls aim to iterate over the associated dataset. It provide positive samples, corresponding
@@ -41,9 +41,9 @@ class Umls(Fetch):
 
         >>> from kdmkb import datasets
 
-        >>> umls = datasets.Umls(batch_size=1, shuffle=True, seed=42)
+        >>> dataset = datasets.Umls(batch_size=1, shuffle=True, seed=42)
 
-        >>> umls
+        >>> dataset
         Umls dataset
             Batch size         1
             Entities           135
@@ -53,18 +53,16 @@ class Umls(Fetch):
             Validation triples 652
             Test triples       661
 
-        >>> for _ in range(3):
-        ...     positive_sample, weight, mode = next(umls)
-        ...     print(positive_sample, weight, mode)
-        tensor([[32,  3, 65]]) tensor([0.1525]) tail-batch
-        tensor([[ 30,   5, 101]]) tensor([0.1890]) head-batch
-        tensor([[13,  3, 34]]) tensor([0.1270]) tail-batch
+        >>> for data in dataset:
+        ...     print(data)
+        ...     break
+        {'sample': tensor([[32,  3, 65]]), 'weight': tensor([0.1525]), 'mode': 'head-batch'}
 
-        >>> assert len(umls.classification_valid['X']) == len(umls.classification_valid['y'])
-        >>> assert len(umls.classification_test['X']) == len(umls.classification_test['y'])
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
+        >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])
 
-        >>> assert len(umls.classification_valid['X']) == len(umls.valid) * 2
-        >>> assert len(umls.classification_test['X']) == len(umls.test) * 2
+        >>> assert len(dataset.classification_valid['X']) == len(dataset.valid) * 2
+        >>> assert len(dataset.classification_test['X']) == len(dataset.test) * 2
 
 
     References:
