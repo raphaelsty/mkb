@@ -122,6 +122,15 @@ class Dataset:
         {'sample': tensor([[0, 0, 1]]), 'weight': tensor([0.3333]), 'mode': 'head-batch'}
         {'sample': tensor([[0, 0, 1]]), 'weight': tensor([0.3333]), 'mode': 'tail-batch'}
 
+    >>> for _ in range(5):
+    ...     data = next(dataset)
+    ...     print(data)
+    {'sample': tensor([[0, 0, 2]]), 'weight': tensor([0.3333]), 'mode': 'tail-batch'}
+    {'sample': tensor([[0, 0, 2]]), 'weight': tensor([0.3333]), 'mode': 'head-batch'}
+    {'sample': tensor([[3, 1, 0]]), 'weight': tensor([0.3536]), 'mode': 'tail-batch'}
+    {'sample': tensor([[2, 0, 4]]), 'weight': tensor([0.3536]), 'mode': 'head-batch'}
+    {'sample': tensor([[0, 0, 1]]), 'weight': tensor([0.3333]), 'mode': 'tail-batch'}
+
     References:
         1. [Sun, Zhiqing, et al. "Rotate: Knowledge graph embedding by relational rotation in complex space." arXiv preprint arXiv:1902.10197 (2019).](https://arxiv.org/pdf/1902.10197.pdf)
         2. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
@@ -152,6 +161,10 @@ class Dataset:
             self.dataset = self.get_train_loader(mode='classification')
             self.len = int(len(self.dataset.dataset) / self.batch_size)
 
+            # Needed for kdmkb to iterate over multiples datasets with single batch each time.
+            # __next__ functionnality
+            self.fetch_dataset = self.fetch(self.dataset)
+
         else:
             self.step = 0
             self.dataset_head = self.get_train_loader(mode='head-batch')
@@ -161,13 +174,17 @@ class Dataset:
                 len(self.dataset_tail.dataset)
             ) / self.batch_size)
 
+            # Needed for kdmkb to iterate over multiples datasets with single batch each time.
+            # __next__ functionnality
+            self.step = 0
+            self.fetch_head = self.fetch(self.dataset_head)
+            self.fetch_tail = self.fetch(self.dataset_tail)
+
         self.classification_valid = classification_valid
         self.classification_test = classification_test
 
         if self.seed:
             torch.manual_seed(self.seed)
-
-        self.state = self.__iter__()
 
     def __iter__(self):
         if self.classification:
@@ -178,8 +195,19 @@ class Dataset:
                 yield tail
 
     def __next__(self):
-        """Kdmkb models need next functionnality"""
-        return next(self.state)
+        if self.classification:
+            return next(self.fetch_dataset)
+        else:
+            self.step += 1
+            if self.step % 2 == 0:
+                return next(self.fetch_head)
+            else:
+                return next(self.fetch_tail)
+
+    @staticmethod
+    def fetch(dataloader):
+        while True:
+            yield from dataloader
 
     def __len__(self):
         return self.len
@@ -234,10 +262,6 @@ class Dataset:
 
     def validation_dataset(self, batch_size):
         return self.test_stream(triples=self.valid, batch_size=batch_size)
-
-    @ staticmethod
-    def fetch(dataloader):
-        return dataloader
 
     def test_stream(self, triples, batch_size):
         head_loader = self._get_test_loader(

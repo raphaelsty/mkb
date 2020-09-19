@@ -22,16 +22,6 @@ import torch
 __all__ = ['KdmkbModel']
 
 
-class NextDataset(Dataset):
-    def __init__(self, dataset):
-        super().__init__(
-            self,
-            entities=dataset.entities,
-            relations=dataset.relations,
-            batch_size=dataset.batch_size
-        )
-
-
 class KdmkbModel:
     """Training model of kdmkb.
 
