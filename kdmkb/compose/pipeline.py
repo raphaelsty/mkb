@@ -238,7 +238,6 @@ class Pipeline:
         self.early_stopping_rounds = early_stopping_rounds
         self.device = device
 
-        self.loss = Adversarial()
         self.metric_loss = stats.RollingMean(1000)
 
         self.round_without_improvement_valid = 0
@@ -259,23 +258,32 @@ class Pipeline:
             for data in bar:
 
                 sample = data['sample'].to(self.device)
-                weight = data['weight'].to(self.device)
                 mode = data['mode']
 
-                negative_sample = sampling.generate(
-                    sample=sample,
-                    mode=mode,
-                )
+                score = model(sample)
 
-                positive_score = model(sample)
+                if mode == 'classification':
 
-                negative_score = model(
-                    sample=sample,
-                    negative_sample=negative_sample,
-                    mode=mode
-                )
+                    y = data['y'].to(self.device)
 
-                error = self.loss(positive_score, negative_score, weight)
+                    error = loss(score, y)
+
+                else:
+
+                    weight = data['weight'].to(self.device)
+
+                    negative_sample = sampling.generate(
+                        sample=sample,
+                        mode=mode,
+                    )
+
+                    negative_score = model(
+                        sample=sample,
+                        negative_sample=negative_sample,
+                        mode=mode
+                    )
+
+                    error = loss(score, negative_score, weight)
 
                 error.backward()
 
