@@ -83,6 +83,8 @@ class Pipeline:
         ...    shuffle = False,
         ... )
 
+        >>> dataset = datasets.CountriesS1(batch_size = 20, seed = 42)
+
         >>> sampling = sampling.NegativeSampling(
         ...        size          = 4,
         ...        train_triples = dataset.train,
@@ -119,7 +121,7 @@ class Pipeline:
 
         >>> pipeline = compose.Pipeline(
         ...     epochs = 3,
-        ...     eval_every = 1,
+        ...     eval_every = 3,
         ...     early_stopping_rounds = 2,
         ...     device = 'cpu',
         ... )
@@ -133,102 +135,54 @@ class Pipeline:
         ...     loss       = losses.Adversarial(alpha=0.5),
         ... )
         <BLANKLINE>
-        Epoch: 0.
-            Validation:
-                    MRR: 0.4375
-                    MR: 3.25
-                    HITS@1: 0.25
-                    HITS@3: 0.25
-                    HITS@10: 1.0
-                    MRR_relations: 1.0
-                    MR_relations: 1.0
-                    HITS@1_relations: 1.0
-                    HITS@3_relations: 1.0
-                    HITS@10_relations: 1.0
-            Test:
-                    MRR: 0.4375
-                    MR: 3.25
-                    HITS@1: 0.25
-                    HITS@3: 0.25
-                    HITS@10: 1.0
-                    MRR_relations: 1.0
-                    MR_relations: 1.0
-                    HITS@1_relations: 1.0
-                    HITS@3_relations: 1.0
-                    HITS@10_relations: 1.0
-        <BLANKLINE>
-        Epoch: 1.
-            Validation:
-                    MRR: 0.4375
-                    MR: 3.25
-                    HITS@1: 0.25
-                    HITS@3: 0.25
-                    HITS@10: 1.0
-                    MRR_relations: 1.0
-                    MR_relations: 1.0
-                    HITS@1_relations: 1.0
-                    HITS@3_relations: 1.0
-                    HITS@10_relations: 1.0
-            Test:
-                    MRR: 0.4375
-                    MR: 3.25
-                    HITS@1: 0.25
-                    HITS@3: 0.25
-                    HITS@10: 1.0
-                    MRR_relations: 1.0
-                    MR_relations: 1.0
-                    HITS@1_relations: 1.0
-                    HITS@3_relations: 1.0
-                    HITS@10_relations: 1.0
-        <BLANKLINE>
         Epoch: 2.
             Validation:
-                    MRR: 0.4375
-                    MR: 3.25
-                    HITS@1: 0.25
-                    HITS@3: 0.25
-                    HITS@10: 1.0
-                    MRR_relations: 1.0
-                    MR_relations: 1.0
-                    HITS@1_relations: 1.0
-                    HITS@3_relations: 1.0
-                    HITS@10_relations: 1.0
+                MRR: 0.0561
+                MR: 117.7292
+                HITS@1: 0.0417
+                HITS@3: 0.0417
+                HITS@10: 0.0417
+                MRR_relations: 0.7917
+                MR_relations: 1.4167
+                HITS@1_relations: 0.5833
+                HITS@3_relations: 1.0
+                HITS@10_relations: 1.0
             Test:
-                    MRR: 0.4375
-                    MR: 3.25
-                    HITS@1: 0.25
-                    HITS@3: 0.25
-                    HITS@10: 1.0
-                    MRR_relations: 1.0
-                    MR_relations: 1.0
-                    HITS@1_relations: 1.0
-                    HITS@3_relations: 1.0
-                    HITS@10_relations: 1.0
+                MRR: 0.0089
+                MR: 138.375
+                HITS@1: 0.0
+                HITS@3: 0.0
+                HITS@10: 0.0
+                MRR_relations: 0.6875
+                MR_relations: 1.625
+                HITS@1_relations: 0.375
+                HITS@3_relations: 1.0
+                HITS@10_relations: 1.0
         <BLANKLINE>
         Epoch: 2.
         <BLANKLINE>
             Validation:
-                    MRR: 0.4375
-                    MR: 3.25
-                    HITS@1: 0.25
-                    HITS@3: 0.25
-                    HITS@10: 1.0
-                    MRR_relations: 1.0
-                    MR_relations: 1.0
-                    HITS@1_relations: 1.0
-                    HITS@3_relations: 1.0
-                    HITS@10_relations: 1.0
+                MRR: 0.0561
+                MR: 117.7292
+                HITS@1: 0.0417
+                HITS@3: 0.0417
+                HITS@10: 0.0417
+                MRR_relations: 0.7917
+                MR_relations: 1.4167
+                HITS@1_relations: 0.5833
+                HITS@3_relations: 1.0
+                HITS@10_relations: 1.0
             Test:
-                    MRR: 0.4375
-                    MR: 3.25
-                    HITS@1: 0.25
-                    HITS@3: 0.25
-                    HITS@10: 1.0
-                    MRR_relations: 1.0
-                    MR_relations: 1.0
-                    HITS@1_relations: 1.0
-                    HITS@3_relations: 1.0
-                    HITS@10_relations: 1.0
+                MRR: 0.0089
+                MR: 138.375
+                HITS@1: 0.0
+                HITS@3: 0.0
+                HITS@10: 0.0
+                MRR_relations: 0.6875
+                MR_relations: 1.625
+                HITS@1_relations: 0.375
+                HITS@3_relations: 1.0
+                HITS@10_relations: 1.0
 
     """
 

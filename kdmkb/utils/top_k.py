@@ -90,6 +90,11 @@ class TopK:
             tail (int): Id of the tail.
 
         """
+        training = False
+        if model.training:
+            training = True
+            model = model.eval()
+
         self.default_relations_e[:] = relation
         self.default_tails_e[:] = tail
 
@@ -109,6 +114,9 @@ class TopK:
             device=self.device
         )
 
+        if training:
+            model = model.train()
+
         return self.entities[rank]
 
     def top_relations(self, k, model, head, tail):
@@ -121,6 +129,11 @@ class TopK:
             tail (int): Id of the tail.
 
         """
+        training = False
+        if model.training:
+            training = True
+            model = model.eval()
+
         self.default_heads_r[:] = head
         self.default_tails_r[:] = tail
 
@@ -140,6 +153,9 @@ class TopK:
             device=self.device
         )
 
+        if training:
+            model = model.train()
+
         return self.relations[rank]
 
     def top_tails(self, k, model, head, relation):
@@ -152,6 +168,11 @@ class TopK:
             relation (int): Id of the relation.
 
         """
+        training = False
+        if model.training:
+            training = True
+            model = model.eval()
+
         self.default_heads_e[:] = head
         self.default_relations_e[:] = relation
 
@@ -170,6 +191,9 @@ class TopK:
             k=k,
             device=self.device
         )
+
+        if training:
+            model = model.train()
 
         return self.entities[rank]
 

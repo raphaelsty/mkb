@@ -26,6 +26,8 @@ import pickle
 
 import torch
 
+import numpy as np
+
 
 __all__ = ['KdmkbModel']
 
@@ -60,15 +62,11 @@ class KdmkbModel:
 
         >>> device = 'cpu'
 
-        >>> max_step = 2
+        >>> max_step = 10
 
-        >>> dataset_1 = datasets.Umls(batch_size = 2, seed = 42)
-        >>> dataset_1.valid = dataset_1.valid[:2]
-        >>> dataset_1.test = dataset_1.test[:2]
+        >>> dataset_1 = datasets.CountriesS1(batch_size = 2, seed = 42)
 
-        >>> dataset_2 = datasets.Umls(batch_size = 2, seed = 42)
-        >>> dataset_2.valid = dataset_2.valid[:2]
-        >>> dataset_2.test = dataset_2.test[:2]
+        >>> dataset_2 = datasets.CountriesS1(batch_size = 2, seed = 42)
 
         >>> model_1 = models.TransE(
         ...     hidden_dim = 3,
@@ -77,17 +75,16 @@ class KdmkbModel:
         ...     gamma = 3
         ... ).to(device)
 
-        >>> model_2 = models.RotatE(
-        ...     hidden_dim = 3,
+        >>> model_2 = models.ConvE(
+        ...     hidden_dim = (5, 5),
         ...     n_entity = dataset_2.n_entity,
         ...     n_relation = dataset_2.n_relation,
-        ...     gamma = 3
         ... ).to(device)
 
         >>> alpha_kl = {'dataset_1': 0.98, 'dataset_2': 0.98}
 
         >>> lr = {'dataset_1': 0.00005, 'dataset_2': 0.00005}
-        >>> alpha_adv = {'dataset_1': 0.5, 'dataset_2': 0.5}
+        >>> alpha_adv = {'dataset_1': 0.98, 'dataset_2': 0.5}
         >>> negative_sampling_size = {'dataset_1': 3, 'dataset_2': 3}
 
         >>> batch_size_entity = {'dataset_1': 2, 'dataset_2': 2}
@@ -115,50 +112,49 @@ class KdmkbModel:
         ...     models = {'dataset_1': model_1, 'dataset_2': model_2},
         ...     datasets = {'dataset_1': dataset_1, 'dataset_2': dataset_2},
         ...     max_step = max_step,
-        ...     eval_every = 2,
-        ...     update_every = 1
+        ...     eval_every = 10,
+        ...     update_every = 3,
         ... )
         <BLANKLINE>
-        Model: dataset_1, step 1
+        Model: dataset_1, step 9
             Validation:
-                    valid_MRR: 0.0104
-                    valid_MR: 98.25
-                    valid_HITS@1: 0.0
-                    valid_HITS@3: 0.0
-                    valid_HITS@10: 0.0
+                valid_MRR: 0.0142
+                valid_MR: 122.4792
+                valid_HITS@1: 0.0
+                valid_HITS@3: 0.0
+                valid_HITS@10: 0.0
             Test:
-                    test_MRR: 0.0125
-                    test_MR: 90.25
-                    test_HITS@1: 0.0
-                    test_HITS@3: 0.0
-                    test_HITS@10: 0.0
+                test_MRR: 0.016
+                test_MR: 132.8125
+                test_HITS@1: 0.0
+                test_HITS@3: 0.0
+                test_HITS@10: 0.0417
             Relation:
-                    test_MRR_relations: 0.0272
-                    test_MR_relations: 38.0
-                    test_HITS@1_relations: 0.0
-                    test_HITS@3_relations: 0.0
-                    test_HITS@10_relations: 0.0
+                test_MRR_relations: 0.9167
+                test_MR_relations: 1.1667
+                test_HITS@1_relations: 0.8333
+                test_HITS@3_relations: 1.0
+                test_HITS@10_relations: 1.0
         <BLANKLINE>
-        Model: dataset_2, step 1
+        Model: dataset_2, step 9
             Validation:
-                    valid_MRR: 0.0184
-                    valid_MR: 58.0
-                    valid_HITS@1: 0.0
-                    valid_HITS@3: 0.0
-                    valid_HITS@10: 0.0
+                valid_MRR: 0.0254
+                valid_MR: 140.0
+                valid_HITS@1: 0.0
+                valid_HITS@3: 0.0208
+                valid_HITS@10: 0.0208
             Test:
-                    test_MRR: 0.0102
-                    test_MR: 100.0
-                    test_HITS@1: 0.0
-                    test_HITS@3: 0.0
-                    test_HITS@10: 0.0
+                test_MRR: 0.0244
+                test_MR: 127.3958
+                test_HITS@1: 0.0
+                test_HITS@3: 0.0208
+                test_HITS@10: 0.0625
             Relation:
-                    test_MRR_relations: 0.0274
-                    test_MR_relations: 36.5
-                    test_HITS@1_relations: 0.0
-                    test_HITS@3_relations: 0.0
-                    test_HITS@10_relations: 0.0
-
+                test_MRR_relations: 0.6667
+                test_MR_relations: 1.6667
+                test_HITS@1_relations: 0.3333
+                test_HITS@3_relations: 1.0
+                test_HITS@10_relations: 1.0
     """
 
     def __init__(
@@ -173,6 +169,8 @@ class KdmkbModel:
         self.n_random_relations = n_random_relations
         self.device = device
         self.seed = seed
+        self._rng = np.random.RandomState(  # pylint: disable=no-member
+            self.seed)
 
         self.loss_function = collections.OrderedDict()
 
@@ -287,31 +285,39 @@ class KdmkbModel:
 
             data = next(dataset)
 
-            sample = data['sample'].to(self.device)
+            sample = data['sample']
+
             mode = data['mode']
 
             scores = models[id_dataset](sample)
 
             if mode == 'classification':
 
+                sample = sample.to(self.device)
+
                 y = data['y'].to(self.device)
 
-                # TODO RETURN HEAD, RELATION, TAIL TO DISTILL OVER A SAMPLE
-                # CHOOSE A STRATEGY, RANDOM SELECTION OF A TAIL OVER N POSITIVE TAILS
-                # ADD LIST OF ALPHA KL
                 loss_models[id_dataset] = self.loss_function[id_dataset](
                     scores,
                     y
                 ) * (1 - self.alpha_kl[id_dataset])
 
-            else:
+                sample = self._format_batch_distillation(
+                    rng=self._rng,
+                    sample=sample,
+                    y=y
+                )
 
-                weight = data['weight'].to(self.device)
+            else:
 
                 negative_sample = self.negative_sampling[id_dataset].generate(
                     sample=sample,
                     mode=mode,
                 )
+
+                weight = data['weight'].to(self.device)
+
+                sample = sample.to(self.device)
 
                 negative_sample = negative_sample.to(self.device)
 
@@ -495,3 +501,17 @@ class KdmkbModel:
         print(f'\t {description}')
         for metric, value in metrics.items():
             print(f'\t\t {metric}: {value}')
+
+    @staticmethod
+    def _format_batch_distillation(rng, sample, y):
+        """When using classification dataset, select a random tail among existing tails for a given
+        head and relation in the dataset to complete sample for distillation.
+        """
+        tails = []
+        for x in y.detach():
+            index = (x == 1.).nonzero().flatten().numpy()
+            tails.append(rng.choice(index))
+        return torch.cat([
+            sample,
+            torch.tensor(tails).unsqueeze(1),
+        ], dim=1)

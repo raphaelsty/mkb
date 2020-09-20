@@ -242,6 +242,8 @@ class TopKSampling:
 
     def get(self, sample, teacher, **kwargs):
 
+        teacher = teacher.eval()
+
         head_distribution_teacher = []
         head_distribution_student = []
         relation_distribution_teacher = []
@@ -304,6 +306,8 @@ class TopKSampling:
             tail_distribution_student.append(
                 self.entities_student[rank_tails]
             )
+
+        teacher = teacher.train()
 
         head_distribution_teacher = torch.stack(
             head_distribution_teacher,
