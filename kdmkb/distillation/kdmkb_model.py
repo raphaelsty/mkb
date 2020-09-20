@@ -1,13 +1,21 @@
+from ..datasets import Dataset
+
 from .distillation import Distillation
+
 from ..evaluation import Evaluation
 from ..evaluation import KGEBoard
+
 from ..losses import Adversarial
+from ..losses import BCEWithLogitsLoss
+
 from ..models import TransE
+
 from ..sampling import NegativeSampling
+
 from .top_k_sampling import TopKSampling
 from .top_k_sampling import TopKSamplingTransE
+
 from ..utils import BarRange
-from ..datasets import Dataset
 
 import collections
 import os
@@ -76,7 +84,7 @@ class KdmkbModel:
         ...     gamma = 3
         ... ).to(device)
 
-        >>> alpha_kl = 0.98
+        >>> alpha_kl = {'dataset_1': 0.98, 'dataset_2': 0.98}
 
         >>> lr = {'dataset_1': 0.00005, 'dataset_2': 0.00005}
         >>> alpha_adv = {'dataset_1': 0.5, 'dataset_2': 0.5}
@@ -168,11 +176,15 @@ class KdmkbModel:
 
         self.loss_function = collections.OrderedDict()
 
-        for id_dataset, _ in datasets.items():
+        for id_dataset, dataset in datasets.items():
 
-            self.loss_function[id_dataset] = Adversarial(
-                alpha=alpha_adv[id_dataset]
-            )
+            if dataset.classification:
+                self.loss_function[id_dataset] = BCEWithLogitsLoss()
+
+            else:
+                self.loss_function[id_dataset] = Adversarial(
+                    alpha=alpha_adv[id_dataset]
+                )
 
         self.optimizers = collections.OrderedDict()
         for id_dataset, learning_rate in lr.items():
@@ -218,13 +230,15 @@ class KdmkbModel:
 
         for id_dataset, dataset in datasets.items():
 
-            self.negative_sampling[id_dataset] = NegativeSampling(
-                size=negative_sampling_size[id_dataset],
-                entities=dataset.entities,
-                relations=dataset.relations,
-                train_triples=dataset.train_triples,
-                seed=seed
-            )
+            if not dataset.classification:
+
+                self.negative_sampling[id_dataset] = NegativeSampling(
+                    size=negative_sampling_size[id_dataset],
+                    entities=dataset.entities,
+                    relations=dataset.relations,
+                    train_triples=dataset.train_triples,
+                    seed=seed
+                )
 
             self.validation[id_dataset] = Evaluation(
                 entities=dataset.entities,
@@ -267,39 +281,54 @@ class KdmkbModel:
     def forward(self, datasets, models):
 
         loss_models = collections.OrderedDict()
-        positive_samples = collections.OrderedDict()
+        samples = collections.OrderedDict()
 
         for id_dataset, dataset in datasets.items():
 
             data = next(dataset)
 
             sample = data['sample'].to(self.device)
-            weight = data['weight'].to(self.device)
             mode = data['mode']
 
-            negative_sample = self.negative_sampling[id_dataset].generate(
-                sample=sample,
-                mode=mode,
-            )
+            scores = models[id_dataset](sample)
 
-            negative_sample = negative_sample.to(self.device)
+            if mode == 'classification':
+
+                y = data['y'].to(self.device)
+
+                # TODO RETURN HEAD, RELATION, TAIL TO DISTILL OVER A SAMPLE
+                # CHOOSE A STRATEGY, RANDOM SELECTION OF A TAIL OVER N POSITIVE TAILS
+                # ADD LIST OF ALPHA KL
+                loss_models[id_dataset] = self.loss_function[id_dataset](
+                    scores,
+                    y
+                ) * (1 - self.alpha_kl[id_dataset])
+
+            else:
+
+                weight = data['weight'].to(self.device)
+
+                negative_sample = self.negative_sampling[id_dataset].generate(
+                    sample=sample,
+                    mode=mode,
+                )
+
+                negative_sample = negative_sample.to(self.device)
+
+                negative_score = models[id_dataset](
+                    sample,
+                    negative_sample,
+                    mode=mode
+                )
+
+                loss_models[id_dataset] = self.loss_function[id_dataset](
+                    positive_score=scores,
+                    negative_score=negative_score,
+                    weight=weight,
+                ) * (1 - self.alpha_kl[id_dataset])
 
             # Store positive sample to distill it.
-            positive_samples[id_dataset] = sample
-
-            positive_score = models[id_dataset](sample)
-
-            negative_score = models[id_dataset](
-                sample,
-                negative_sample,
-                mode=mode
-            )
-
-            loss_models[id_dataset] = self.loss_function[id_dataset](
-                positive_score=positive_score,
-                negative_score=negative_score,
-                weight=weight,
-            ) * (1 - self.alpha_kl)
+            samples[id_dataset] = sample
 
         for id_dataset_teacher, _ in datasets.items():
 
@@ -312,8 +341,8 @@ class KdmkbModel:
                     ].distill(
                         teacher=models[id_dataset_teacher],
                         student=models[id_dataset_student],
-                        sample=positive_samples[id_dataset_teacher]
-                    ) * self.alpha_kl
+                        sample=samples[id_dataset_teacher]
+                    ) * self.alpha_kl[id_dataset]
 
         for id_dataset, _ in datasets.items():
 
