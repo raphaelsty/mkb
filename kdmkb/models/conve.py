@@ -210,6 +210,10 @@ class ConvE(base.BaseConvE):
         return scores.view(shape)
 
     def head_batch_chunk(self, head, relation, tail, shape, chunk_size):
+        """
+        Process head-batch input data into chunk to reduce RAM usage. ConvE is not designed to find
+        the head that likely complete the triple (?, relation, tail).
+        """
         list_scores = []
 
         size = max(head.shape[0] // chunk_size, 1)
