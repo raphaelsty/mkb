@@ -92,6 +92,7 @@ class MultiKb(Dataset):
             shuffle=dataset.shuffle,
             num_workers=dataset.num_workers,
             seed=dataset.seed,
+            classification=dataset.classification,
             classification_valid=dataset.classification_valid,
             classification_test=dataset.classification_test,
         )
