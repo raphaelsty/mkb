@@ -129,7 +129,8 @@ class ConvE(base.BaseConvE):
         kernel_size=3,
         embedding_dropout=0.2,
         feature_map_dropout=0.2,
-        layer_dropout=0.3
+        layer_dropout=0.3,
+        chunk_size=250,
     ):
 
         super().__init__(
@@ -143,6 +144,8 @@ class ConvE(base.BaseConvE):
             feature_map_dropout=feature_map_dropout,
             layer_dropout=layer_dropout
         )
+
+        self.chunk_size = chunk_size
 
         self.conv_e = nn.Sequential(
             nn.Dropout(p=self.embedding_dropout),
@@ -179,7 +182,8 @@ class ConvE(base.BaseConvE):
                 head=head,
                 relation=relation,
                 tail=tail,
-                shape=shape
+                shape=shape,
+                chunk_size=self.chunk_size,
             )
 
         head = head.view(
@@ -205,14 +209,14 @@ class ConvE(base.BaseConvE):
 
         return scores.view(shape)
 
-    def head_batch_chunk(self, head, relation, tail, shape, batch_size=250):
+    def head_batch_chunk(self, head, relation, tail, shape, chunk_size):
         list_scores = []
 
-        size_chunk = max(head.shape[0] // batch_size, 1)
+        size = max(head.shape[0] // chunk_size, 1)
 
-        batch_h = torch.chunk(head, size_chunk)
-        batch_r = torch.chunk(relation, size_chunk)
-        batch_t = torch.chunk(tail, size_chunk)
+        batch_h = torch.chunk(head, size)
+        batch_r = torch.chunk(relation, size)
+        batch_t = torch.chunk(tail, size)
 
         for h, r, t in zip(batch_h, batch_r, batch_t):
 
