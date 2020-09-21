@@ -412,16 +412,30 @@ class BaseConvE(Base):
         return head, relation, tail, shape
 
     def head_batch(self, sample, negative_sample):
+        """ConvE is not designed to find most likely head for a given relation and tail.
+        To reduce the cost of computing heads score given relation and tail, I divided input
+        into chunk of size 250 whatever the input sample shape.
+        """
         head = self.entity_embedding(negative_sample)
-        relation = self.relation_embedding(sample[:, 1])
+
+        relation = self.relation_embedding(sample[:, 1]).unsqueeze(-1)
+
+        relation = torch.stack([
+            relation for _ in range(head.shape[1])], dim=1)
+
         tail = self.entity_embedding(sample[:, 2])
 
-        relation = torch.stack(
-            [relation for _ in range(negative_sample.shape[1])], dim=1)
+        tail = torch.stack([
+            tail for _ in range(head.shape[1])], dim=1)
 
-        tail = torch.stack(
-            [tail for _ in range(negative_sample.shape[1])], dim=1)
-        tail = tail.view(tail.shape[0] * tail.shape[1], tail.shape[2], 1)
+        head = head.view(
+            head.shape[0] * head.shape[1], head.shape[2])
+
+        relation = relation.view(
+            relation.shape[0] * relation.shape[1], relation.shape[2])
+
+        tail = tail.view(
+            tail.shape[0] * tail.shape[1], tail.shape[2])
 
         return head, relation, tail
 

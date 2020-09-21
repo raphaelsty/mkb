@@ -50,34 +50,42 @@ class TransH(base.BaseModel):
         super().__init__(hidden_dim=hidden_dim, relation_dim=hidden_dim, entity_dim=hidden_dim,
                          n_entity=n_entity, n_relation=n_relation, gamma=gamma)
 
-        self.relation_norm = nn.Parameter(
-            torch.zeros(self.n_relation, self.relation_dim))
+        self.relation_norm = nn.Embedding(
+            self.n_relation, self.relation_dim)
 
-        nn.init.uniform_(
-            tensor=self.relation_norm,
-            a=-self.embedding_range.item(),
-            b=self.embedding_range.item()
-        )
+    def _transfer(self, e, norm):
+        norm = F.normalize(norm, p=2, dim=-1)
+        if e.shape != norm.shape:
+            norm_up = torch.cat(
+                [norm for _ in range(e.shape[1])], dim=-2).view(e.transpose(1, 2).shape)
+            return (e - torch.sum(e.bmm(norm_up), -1, True)).bmm(norm.unsqueeze(1).transpose(1, 2))
+        return e - torch.sum(e * norm, -1, True) * norm
 
-    def forward(self, sample):
-        head, relation, tail, shape = self.batch(
+    def forward(self, sample, negative_sample=None, mode=None):
+        h, r, t, shape = self.batch(
             sample=sample,
             negative_sample=negative_sample,
             mode=mode
         )
 
-        norm = torch.index_select(
-            self.relation_embedding,
-            dim=0,
-            index=sample[:, 1]
-        ).unsqueeze(1)
+        h = h.squeeze(1)
+        r = r.squeeze(1)
+        t = t.squeeze(1)
 
-        norm = F.normalize(norm, p=2, dim=-1)
-        head = head - torch.sum(head * norm, dim=-1, keepdim=True) * norm
-        tail = tail - torch.sum(tail * norm, dim=-1, keepdim=True) * norm
+        if len(sample.shape) == 3:
+            sample = sample.unsqueeze(1)
 
-        score = (head + relation) - tail
+        norm = self.relation_norm(sample[:, 1])
 
-        score = self.gamma.item() - torch.norm(score, p=1, dim=2)
+        h = self._transfer(e=h, norm=norm)
+        t = self._transfer(e=t, norm=norm)
+
+        if mode == 'head-batch':
+            score = h + (r - t)
+        else:
+            return (h + r).shape, t.shape
+            score = (h + r) - t
+
+        score = self.gamma.item() - torch.norm(score, p=1, dim=-1)
 
         return score.view(shape)

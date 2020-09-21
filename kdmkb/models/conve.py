@@ -33,6 +33,8 @@ class ConvE(base.BaseConvE):
         ...     n_relation = dataset.n_relation,
         ... )
 
+        >>> model = model.eval()
+
         >>> model
         ConvE model
         Entities embeddings dim  16
@@ -65,20 +67,20 @@ class ConvE(base.BaseConvE):
         >>> assert y_pred.shape == torch.Size([1, 271])
 
         >>> y_pred[0][266]
-        tensor(0.0561, grad_fn=<SelectBackward>)
+        tensor(-0.0526, grad_fn=<SelectBackward>)
 
         >>> sample = torch.tensor([[0, 0], [1, 1], [1, 1]])
 
         >>> y_pred = model(sample)
 
         >>> y_pred[0][266]
-        tensor(0.0561, grad_fn=<SelectBackward>)
+        tensor(-0.0526, grad_fn=<SelectBackward>)
 
         >>> y_pred[1][56]
-        tensor(0.6604, grad_fn=<SelectBackward>)
+        tensor(0.6998, grad_fn=<SelectBackward>)
 
         >>> y_pred[2][14]
-        tensor(-0.2499, grad_fn=<SelectBackward>)
+        tensor(-0.2009, grad_fn=<SelectBackward>)
 
         >>> sample = torch.tensor([
         ...    [  0,   0, 266],
@@ -91,34 +93,24 @@ class ConvE(base.BaseConvE):
         ... ])
 
         >>> model(sample, negative_sample, mode = 'tail-batch')
-        tensor([[ 0.0561,  0.0561],
-                [ 0.6604,  0.6604],
-                [-0.2499, -0.2499]], grad_fn=<ViewBackward>)
+        tensor([[-0.0526, -0.0526],
+                [ 0.6998,  0.6998],
+                [-0.2009, -0.2009]], grad_fn=<ViewBackward>)
 
         >>> model(sample, negative_sample, mode = 'tail-batch')
-        tensor([[ 0.0561,  0.0561],
-                [ 0.6604,  0.6604],
-                [-0.2499, -0.2499]], grad_fn=<ViewBackward>)
-
+        tensor([[-0.0526, -0.0526],
+                [ 0.6998,  0.6998],
+                [-0.2009, -0.2009]], grad_fn=<ViewBackward>)
 
         >>> negative_sample = torch.tensor([
-        ...    [0, 0], [1, 1], [1, 1]
+        ...    [0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]
         ... ])
 
         >>> model(sample, negative_sample, mode = 'head-batch')
-        tensor([[ 0.0561,  0.0561],
-                [ 0.6604,  0.6604],
-                [-0.2499, -0.2499]], grad_fn=<ViewBackward>)
-
-
-        >>> sample = torch.tensor([
-        ...     [[0, 0, 266], [0, 0, 266]],
-        ...     [[1, 1, 56 ], [1, 1, 56]]
-        ... ])
-
-        >>> model(sample, mode = 'default')
-        tensor([[0.0561, 0.0561],
-                [0.6604, 0.6604]], grad_fn=<ViewBackward>)
+        tensor([[-0.0526, -0.0526, -0.0526, -0.0526, -0.0526, -0.0526],
+                [ 0.6998,  0.6998,  0.6998,  0.6998,  0.6998,  0.6998],
+                [-0.2009, -0.2009, -0.2009, -0.2009, -0.2009, -0.2009]],
+           grad_fn=<ViewBackward>)
 
 
     References:
@@ -180,6 +172,16 @@ class ConvE(base.BaseConvE):
         head, relation, tail, shape = self.batch(
             sample=sample, negative_sample=negative_sample, mode=mode)
 
+        if mode == 'head-batch':
+            # ConvE is not designed to predict head from a given relation and tail.
+            # We divide input batch into chunk of size 250 to avoid explode RAM.
+            return self.head_batch_chunk(
+                head=head,
+                relation=relation,
+                tail=tail,
+                shape=shape
+            )
+
         head = head.view(
             -1,
             self.hidden_dim_w,
@@ -202,3 +204,42 @@ class ConvE(base.BaseConvE):
             scores = scores.unsqueeze(1).bmm(tail)
 
         return scores.view(shape)
+
+    def head_batch_chunk(self, head, relation, tail, shape, batch_size=250):
+        list_scores = []
+
+        size_chunk = max(head.shape[0] // batch_size, 1)
+
+        batch_h = torch.chunk(head, size_chunk)
+        batch_r = torch.chunk(relation, size_chunk)
+        batch_t = torch.chunk(tail, size_chunk)
+
+        for h, r, t in zip(batch_h, batch_r, batch_t):
+
+            h = h.view(
+                -1,
+                self.hidden_dim_w,
+                self.hidden_dim_h
+            )
+
+            r = r.view(
+                -1,
+                self.hidden_dim_w,
+                self.hidden_dim_h
+            )
+
+            t = t.view(
+                h.shape[0],
+                self.hidden_dim_w * self.hidden_dim_h,
+                1
+            )
+
+            input_nn = torch.cat([h, r], dim=1).unsqueeze(dim=1)
+
+            scores = self.conv_e(input_nn)
+
+            scores = scores.unsqueeze(1).bmm(t)
+
+            list_scores.append(scores)
+
+        return torch.cat(list_scores).view(shape)
