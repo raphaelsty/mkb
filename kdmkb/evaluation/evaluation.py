@@ -8,7 +8,7 @@ import torch
 import collections
 
 from ..datasets import base
-
+from ..utils import Bar
 
 __all__ = ['Evaluation']
 
@@ -215,7 +215,10 @@ class Evaluation:
             model = model.eval()
             training = True
 
-        for data in test_set:
+        bar = Bar(dataset=test_set, update_every=1)
+        bar.set_description('Evaluation')
+
+        for data in bar:
 
             sample = data['sample'].to(device)
             negative_sample = data['negative_sample'].to(device)
@@ -283,7 +286,10 @@ class Evaluation:
             model = model.eval()
             training = True
 
-        for data in test_set:
+        bar = Bar(dataset=test_set, update_every=1)
+        bar.set_description('Evaluation')
+
+        for data in bar:
 
             sample = data['sample'].to(device)
             negative_sample = data['negative_sample'].to(device)
