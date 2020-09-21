@@ -215,7 +215,7 @@ class Evaluation:
             model = model.eval()
             training = True
 
-        bar = Bar(dataset=test_set, update_every=1, position=1)
+        bar = Bar(dataset=test_set, update_every=1)
         bar.set_description('Evaluation')
 
         for data in bar:
@@ -286,7 +286,7 @@ class Evaluation:
             model = model.eval()
             training = True
 
-        bar = Bar(dataset=test_set, update_every=1, position=1)
+        bar = Bar(dataset=test_set, update_every=1)
         bar.set_description('Evaluation')
 
         for data in bar:
