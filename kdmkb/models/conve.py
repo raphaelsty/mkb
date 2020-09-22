@@ -117,9 +117,9 @@ class ConvE(base.BaseConvE):
 
     def __init__(
         self,
-        hidden_dim,
         n_entity,
         n_relation,
+        hidden_dim=(20, 10),
         channels=32,
         kernel_size=3,
         embedding_dropout=0.2,
