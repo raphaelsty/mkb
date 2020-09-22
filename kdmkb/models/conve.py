@@ -67,20 +67,20 @@ class ConvE(base.BaseConvE):
         >>> assert y_pred.shape == torch.Size([1, 271])
 
         >>> y_pred[0][266]
-        tensor(-0.0526, grad_fn=<SelectBackward>)
+        tensor(-0.0131, grad_fn=<SelectBackward>)
 
         >>> sample = torch.tensor([[0, 0], [1, 1], [1, 1]])
 
         >>> y_pred = model(sample)
 
         >>> y_pred[0][266]
-        tensor(-0.0526, grad_fn=<SelectBackward>)
+        tensor(-0.0131, grad_fn=<SelectBackward>)
 
         >>> y_pred[1][56]
-        tensor(0.6998, grad_fn=<SelectBackward>)
+        tensor(-0.0137, grad_fn=<SelectBackward>)
 
         >>> y_pred[2][14]
-        tensor(-0.2009, grad_fn=<SelectBackward>)
+        tensor(0.0042, grad_fn=<SelectBackward>)
 
         >>> sample = torch.tensor([
         ...    [  0,   0, 266],
@@ -93,23 +93,18 @@ class ConvE(base.BaseConvE):
         ... ])
 
         >>> model(sample, negative_sample, mode = 'tail-batch')
-        tensor([[-0.0526, -0.0526],
-                [ 0.6998,  0.6998],
-                [-0.2009, -0.2009]], grad_fn=<ViewBackward>)
-
-        >>> model(sample, negative_sample, mode = 'tail-batch')
-        tensor([[-0.0526, -0.0526],
-                [ 0.6998,  0.6998],
-                [-0.2009, -0.2009]], grad_fn=<ViewBackward>)
+        tensor([[-0.0131, -0.0131],
+                [-0.0137, -0.0137],
+                [ 0.0042,  0.0042]], grad_fn=<ViewBackward>)
 
         >>> negative_sample = torch.tensor([
         ...    [0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]
         ... ])
 
         >>> model(sample, negative_sample, mode = 'head-batch')
-        tensor([[-0.0526, -0.0526, -0.0526, -0.0526, -0.0526, -0.0526],
-                [ 0.6998,  0.6998,  0.6998,  0.6998,  0.6998,  0.6998],
-                [-0.2009, -0.2009, -0.2009, -0.2009, -0.2009, -0.2009]],
+        tensor([[-0.0131, -0.0131, -0.0131, -0.0131, -0.0131, -0.0131],
+                [-0.0137, -0.0137, -0.0137, -0.0137, -0.0137, -0.0137],
+                [ 0.0042,  0.0042,  0.0042,  0.0042,  0.0042,  0.0042]],
            grad_fn=<ViewBackward>)
 
 
@@ -148,23 +143,29 @@ class ConvE(base.BaseConvE):
         self.chunk_size = chunk_size
 
         self.conv_e = nn.Sequential(
+            nn.BatchNorm2d(1),
             nn.Dropout(p=self.embedding_dropout),
             nn.Conv2d(
                 in_channels=1,
                 out_channels=self.channels,
-                kernel_size=self.kernel_size),
-            nn.ReLU(),
+                kernel_size=self.kernel_size,
+                bias=True,
+            ),
             nn.BatchNorm2d(num_features=self.channels),
+            nn.ReLU(),
             nn.Dropout2d(p=self.feature_map_dropout),
             Flatten(),
             nn.Linear(
                 in_features=self.flattened_size,
                 out_features=self.hidden_dim
             ),
-            nn.ReLU(),
+            nn.Dropout(p=self.layer_dropout),
             nn.BatchNorm1d(num_features=self.hidden_dim),
-            nn.Dropout(p=self.layer_dropout)
+            nn.ReLU()
         )
+
+        nn.init.xavier_normal_(self.entity_embedding.weight.data)
+        nn.init.xavier_normal_(self.relation_embedding.weight.data)
 
     def forward(self, sample, negative_sample=None, mode='default'):
         # Classification mode, returns probability distribution(s) of tails given head(s) and
