@@ -231,6 +231,8 @@ class Pipeline:
                         mode=mode,
                     )
 
+                    negative_sample = negative_sample.to(self.device)
+
                     negative_score = model(
                         sample=sample,
                         negative_sample=negative_sample,
