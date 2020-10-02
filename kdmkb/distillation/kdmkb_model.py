@@ -118,43 +118,51 @@ class KdmkbModel:
         <BLANKLINE>
         Model: dataset_1, step 9
             Validation:
-                    valid_MRR: 0.0143
-                    valid_MR: 122.4792
-                    valid_HITS@1: 0.0
-                    valid_HITS@3: 0.0
-                    valid_HITS@10: 0.0
+                valid_MRR: 0.0143
+                valid_MR: 122.4792
+                valid_HITS@1: 0.0
+                valid_HITS@3: 0.0
+                valid_HITS@10: 0.0
+                valid_MRR_relations: 0.9375
+                valid_MR_relations: 1.125
+                valid_HITS@1_relations: 0.875
+                valid_HITS@3_relations: 1.0
+                valid_HITS@10_relations: 1.0
             Test:
-                    test_MRR: 0.016
-                    test_MR: 132.8125
-                    test_HITS@1: 0.0
-                    test_HITS@3: 0.0
-                    test_HITS@10: 0.0417
-            Relation:
-                    test_MRR_relations: 0.9167
-                    test_MR_relations: 1.1667
-                    test_HITS@1_relations: 0.8333
-                    test_HITS@3_relations: 1.0
-                    test_HITS@10_relations: 1.0
+                test_MRR: 0.016
+                test_MR: 132.8125
+                test_HITS@1: 0.0
+                test_HITS@3: 0.0
+                test_HITS@10: 0.0417
+                test_MRR_relations: 0.9167
+                test_MR_relations: 1.1667
+                test_HITS@1_relations: 0.8333
+                test_HITS@3_relations: 1.0
+                test_HITS@10_relations: 1.0
         <BLANKLINE>
         Model: dataset_2, step 9
             Validation:
-                    valid_MRR: 0.0147
-                    valid_MR: 142.0625
-                    valid_HITS@1: 0.0
-                    valid_HITS@3: 0.0
-                    valid_HITS@10: 0.0417
+                valid_MRR: 0.0147
+                valid_MR: 142.0625
+                valid_HITS@1: 0.0
+                valid_HITS@3: 0.0
+                valid_HITS@10: 0.0417
+                valid_MRR_relations: 0.75
+                valid_MR_relations: 1.5
+                valid_HITS@1_relations: 0.5
+                valid_HITS@3_relations: 1.0
+                valid_HITS@10_relations: 1.0
             Test:
-                    test_MRR: 0.0123
-                    test_MR: 154.7083
-                    test_HITS@1: 0.0
-                    test_HITS@3: 0.0
-                    test_HITS@10: 0.0417
-            Relation:
-                    test_MRR_relations: 0.7083
-                    test_MR_relations: 1.5833
-                    test_HITS@1_relations: 0.4167
-                    test_HITS@3_relations: 1.0
-                    test_HITS@10_relations: 1.0
+                test_MRR: 0.0123
+                test_MR: 154.7083
+                test_HITS@1: 0.0
+                test_HITS@3: 0.0
+                test_HITS@10: 0.0417
+                test_MRR_relations: 0.7083
+                test_MR_relations: 1.5833
+                test_HITS@1_relations: 0.4167
+                test_HITS@3_relations: 1.0
+                test_HITS@10_relations: 1.0
 
     """
 
@@ -502,7 +510,7 @@ class KdmkbModel:
                     # Save models
                     if save_path is not None:
 
-                        model_name = f'kdmkb_{dataset.name}_{models[id_dataset].name}_{step}.pickle'
+                        model_name = f'kdmkb_{dataset.name}_{id_dataset}_{models[id_dataset].name}_{step}.pickle'
 
                         models[id_dataset].cpu().save(
                             path=os.path.join(save_path, model_name))
