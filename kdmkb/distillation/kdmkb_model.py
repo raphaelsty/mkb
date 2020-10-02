@@ -487,6 +487,12 @@ class KdmkbModel:
                                     'dataset': dataset.name,
                                     'model_name': models[id_dataset].name,
                                     'step': step,
+                                    'id_set': '_'.join(dataset.id_set)
+                                    if hasattr(dataset, 'id_set') else None,
+                                    'n_part': dataset.n_part
+                                    if hasattr(dataset, 'n_part') else None,
+                                    'aligned_entities': dataset.aligned_entities
+                                    if hasattr(dataset, 'aligned_entities') else None,
                                 }, orient='index').T,
                                 pd.DataFrame.from_dict({
                                     'batch_size': dataset.batch_size,
