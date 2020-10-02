@@ -23,28 +23,28 @@ class MultiKb(Dataset):
 
         >>> dataset = datasets.MultiKb(
         ...     dataset = datasets.Umls(batch_size = 1, shuffle = True, seed = 42),
-        ...     id_set = 0,
-        ...     n_part = 2,
+        ...     id_set = [0, 1, 2, 3, 4],
+        ...     n_part = 10,
         ...     aligned_entities = 0.8,
         ... )
 
         >>> dataset
-        Umls_1_2_80 dataset
-            Batch size  1
-            Entities  135
-            Relations  46
-            Shuffle  True
-            Train triples  2608
-            Validation triples  652
-            Test triples  661
-            Umls cutted in  2
-            Umls set  1
-            Aligned entities  80.0%
+        Umls_[0, 1, 2, 3, 4]_10_80 dataset
+            Batch size         1
+            Entities           135
+            Relations          46
+            Shuffle            True
+            Train triples      2610
+            Validation triples 652
+            Test triples       661
+            Umls cutted in     10
+            Umls set           [0, 1, 2, 3, 4]
+            Aligned entities   80.0%
 
         >>> for data in dataset:
         ...     print(data)
         ...     break
-        {'sample': tensor([[ 26,  13, 107]]), 'weight': tensor([0.2000]), 'mode': 'head-batch'}
+        {'sample': tensor([[73, 17, 67]]), 'weight': tensor([0.2236]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])
@@ -65,7 +65,8 @@ class MultiKb(Dataset):
     """
 
     def __init__(self, dataset, id_set, n_part, aligned_entities=1.):
-
+        if not isinstance(id_set, list):
+            id_set = [id_set]
         self.id_set = id_set
         self.n_part = n_part
         self.aligned_entities = aligned_entities
@@ -111,7 +112,7 @@ class MultiKb(Dataset):
 
     @property
     def name(self):
-        return f'{self.dataset_name}_{self.id_set + 1}_{self.n_part}_{round(self.aligned_entities * 100)}'
+        return f'{self.dataset_name}_{self.id_set}_{self.n_part}_{round(self.aligned_entities * 100)}'
 
     @property
     def _repr_title(self):
@@ -131,7 +132,7 @@ class MultiKb(Dataset):
             'Validation triples': f'{len(self.valid) if self.valid else 0}',
             'Test triples': f'{len(self.test) if self.test else 0}',
             f'{self.dataset_name} cutted in': f'{self.n_part}',
-            f'{self.dataset_name} set': f'{self.id_set + 1}',
+            f'{self.dataset_name} set': f'{self.id_set}',
             'Aligned entities': f'{self.aligned_entities * 100}%'
         }
 
@@ -140,17 +141,22 @@ class MultiKb(Dataset):
         """
         Split train into n_part. Returns selected part and excluded triples.
         """
+        splitted_train = []
+
         train = copy.deepcopy(train)
+
         random.Random(seed).shuffle(train)
+
         excluded_triples = []
+
         for i, frame in enumerate(np.array_split(train, n_part)):
 
-            if i == id_set:
-                train = cls.format_triples(frame)
+            if i in id_set:
+                splitted_train += cls.format_triples(frame)
             else:
                 excluded_triples += cls.format_triples(frame)
 
-        return train, excluded_triples
+        return splitted_train, excluded_triples
 
     @staticmethod
     def format_triples(x):
