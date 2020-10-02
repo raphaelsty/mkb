@@ -3,7 +3,6 @@ from ..datasets import Dataset
 from .distillation import Distillation
 
 from ..evaluation import Evaluation
-from ..evaluation import KGEBoard
 
 from ..losses import Adversarial
 from ..losses import BCEWithLogitsLoss
@@ -27,6 +26,7 @@ import pickle
 import torch
 
 import numpy as np
+import pandas as pd
 
 
 __all__ = ['KdmkbModel']
@@ -388,14 +388,27 @@ class KdmkbModel:
         return self.metrics
 
     def learn(self, models, datasets, max_step, eval_every=2000,
-              update_every=10, log_dir=None, experiment=None, save_path=None):
+              update_every=10, log_dir=None, save_path=None):
+        """
+            Parameters:
+                models: (dict[id_dataset, kdmkb.models]): Mapping between ids datasets and models.
+                datasets (dict[id_dataset, kdmkb.datasets]): Mapping between ids datasets and datasets.
+                max_step (int): Number of steps to train the model.
+                eval_every (int): Eval each models of kdmkb every `eval_every` steps.
+                update_every (int): Update tqdm bar description every `update_every` steps.
+                log_dir (str): Path to export evaluation scores as pandas DataFrame.
+                save_path (str): Path to pickle the model.
 
-        if log_dir is not None and experiment is not None:
+        """
 
-            board = KGEBoard(
-                log_dir=log_dir,
-                experiment=experiment,
-            )
+        # Load existing scores
+        if log_dir is not None:
+
+            scores = []
+
+            if os.path.isfile(log_dir):
+
+                scores.append(pd.read_csv(f'{log_dir}'))
 
         bar = BarRange(step=max_step, update_every=update_every)
 
@@ -420,6 +433,11 @@ class KdmkbModel:
                         dataset=dataset.valid
                     )
 
+                    scores_valid.update(self.validation[id_dataset].eval_relations(
+                        model=models[id_dataset],
+                        dataset=dataset.valid
+                    ))
+
                     scores_valid = collections.OrderedDict({
                         f'valid_{metric}': score for metric, score in scores_valid.items()
                     })
@@ -429,20 +447,16 @@ class KdmkbModel:
                         dataset=dataset.test
                     )
 
+                    scores_test.update(self.validation[id_dataset].eval_relations(
+                        model=models[id_dataset],
+                        dataset=dataset.test
+                    ))
+
                     scores_test = collections.OrderedDict({
                         f'test_{metric}': score for metric, score in scores_test.items()
                     })
 
-                    scores_relation = self.validation[id_dataset].eval_relations(
-                        model=models[id_dataset],
-                        dataset=dataset.test
-                    )
-
                     models[id_dataset] = models[id_dataset].train()
-
-                    scores_relations_test = collections.OrderedDict({
-                        f'test_{metric}': score for metric, score in scores_relation.items()
-                    })
 
                     print(f'\n Model: {id_dataset}, step {step}')
 
@@ -456,45 +470,45 @@ class KdmkbModel:
                         metrics=scores_test
                     )
 
-                    self.print_metrics(
-                        description='Relation:',
-                        metrics=scores_relations_test
-                    )
+                    # Export results to pandas dataframe
+                    if log_dir is not None:
 
-                    # Export results to tensorboard
-                    if log_dir is not None and experiment is not None:
+                        scores.append(pd.concat(
+                            [
+                                pd.DataFrame.from_dict({
+                                    'dataset': dataset.name,
+                                    'model_name': models[id_dataset].name,
+                                    'step': step,
+                                }, orient='index').T,
+                                pd.DataFrame.from_dict({
+                                    'batch_size': dataset.batch_size,
+                                    'negative_sample_size': self.negative_sampling[id_dataset].size
+                                    if not dataset.classification else 0,
+                                    'hidden_dim': models[id_dataset].hidden_dim,
+                                    'gamma': models[id_dataset].gamma.item()
+                                    if not dataset.classification else 0,
+                                }, orient='index').T,
+                                pd.DataFrame.from_dict(
+                                    scores_valid, orient='index').T,
+                                pd.DataFrame.from_dict(
+                                    scores_test, orient='index').T,
+                            ],
+                            axis='columns'
+                        ))
 
-                        board.update(
-                            step=step,
-                            metrics=dict(
-                                **scores_valid, **scores_test,
-                                **scores_relations_test
-                            ),
-                            model_name=models[id_dataset].name,
-                            dataset_name=dataset.name,
-                            metadata={
-                                'hidden_dim': models[id_dataset].hidden_dim,
-                                'gamma': models[id_dataset].gamma.item(),
-
-                            },
-                        )
+                        pd.concat(scores, axis='rows').reset_index(
+                            drop=True).to_csv(log_dir, index=False)
 
                     # Save models
                     if save_path is not None:
 
-                        scores_to_str = ', '.join(
-                            [f'{metric}: {x}' for metric,
-                                x in scores_valid.items()]
-                        )
+                        model_name = f'kdmkb_{dataset.name}_{models[id_dataset].name}_{step}.pickle'
 
-                        name_model = f'{id_dataset}_{scores_to_str}.pickle'
+                        models[id_dataset].cpu().save(
+                            path=os.path.join(save_path, model_name))
 
-                        with open(os.path.join(save_path, name_model), 'wb') as handle:
-                            pickle.dump(
-                                models[id_dataset],
-                                handle,
-                                protocol=pickle.HIGHEST_PROTOCOL
-                            )
+                        models[id_dataset] = models[id_dataset].to(self.device)
+
         return self
 
     @classmethod
