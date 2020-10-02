@@ -487,7 +487,7 @@ class KdmkbModel:
                                     'dataset': dataset.name,
                                     'model_name': models[id_dataset].name,
                                     'step': step,
-                                    'id_set': '_'.join(dataset.id_set)
+                                    'id_set': dataset.id_set
                                     if hasattr(dataset, 'id_set') else None,
                                     'n_part': dataset.n_part
                                     if hasattr(dataset, 'n_part') else None,
