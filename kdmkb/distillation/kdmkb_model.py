@@ -294,15 +294,13 @@ class KdmkbModel:
 
             data = next(dataset)
 
-            sample = data['sample']
+            sample = data['sample'].to(self.device)
 
             mode = data['mode']
 
             scores = models[id_dataset](sample)
 
             if mode == 'classification':
-
-                sample = sample.to(self.device)
 
                 y = data['y'].to(self.device)
 
@@ -325,9 +323,6 @@ class KdmkbModel:
                 )
 
                 weight = data['weight'].to(self.device)
-
-                sample = sample.to(self.device)
-
                 negative_sample = negative_sample.to(self.device)
 
                 negative_score = models[id_dataset](
@@ -485,6 +480,7 @@ class KdmkbModel:
                             [
                                 pd.DataFrame.from_dict({
                                     'dataset': dataset.name,
+                                    'id_dataset': id_dataset,
                                     'model_name': models[id_dataset].name,
                                     'step': step,
                                     'id_set': dataset.id_set
@@ -493,6 +489,9 @@ class KdmkbModel:
                                     if hasattr(dataset, 'n_part') else None,
                                     'aligned_entities': dataset.aligned_entities
                                     if hasattr(dataset, 'aligned_entities') else None,
+                                    'alpha_kl': self.alpha_kl[id_dataset],
+                                    'alpha_adv': self.loss_function[id_dataset].alpha
+                                    if hasattr(self.loss_function[id_dataset], 'alpha') else None,
                                 }, orient='index').T,
                                 pd.DataFrame.from_dict({
                                     'batch_size': dataset.batch_size,
@@ -516,10 +515,10 @@ class KdmkbModel:
                     # Save models
                     if save_path is not None:
 
-                        model_name = f'kdmkb_{dataset.name}_{id_dataset}_{models[id_dataset].name}_{step}.pickle'
+                        pickle_name = f'kdmkb_{dataset.name}_{id_dataset}_{models[id_dataset].name}_{step}.pickle'
 
                         models[id_dataset].cpu().save(
-                            path=os.path.join(save_path, model_name))
+                            path=os.path.join(save_path, pickle_name))
 
                         models[id_dataset] = models[id_dataset].to(self.device)
 
