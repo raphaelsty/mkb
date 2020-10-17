@@ -530,7 +530,7 @@ validation.eval(model = model, dataset = dataset.test)
 You can get a more detailed evaluation of the link prediction task and measure the performance of the model according to the type of relationship.
 
 ```python
-validation.detail_eval(model=model, dataset=dataset.test, treshold=1.5)
+validation.detail_eval(model=model, dataset=dataset.test, threshold=1.5)
 ```
 
 ```python
@@ -564,7 +564,7 @@ The triplet classification task is designed to predict whether or not a triplet 
 ```python
 from mkb import evaluation
 
-evaluation.find_treshold(
+evaluation.find_threshold(
     model = model,
     X = dataset.classification_valid['X'],
     y = dataset.classification_valid['y'],
@@ -573,7 +573,7 @@ evaluation.find_treshold(
 
 ```
 
-Best treshold found from triplet classification valid set and associated accuracy:
+Best threshold found from triplet classification valid set and associated accuracy:
 
 ```python
 {'threshold': 1.924787, 'accuracy': 0.803803}
