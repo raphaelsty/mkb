@@ -169,7 +169,7 @@ pipeline = pipeline.learn(
 ```
 <br>
 
-<details><summary>**Plot embeddings:**</summary>
+<details><summary>Plot embeddings:</summary>
 
 ```python
 from sklearn import manifold
@@ -407,6 +407,18 @@ negative_sampling = sampling.NegativeSampling(
 You can train your model using a pipeline:
 
 ```python
+from mkb import compose
+from mkb import losses
+from mkb import evaluation
+
+validation = evaluation.Evaluation(
+    true_triples = dataset.true_triples, 
+    entities   = dataset.entities, 
+    relations  = dataset.relations, 
+    batch_size = 8,
+    device     = device,
+)
+
 pipeline = compose.Pipeline(
     epochs                = 100,
     eval_every            = 50,
@@ -427,6 +439,17 @@ pipeline = pipeline.learn(
 You can also train your model with a lower level of abstraction:
 
 ```python
+from mkb import losses
+from mkb import evaluation
+
+validation = evaluation.Evaluation(
+    true_triples = dataset.true_triples, 
+    entities   = dataset.entities, 
+    relations  = dataset.relations, 
+    batch_size = 8,
+    device     = device,
+)
+
 loss = losses.Adversarial(alpha=0.5)
 
 for epoch in range(2000):
