@@ -13,7 +13,7 @@
 mkb provides datasets, models and tools to evaluate performance.</p>
 </br>
 
-## 💬 Citations 
+## 💬 Citations
 
 The **Mkb** library was developed for the research paper **Knowledge Base Embedding By Cooperative Knowledge Distillation** soon to be published at **Coling2020**.
 
@@ -28,7 +28,7 @@ The **Mkb** library was developed for the research paper **Knowledge Base Embedd
 - [🗂 Datasets](#-datasets)
 - [🤖 Models](#-models)
 - [🎭 Negative sampling](#-negative-sampling)
-- [🤖 Train your model](#-train-you-model)  
+- [🤖 Train your model](#-train-you-model)
 - [📊 Evaluation](#-evaluation)
 - [🤩 Get embeddings](#-get-embeddings)
 - [🎁 Distillation](#-distillation)
@@ -41,49 +41,47 @@ You should be able to install and use this library with any Python version above
 
 ```sh
 $ pip install git+https://github.com/raphaelsty/mkb
-$ cd kmkb
-$ pip install -r requirements.txt
 ```
 
- 
+
 
 ## ⚡️ Quickstart:
 
 Load or initialize your dataset as a list of triplets:
 
 ```python
-train = [    
+train = [
     ('🦆', 'is a', 'bird'),
     ('🦅', 'is a', 'bird'),
-    
+
     ('🦆', 'lives in', '🌳'),
     ('🦉', 'lives in', '🌳'),
     ('🦅', 'lives in', '🏔'),
-    
+
     ('🦉', 'hability', 'fly'),
     ('🦅', 'hability', 'fly'),
-    
+
     ('🐌', 'is a', 'mollusc'),
     ('🐜', 'is a', 'insect'),
     ('🐝', 'is a', 'insect'),
-    
+
     ('🐌', 'lives in', '🌳'),
     ('🐝', 'lives in', '🌳'),
-    
+
     ('🐝', 'hability', 'fly'),
-    
+
     ('🐻', 'is a', 'mammal'),
     ('🐶', 'is a', 'mammal'),
     ('🐨', 'is a', 'mammal'),
-    
+
     ('🐻', 'lives in', '🏔'),
     ('🐶', 'lives in', '🏠'),
     ('🐱', 'lives in', '🏠'),
     ('🐨', 'lives in', '🌳'),
-    
+
     ('🐬', 'lives in', '🌊'),
     ('🐳', 'lives in', '🌊'),
-    
+
     ('🐋', 'is a', 'marine mammal'),
     ('🐳', 'is a', 'marine mammal'),
 ]
@@ -113,7 +111,7 @@ import torch
 _ = torch.manual_seed(42)
 
 # Set device = 'cuda' if you own a gpu.
-device = 'cpu' 
+device = 'cpu'
 
 dataset = datasets.Dataset(
     train      = train,
@@ -183,19 +181,19 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 emojis_tokens = {
-    '🦆': 'duck', 
-    '🦅': 'eagle', 
-    '🦉': 'owl', 
+    '🦆': 'duck',
+    '🦅': 'eagle',
+    '🦉': 'owl',
     '🐌': 'snail',
-    '🐜': 'ant', 
-    '🐝': 'bee', 
-    '🐻': 'bear', 
-    '🐶': 'dog', 
-    '🐨': 'koala', 
-    '🐱': 'cat', 
-    '🐬': 'dolphin', 
-    '🐳': 'whale', 
-    '🐋': 'humpback whale', 
+    '🐜': 'ant',
+    '🐝': 'bee',
+    '🐻': 'bear',
+    '🐶': 'dog',
+    '🐨': 'koala',
+    '🐱': 'cat',
+    '🐬': 'dolphin',
+    '🐳': 'whale',
+    '🐋': 'humpback whale',
 }
 
 embeddings = pd.DataFrame(model.embeddings['entities']).T.reset_index()
@@ -213,36 +211,36 @@ X['cluster'] = kmeans.fit_predict(X)
 %config InlineBackend.figure_format = 'retina'
 
 fgrid = sns.lmplot(
-    data = X, 
-    x = 'dim_1', 
-    y = 'dim_2', 
-    hue = 'cluster', 
-    fit_reg = False, 
-    legend = False, 
+    data = X,
+    x = 'dim_1',
+    y = 'dim_2',
+    hue = 'cluster',
+    fit_reg = False,
+    legend = False,
     legend_out = False,
-    height = 7, 
+    height = 7,
     aspect = 1.6,
     scatter_kws={"s": 500}
 )
 
 ax = fgrid.axes[0,0]
-ax.set_ylabel('')    
+ax.set_ylabel('')
 ax.set_xlabel('')
-ax.set(xticklabels=[]) 
-ax.set(yticklabels=[]) 
+ax.set(xticklabels=[])
+ax.set(yticklabels=[])
 
 for i, label in enumerate(embeddings.index):
-    
+
      ax.text(
-         X['dim_1'][i] + 1, 
-         X['dim_2'][i], 
-         emojis_tokens[label], 
-         horizontalalignment = 'left', 
-         size = 'medium', 
-         color = 'black', 
+         X['dim_1'][i] + 1,
+         X['dim_2'][i],
+         emojis_tokens[label],
+         horizontalalignment = 'left',
+         size = 'medium',
+         color = 'black',
          weight = 'semibold',
      )
-        
+
 plt.show()
 ```
 
@@ -326,12 +324,12 @@ dataset
 
 ```python
 Dataset dataset
-        Batch size  3   
-          Entities  5   
-         Relations  2   
+        Batch size  3
+          Entities  5
+         Relations  2
            Shuffle  True
-     Train triples  4   
-Validation triples  1   
+     Train triples  4
+Validation triples  1
       Test triples  1
 ```
 
@@ -354,9 +352,9 @@ Knowledge graph models build latent representations of nodes (entities) and rela
 from mkb import models
 
 model = models.RotatE(
-   n_entity   = dataset.entities, 
-   n_relation = dataset.relations, 
-   gamma      = 6, 
+   n_entity   = dataset.entities,
+   n_relation = dataset.relations,
+   gamma      = 6,
    hidden_dim = 500
 )
 
@@ -365,11 +363,11 @@ model
 
 ```python
 RotatE model
-    Entities embeddings  dim  1000 
-    Relations embeddings dim  500  
-    Gamma                     3.0  
-    Number of entities        40923 
-    Number of relations       11   
+    Entities embeddings  dim  1000
+    Relations embeddings dim  500
+    Gamma                     3.0
+    Number of entities        40923
+    Number of relations       11
 ```
 
 **Set the learning rate of the model:**
@@ -386,9 +384,9 @@ optimizer = torch.optim.Adam(
 
 ```
 
-## 🎭 Negative sampling 
+## 🎭 Negative sampling
 
-Knowledge graph embedding models learn to distinguish existing triplets from generated triplets. The `sampling` module allows to generate triplets that do not exist in the dataset. 
+Knowledge graph embedding models learn to distinguish existing triplets from generated triplets. The `sampling` module allows to generate triplets that do not exist in the dataset.
 
 ```python
 from mkb import sampling
@@ -402,7 +400,7 @@ negative_sampling = sampling.NegativeSampling(
 )
 ```
 
-## 🤖 Train your model 
+## 🤖 Train your model
 
 You can train your model using a pipeline:
 
@@ -412,9 +410,9 @@ from mkb import losses
 from mkb import evaluation
 
 validation = evaluation.Evaluation(
-    true_triples = dataset.true_triples, 
-    entities   = dataset.entities, 
-    relations  = dataset.relations, 
+    true_triples = dataset.true_triples,
+    entities   = dataset.entities,
+    relations  = dataset.relations,
     batch_size = 8,
     device     = device,
 )
@@ -443,9 +441,9 @@ from mkb import losses
 from mkb import evaluation
 
 validation = evaluation.Evaluation(
-    true_triples = dataset.true_triples, 
-    entities   = dataset.entities, 
-    relations  = dataset.relations, 
+    true_triples = dataset.true_triples,
+    entities   = dataset.entities,
+    relations  = dataset.relations,
     batch_size = 8,
     device     = device,
 )
@@ -453,50 +451,50 @@ validation = evaluation.Evaluation(
 loss = losses.Adversarial(alpha=0.5)
 
 for epoch in range(2000):
-    
+
     for data in dataset:
-        
+
         sample = data['sample'].to(device)
         weight = data['weight'].to(device)
         mode = data['mode']
-        
+
         negative_sample = negative_sampling.generate(sample=sample, mode=mode)
 
         negative_sample = negative_sample.to(device)
-        
+
         positive_score = model(sample)
-        
+
         negative_score = model(
             sample=sample,
             negative_sample=negative_sample,
             mode=mode
         )
-        
+
         error = loss(positive_score, negative_score, weight)
-        
+
         error.backward()
 
         _ = optimizer.step()
 
         optimizer.zero_grad()
-    
+
     validation_scores = validation.eval(dataset=dataset.valid, model=model)
-    
+
     print(validation_scores)
 ```
 
 
 ## 📊 Evaluation
 
-You can evaluate the performance of your models with the `evaluation` module. 
+You can evaluate the performance of your models with the `evaluation` module.
 
 ```python
 from mkb import evaluation
 
 validation = evaluation.Evaluation(
-    true_triples = dataset.true_triples, 
-    entities   = dataset.entities, 
-    relations  = dataset.relations, 
+    true_triples = dataset.true_triples,
+    entities   = dataset.entities,
+    relations  = dataset.relations,
     batch_size = 8,
     device     = device,
 )
@@ -543,7 +541,7 @@ relation
 1_M       1.0  1.0    1.0    1.0     1.0  0.5000  2.0    0.0    1.0     1.0
 M_1       0.0  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0
 M_M       0.0  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0
-  
+
 ```
 
 #### ➡️ Relation prediction:
@@ -634,9 +632,9 @@ $ cd kmkb
 $ python3 -m venv env
 $ source env/bin/activate
 
-# Install 
+# Install
 $ pip install -r requirements.txt
-$ python setup.py install 
+$ python setup.py install
 
 # Run tests
 $ python -m pytest
