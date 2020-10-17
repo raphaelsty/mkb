@@ -352,8 +352,8 @@ Knowledge graph models build latent representations of nodes (entities) and rela
 from mkb import models
 
 model = models.RotatE(
-   n_entity   = dataset.entities,
-   n_relation = dataset.relations,
+   entities   = dataset.entities,
+   relations  = dataset.relations,
    gamma      = 6,
    hidden_dim = 500
 )
