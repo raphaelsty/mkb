@@ -1,22 +1,22 @@
 import setuptools
 
-from kdmkb.__version__ import __version__
+from mkb.__version__ import __version__
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="kdmkb",
+    name="mkb",
     version=f"{__version__}",
     author="Raphael Sourty",
     author_email="raphael.sourty@gmail.com",
-    description="kdmkb",
+    description="mkb",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/raphaelsty/kdmkb",
+    url="https://github.com/raphaelsty/mkb",
     packages=setuptools.find_packages(),
     package_data={
-        'kdmkb': [
+        'mkb': [
             'datasets/countries_s1/*.csv',
             'datasets/countries_s1/*.json',
             'datasets/countries_s2/*.csv',
