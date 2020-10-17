@@ -1,10 +1,10 @@
 <div align="center">
-    <img src="docs/img/logo.png" alt="PyTorch" width="45%" vspace="50">
+    <img src="docs/img/logo.png" alt="PyTorch" width="45%" vspace="5">
 </div>
 </br>
 
 <div align="center">
-    <img src="docs/img/Pytorch.png" alt="PyTorch" width="35%" vspace="20">
+    <img src="docs/img/pytorch.png" alt="PyTorch" width="35%" vspace="5">
 </div>
 </br>
 
