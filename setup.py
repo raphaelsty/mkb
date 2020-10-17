@@ -5,6 +5,9 @@ from mkb.__version__ import __version__
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
 setuptools.setup(
     name="mkb",
     version=f"{__version__}",
@@ -15,6 +18,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/raphaelsty/mkb",
     packages=setuptools.find_packages(),
+    install_requires=required,
     package_data={
         'mkb': [
             'datasets/countries_s1/*.csv',
