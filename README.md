@@ -17,7 +17,7 @@ mkb provides datasets, models and tools to evaluate performance.</p>
 
 The **Mkb** library was developed for the research paper **Knowledge Base Embedding By Cooperative Knowledge Distillation** soon to be published at **Coling2020**.
 
-**Sourty, Raphaël and G. Moreno, Jose and Servant, François-Paul and Tamine-Lechani, Lynda.**
+**Sourty, Raphaël and G. Moreno, Jose and Servant, François-Paul and Tamine, Lynda.**
 
 
 ## Table of contents
