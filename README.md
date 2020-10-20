@@ -626,20 +626,36 @@ The module `mkb.distillation` provides tools for distilling knowledge of knowled
 ```sh
 # Download and navigate to the source code
 $ git clone https://github.com/raphaelsty/mkb
-$ cd kmkb
+$ cd mkb
 
 # Create a virtual environment
 $ python3 -m venv env
 $ source env/bin/activate
 
 # Install
-$ pip install -r requirements.txt
 $ python setup.py install
 
 # Run tests
 $ python -m pytest
 ```
 
+## 👍 See also
+
+There are a multitude of tools and libraries available on github to build latent knowledge graph embeddings. These libraries are very complete and provide powerful implementations of knowledge graph embedding algorithms.
+
+From a user's point of view, I find that most of the libraries suffer from a lack of modularity. That's why I created this tool. `Mkb` addresses this modularity problem and is easily integrated into a machine learning pipeline.
+
+- [DGL-KE](https://github.com/awslabs/dgl-ke): High performance, easy-to-use, and scalable package for learning large-scale knowledge graph embeddings.
+
+- [OpenKE](https://github.com/thunlp/OpenKE): An Open-source Framework for Knowledge Embedding implemented with PyTorch.
+
+- [GraphVite](https://github.com/DeepGraphLearning/graphvite): GraphVite is a general graph embedding engine, dedicated to high-speed and large-scale embedding learning in various applications.
+
+- [LibKGE](https://github.com/uma-pi1/kge): LibKGE is a PyTorch-based library for efficient training, evaluation, and hyperparameter optimization of knowledge graph embeddings (KGE).
+
+- [TorchKGE](https://github.com/torchkge-team/torchkge): Knowledge Graph embedding in Python and Pytorch.
+
+- [KnowledgeGraphEmbedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding): RotatE, Knowledge Graph Embedding by Relational Rotation in Complex Space
 
 ## 🗒 License
 
