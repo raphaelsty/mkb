@@ -33,6 +33,7 @@ The **Mkb** library was developed for the research paper **Knowledge Base Embedd
 - [🤩 Get embeddings](#-get-embeddings)
 - [🎁 Distillation](#-distillation)
 - [🧰 Development](#-development)
+- [👍 See also](#-see-also)
 - [🗒 License](#-license)
 
 ## 👾 Installation
