@@ -14,10 +14,14 @@ mkb provides datasets, models and tools to evaluate performance.</p>
 </br>
 
 ## 💬 Citations
-
-The **Mkb** library was developed for the research paper **Knowledge Base Embedding By Cooperative Knowledge Distillation** soon to be published at **Coling2020**.
-
-**Sourty, Raphaël and G. Moreno, Jose and Servant, François-Paul and Tamine-Lechani, Lynda.**
+```
+@article{Sourty-2020-Coling,
+    title = "Knowledge Base Embedding By Cooperative Knowledge Distillation",
+    author = "Sourty, Raphael and Moreno, Jose G. and Tamine, Lynda and Servant, Francois-Paul", 
+    booktitle = "Proceedings of {COLING} 2020, the 28th International Conference on Computational Linguistics (to appear)",
+    year = "2020",
+}
+```
 
 
 ## Table of contents
