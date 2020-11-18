@@ -23,7 +23,7 @@ def DataFrameToKG(df, keys):
         ... }
 
         >>> utils.DataFrameToKG(df, keys)
-        [(1, 'user_banque', 'Societe Generale'), (2, 'user_banque', 'Credit Lyonnais'), (3, 'user_banque', 'Chinese National Bank'), (4, 'user_banque', 'Chinese National Bank'), (5, 'user_banque', 'QIWI'), ('Societe Generale', 'banque_country', 'France'), ('Credit Lyonnais', 'banque_country', 'France'), ('Chinese National Bank', 'banque_country', 'China'), ('QIWI', 'banque_country', 'Russia')]
+        [('user_1', 'user_banque', 'banque_Societe Generale'), ('user_2', 'user_banque', 'banque_Credit Lyonnais'), ('user_3', 'user_banque', 'banque_Chinese National Bank'), ('user_4', 'user_banque', 'banque_Chinese National Bank'), ('user_5', 'user_banque', 'banque_QIWI'), ('banque_Societe Generale', 'banque_country', 'country_France'), ('banque_Credit Lyonnais', 'banque_country', 'country_France'), ('banque_Chinese National Bank', 'banque_country', 'country_China'), ('banque_QIWI', 'banque_country', 'country_Russia')]
 
     """
 
@@ -37,6 +37,10 @@ def DataFrameToKG(df, keys):
         for tail in tails:
 
             subset = df[[head, tail]].drop_duplicates().copy(deep=True)
+
+            subset[head] = f'{head}_' + subset[head].astype('str')
+            subset[tail] = f'{tail}_' + subset[tail].astype('str')
+
             subset.columns = ['head', 'tail']
             subset['relation'] = f'{head}_{tail}'
 
