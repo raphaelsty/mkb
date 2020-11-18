@@ -1,6 +1,8 @@
 from .bar import Bar
 from .bar import BarRange
-from .dataframe_to_kg import DataFrameToKG
+from .dataframe_to_kg import dataframe_to_kg
+from .dataframe_to_kg import map_embeddings
+from .dataframe_to_kg import decompose
 from .export_embeddings import export_embeddings
 from .predict import FetchToPredict
 from .predict import make_prediction
@@ -13,7 +15,9 @@ from .top_k import TopK
 __all__ = [
     'Bar',
     'BarRange',
-    'DataFrameToKG',
+    'dataframe_to_kg',
+    'map_embeddings',
+    'decompose',
     'export_embeddings',
     'FetchToPredict',
     'make_prediction',

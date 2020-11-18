@@ -1,10 +1,12 @@
 import pandas as pd
 
+from sklearn import decomposition
 
-__all__ = ['DataFrameToKG']
+
+__all__ = ['dataframe_to_kg', 'map_embeddings', 'decompose']
 
 
-def DataFrameToKG(df, keys, prefix={}):
+def dataframe_to_kg(df, keys, prefix={}):
     """Convert pandas DataFrame to knowledge graph.
 
     Parameters:
@@ -64,3 +66,59 @@ def DataFrameToKG(df, keys, prefix={}):
                             ].to_records(index=False))
 
     return kg
+
+
+def map_embeddings(df, prefix, embeddings, n_components, batch_size=None):
+    """Map embeddings to input dataframe to train machine learning models. Apply PCA before mapping
+    embeddigs. If batch size is defined, apply incremental PCA.
+    """
+
+    df_embeddings = df.copy()
+
+    embeddings = decompose(embeddings=embeddings,
+                           n_components=n_components, batch_size=batch_size)
+
+    for column, prefix in prefix.items():
+
+        df_embeddings[column] = prefix + df_embeddings[column].astype(str)
+
+    for column in df.columns:
+
+        df_embeddings[column] = df_embeddings[column].map(embeddings)
+
+    columns_to_keep = []
+
+    for column in df.columns:
+
+        for i in range(n_components):
+
+            df_embeddings[f'{column}_dim_{i}'] = df_embeddings[column].str[i]
+
+            columns_to_keep.append(f'{column}_dim_{i}')
+
+    return df_embeddings[columns_to_keep]
+
+
+def decompose(embeddings, n_components, batch_size=None):
+    """Apply CPA over input dataset. If batch size is not None, use incremental PCA."""
+
+    embeddings = pd.DataFrame(embeddings).T.reset_index()
+
+    embeddings = embeddings.set_index('index')
+
+    if batch_size is None:
+        PCA = decomposition.PCA(n_components=n_components)
+
+    else:
+        PCA = decomposition.IncrementalPCA(
+            n_components=n_components, batch_size=batch_size)
+
+    X = PCA.fit_transform(embeddings)
+
+    output = {}
+
+    for i, label in enumerate(embeddings.index):
+
+        output[label] = X[i]
+
+    return output
