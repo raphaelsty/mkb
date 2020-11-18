@@ -5,7 +5,12 @@ __all__ = ['DataFrameToKG']
 
 
 def DataFrameToKG(df, keys, prefix={}):
-    """
+    """Convert pandas DataFrame to knowledge graph.
+
+    Parameters:
+        df (pd.DataFrame): dataset.
+        keys (dict): Edges of the graphs.
+        prefix (dict): Prefix to add to avoid collisions. Common columns should have common prefixes.
 
     Example:
 
@@ -15,7 +20,6 @@ def DataFrameToKG(df, keys, prefix={}):
         ...    'user': [1, 2, 3, 4, 5],
         ...    'banque': ['Societe Generale', 'Credit Lyonnais', 'Chinese National Bank', 'Chinese National Bank', 'QIWI'],
         ...    'country': ['France', 'France', 'China', 'China', 'Russia'],
-        ...    'contact': [2, 3, 3, 3, 1],
         ... })
 
         >>> keys = {
