@@ -9,6 +9,8 @@ def DataFrameToKG(df, keys):
 
     Example:
 
+        >>> from mkb import utils
+
         >>> df = pd.DataFrame({
         ...    'user': [1, 2, 3, 4, 5],
         ...    'banque': ['Societe Generale', 'Credit Lyonnais', 'Chinese National Bank', 'Chinese National Bank', 'QIWI'],
@@ -20,7 +22,7 @@ def DataFrameToKG(df, keys):
         ...    'banque': ['country'],
         ... }
 
-        >>> DataFrameToKG(df, keys)
+        >>> utils.DataFrameToKG(df, keys)
         [(1, 'user_banque', 'Societe Generale'), (2, 'user_banque', 'Credit Lyonnais'), (3, 'user_banque', 'Chinese National Bank'), (4, 'user_banque', 'Chinese National Bank'), (5, 'user_banque', 'QIWI'), ('Societe Generale', 'banque_country', 'France'), ('Credit Lyonnais', 'banque_country', 'France'), ('Chinese National Bank', 'banque_country', 'China'), ('Chinese National Bank', 'banque_country', 'China'), ('QIWI', 'banque_country', 'Russia')]
 
     """
