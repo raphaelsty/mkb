@@ -4,7 +4,7 @@ import pandas as pd
 __all__ = ['DataFrameToKG']
 
 
-def DataFrameToKG(df, keys):
+def DataFrameToKG(df, keys, prefix={}):
     """
 
     Example:
@@ -14,7 +14,8 @@ def DataFrameToKG(df, keys):
         >>> df = pd.DataFrame({
         ...    'user': [1, 2, 3, 4, 5],
         ...    'banque': ['Societe Generale', 'Credit Lyonnais', 'Chinese National Bank', 'Chinese National Bank', 'QIWI'],
-        ...    'country': ['France', 'France', 'China', 'China', 'Russia']
+        ...    'country': ['France', 'France', 'China', 'China', 'Russia'],
+        ...    'contact': [2, 3, 3, 3, 1],
         ... })
 
         >>> keys = {
@@ -22,7 +23,13 @@ def DataFrameToKG(df, keys):
         ...    'banque': ['country'],
         ... }
 
-        >>> utils.DataFrameToKG(df, keys)
+        >>> prefix = {
+        ...    'user': 'user_',
+        ...    'banque': 'banque_',
+        ...    'country': 'country_',
+        ... }
+
+        >>> utils.DataFrameToKG(df, keys, prefix)
         [('user_1', 'user_banque', 'banque_Societe Generale'), ('user_2', 'user_banque', 'banque_Credit Lyonnais'), ('user_3', 'user_banque', 'banque_Chinese National Bank'), ('user_4', 'user_banque', 'banque_Chinese National Bank'), ('user_5', 'user_banque', 'banque_QIWI'), ('banque_Societe Generale', 'banque_country', 'country_France'), ('banque_Credit Lyonnais', 'banque_country', 'country_France'), ('banque_Chinese National Bank', 'banque_country', 'country_China'), ('banque_QIWI', 'banque_country', 'country_Russia')]
 
     """
@@ -38,8 +45,12 @@ def DataFrameToKG(df, keys):
 
             subset = df[[head, tail]].drop_duplicates().copy(deep=True)
 
-            subset[head] = f'{head}_' + subset[head].astype('str')
-            subset[tail] = f'{tail}_' + subset[tail].astype('str')
+            # Add prefix to avoid collisions:
+            if head in prefix:
+                subset[head] = prefix[head] + subset[head].astype('str')
+
+            if tail in prefix:
+                subset[tail] = prefix[tail] + subset[tail].astype('str')
 
             subset.columns = ['head', 'tail']
             subset['relation'] = f'{head}_{tail}'
