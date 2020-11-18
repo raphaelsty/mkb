@@ -3,6 +3,7 @@ from .bar import BarRange
 from .dataframe_to_kg import dataframe_to_kg
 from .dataframe_to_kg import map_embeddings
 from .dataframe_to_kg import decompose
+from .dataframe_to_kg import row_embeddings
 from .export_embeddings import export_embeddings
 from .predict import FetchToPredict
 from .predict import make_prediction
@@ -18,6 +19,7 @@ __all__ = [
     'dataframe_to_kg',
     'map_embeddings',
     'decompose',
+    'row_embeddings',
     'export_embeddings',
     'FetchToPredict',
     'make_prediction',

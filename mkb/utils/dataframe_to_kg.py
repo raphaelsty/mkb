@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn import decomposition
 
 
-__all__ = ['dataframe_to_kg', 'map_embeddings', 'decompose']
+__all__ = ['dataframe_to_kg', 'map_embeddings', 'decompose', 'row_embeddings']
 
 
 def dataframe_to_kg(df, keys, prefix={}):
@@ -70,7 +70,7 @@ def dataframe_to_kg(df, keys, prefix={}):
 
 def map_embeddings(df, prefix, embeddings, n_components, batch_size=None):
     """Map embeddings to input dataframe to train machine learning models. Apply PCA before mapping
-    embeddigs. If batch size is defined, apply incremental PCA.
+    embeddings. If batch size is defined, apply incremental PCA.
     """
 
     df_embeddings = df.copy()
@@ -122,3 +122,44 @@ def decompose(embeddings, n_components, batch_size=None):
         output[label] = X[i]
 
     return output
+
+
+def row_embeddings(df, embeddings, prefix, n_components=2, batch_size=None):
+    """Map embeddings on input dataframe and apply PCA on the input dataframe. Apply PCA after mapping
+    embeddings.
+    """
+    e = {}
+    for key, value in embeddings.items():
+        e[key] = value.tolist()
+
+    X = []
+
+    for column in df.columns:
+
+        if column in prefix:
+            embedding = (prefix[column] +
+                         df[column].astype(str)).map(e)
+        else:
+            embedding = df[column].astype(str).map(e)
+
+        X.append(
+            pd.DataFrame(dict(zip(df.index, embedding))).T
+        )
+
+    X = pd.concat(X, axis='columns')
+
+    if batch_size is None:
+        PCA = decomposition.PCA(n_components=n_components)
+    else:
+        PCA = decomposition.IncrementalPCA(
+            n_components=n_components, batch_size=batch_size)
+
+    X = PCA.fit_transform(X)
+
+    X = pd.DataFrame(X)
+
+    X.columns = [f'dim_{i}' for i in range(len(X.columns))]
+
+    X.index = df.index
+
+    return X
