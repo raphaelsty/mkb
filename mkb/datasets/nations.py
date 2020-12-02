@@ -41,22 +41,17 @@ class Nations(Dataset):
 
         >>> from mkb import datasets
 
-        >>> dataset = datasets.Nations(batch_size=1, shuffle=True, pre_compute=False, seed=42)
+        >>> dataset = datasets.Nations(batch_size=1, shuffle=False, pre_compute=False, seed=42)
 
         >>> dataset
         Nations dataset
             Batch size           1
             Entities            14
             Relations           56
-            Shuffle           True
+            Shuffle           False
             Train triples     1619
             Validation triples 202
             Test triples       203
-
-        >>> for data in dataset:
-        ...     print(data)
-        ...     break
-        {'sample': tensor([[ 6,  5, 13]]), 'weight': tensor([0.2085]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

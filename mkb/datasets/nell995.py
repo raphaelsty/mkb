@@ -41,22 +41,17 @@ class Nell995(Dataset):
 
         >>> from mkb import datasets
 
-        >>> dataset = datasets.Nell995(batch_size=1, shuffle=True, pre_compute=False, seed=42)
+        >>> dataset = datasets.Nell995(batch_size=1, shuffle=False, pre_compute=False, seed=42)
 
         >>> dataset
         Nell995 dataset
             Batch size         1
             Entities           75492
             Relations          200
-            Shuffle            True
+            Shuffle            False
             Train triples      149678
             Validation triples 543
             Test triples       3992
-
-        >>> for data in dataset:
-        ...     print(data)
-        ...     break
-        {'sample': tensor([[23670,   124, 19128]]), 'weight': tensor([0.0577]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

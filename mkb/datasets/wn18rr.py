@@ -40,22 +40,17 @@ class Wn18rr(Dataset):
 
         >>> from mkb import datasets
 
-        >>> dataset = datasets.Wn18rr(batch_size=1, shuffle=True, pre_compute=False, seed=42)
+        >>> dataset = datasets.Wn18rr(batch_size=1, shuffle=False, pre_compute=False, seed=42)
 
         >>> dataset
         Wn18rr dataset
             Batch size          1
             Entities            40943
             Relations           11
-            Shuffle             True
+            Shuffle             False
             Train triples       86835
             Validation triples  3034
             Test triples        3134
-
-        >>> for data in dataset:
-        ...     print(data)
-        ...     break
-        {'sample': tensor([[12241,     4, 33028]]), 'weight': tensor([0.3333]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

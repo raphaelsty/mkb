@@ -136,52 +136,53 @@ class Pipeline:
         <BLANKLINE>
         Epoch: 2.
             Validation:
-                MRR: 0.0561
-                MR: 117.7292
-                HITS@1: 0.0417
-                HITS@3: 0.0417
-                HITS@10: 0.0417
-                MRR_relations: 0.7917
-                MR_relations: 1.4167
-                HITS@1_relations: 0.5833
-                HITS@3_relations: 1.0
-                HITS@10_relations: 1.0
+                    MRR: 0.0561
+                    MR: 117.6875
+                    HITS@1: 0.0417
+                    HITS@3: 0.0417
+                    HITS@10: 0.0417
+                    MRR_relations: 0.7917
+                    MR_relations: 1.4167
+                    HITS@1_relations: 0.5833
+                    HITS@3_relations: 1.0
+                    HITS@10_relations: 1.0
             Test:
-                MRR: 0.0089
-                MR: 138.375
-                HITS@1: 0.0
-                HITS@3: 0.0
-                HITS@10: 0.0
-                MRR_relations: 0.6875
-                MR_relations: 1.625
-                HITS@1_relations: 0.375
-                HITS@3_relations: 1.0
-                HITS@10_relations: 1.0
+                    MRR: 0.0089
+                    MR: 138.25
+                    HITS@1: 0.0
+                    HITS@3: 0.0
+                    HITS@10: 0.0
+                    MRR_relations: 0.6875
+                    MR_relations: 1.625
+                    HITS@1_relations: 0.375
+                    HITS@3_relations: 1.0
+                    HITS@10_relations: 1.0
         <BLANKLINE>
-        Epoch: 2.
+            Epoch: 2.
         <BLANKLINE>
-            Validation:
-                MRR: 0.0561
-                MR: 117.7292
-                HITS@1: 0.0417
-                HITS@3: 0.0417
-                HITS@10: 0.0417
-                MRR_relations: 0.7917
-                MR_relations: 1.4167
-                HITS@1_relations: 0.5833
-                HITS@3_relations: 1.0
-                HITS@10_relations: 1.0
-            Test:
-                MRR: 0.0089
-                MR: 138.375
-                HITS@1: 0.0
-                HITS@3: 0.0
-                HITS@10: 0.0
-                MRR_relations: 0.6875
-                MR_relations: 1.625
-                HITS@1_relations: 0.375
-                HITS@3_relations: 1.0
-                HITS@10_relations: 1.0
+                Validation:
+                        MRR: 0.0561
+                        MR: 117.6875
+                        HITS@1: 0.0417
+                        HITS@3: 0.0417
+                        HITS@10: 0.0417
+                        MRR_relations: 0.7917
+                        MR_relations: 1.4167
+                        HITS@1_relations: 0.5833
+                        HITS@3_relations: 1.0
+                        HITS@10_relations: 1.0
+                Test:
+                        MRR: 0.0089
+                        MR: 138.25
+                        HITS@1: 0.0
+                        HITS@3: 0.0
+                        HITS@10: 0.0
+                        MRR_relations: 0.6875
+                        MR_relations: 1.625
+                        HITS@1_relations: 0.375
+                        HITS@3_relations: 1.0
+                        HITS@10_relations: 1.0
+
 
     """
 

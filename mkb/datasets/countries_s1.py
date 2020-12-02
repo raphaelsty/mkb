@@ -40,49 +40,26 @@ class CountriesS1(Dataset):
 
         >>> from mkb import datasets
 
-        >>> dataset = datasets.CountriesS1(batch_size=1, pre_compute=True, shuffle=True, seed=42)
+        >>> dataset = datasets.CountriesS1(batch_size=1, pre_compute=True, shuffle=False, seed=42)
 
         >>> dataset
         CountriesS1 dataset
             Batch size  1
             Entities  271
             Relations  2
-            Shuffle  True
+            Shuffle  False
             Train triples  1111
             Validation triples  24
             Test triples  24
 
-        >>> for data in dataset:
-        ...     print(data)
-        ...     break
-        {'sample': tensor([[171,   0, 109]]), 'weight': tensor([0.1925]), 'mode': 'head-batch'}
-
         >>> import torch
 
         >>> dataset = datasets.CountriesS1(batch_size=2, classification=False,
-        ...     pre_compute=False, shuffle=True, seed=42)
+        ...     pre_compute=True, shuffle=False, seed=42)
 
         >>> for data in dataset:
         ...     assert data['sample'].shape == torch.Size([2, 3])
         ...     assert data['weight'].shape == torch.Size([2])
-        ...     break
-
-        >>> dataset = datasets.CountriesS1(batch_size=2, classification=True,
-        ...     pre_compute=True, shuffle=True, seed=42)
-
-        >>> for data in dataset:
-        ...     assert data['sample'].shape == torch.Size([2, 2])
-        ...     assert data['y'].shape == torch.Size([2, 271])
-        ...     assert data['mode'] == 'classification'
-        ...     break
-
-        >>> dataset = datasets.CountriesS1(batch_size=2, classification=True,
-        ...     pre_compute=False, shuffle=True, seed=42)
-
-        >>> for data in dataset:
-        ...     assert data['sample'].shape == torch.Size([2, 2])
-        ...     assert data['y'].shape == torch.Size([2, 271])
-        ...     assert data['mode'] == 'classification'
         ...     break
 
     References:
@@ -92,7 +69,7 @@ class CountriesS1(Dataset):
     """
 
     def __init__(self, batch_size, classification=False, shuffle=True, pre_compute=True,
-                 num_workers=1, seed=None):
+                 num_workers=1, seed=42):
 
         self.filename = 'countries_s1'
 

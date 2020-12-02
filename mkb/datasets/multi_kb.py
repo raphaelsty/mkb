@@ -22,7 +22,7 @@ class MultiKb(Dataset):
         >>> from mkb import datasets
 
         >>> dataset = datasets.MultiKb(
-        ...     dataset = datasets.Umls(batch_size = 1, shuffle = True, seed = 42),
+        ...     dataset = datasets.Umls(batch_size = 1, shuffle = False, seed = 42),
         ...     id_set = [0, 1, 2, 3, 4],
         ...     n_part = 10,
         ...     aligned_entities = 0.8,
@@ -33,18 +33,13 @@ class MultiKb(Dataset):
             Batch size         1
             Entities           135
             Relations          46
-            Shuffle            True
+            Shuffle            False
             Train triples      2610
             Validation triples 652
             Test triples       661
             Umls cutted in     10
             Umls set           [0, 1, 2, 3, 4]
             Aligned entities   80.0%
-
-        >>> for data in dataset:
-        ...     print(data)
-        ...     break
-        {'sample': tensor([[73, 17, 67]]), 'weight': tensor([0.2236]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

@@ -11,8 +11,7 @@ from ..models import TransE
 
 from ..sampling import NegativeSampling
 
-from .top_k_sampling import TopKSampling
-from .top_k_sampling import TopKSamplingTransE
+from .top_k_sampling import FastTopKSampling
 
 from ..utils import BarRange
 
@@ -118,57 +117,58 @@ class KdmkbModel:
         <BLANKLINE>
         Model: dataset_1, step 9
             Validation:
-                valid_MRR: 0.0143
-                valid_MR: 122.4792
-                valid_HITS@1: 0.0
-                valid_HITS@3: 0.0
-                valid_HITS@10: 0.0
-                valid_MRR_relations: 0.9375
-                valid_MR_relations: 1.125
-                valid_HITS@1_relations: 0.875
-                valid_HITS@3_relations: 1.0
-                valid_HITS@10_relations: 1.0
+                    valid_MRR: 0.0143
+                    valid_MR: 122.4583
+                    valid_HITS@1: 0.0
+                    valid_HITS@3: 0.0
+                    valid_HITS@10: 0.0
+                    valid_MRR_relations: 0.9375
+                    valid_MR_relations: 1.125
+                    valid_HITS@1_relations: 0.875
+                    valid_HITS@3_relations: 1.0
+                    valid_HITS@10_relations: 1.0
             Test:
-                test_MRR: 0.016
-                test_MR: 132.8125
-                test_HITS@1: 0.0
-                test_HITS@3: 0.0
-                test_HITS@10: 0.0417
-                test_MRR_relations: 0.9167
-                test_MR_relations: 1.1667
-                test_HITS@1_relations: 0.8333
-                test_HITS@3_relations: 1.0
-                test_HITS@10_relations: 1.0
+                    test_MRR: 0.016
+                    test_MR: 132.8125
+                    test_HITS@1: 0.0
+                    test_HITS@3: 0.0
+                    test_HITS@10: 0.0417
+                    test_MRR_relations: 0.9167
+                    test_MR_relations: 1.1667
+                    test_HITS@1_relations: 0.8333
+                    test_HITS@3_relations: 1.0
+                    test_HITS@10_relations: 1.0
         <BLANKLINE>
         Model: dataset_2, step 9
             Validation:
-                valid_MRR: 0.0147
-                valid_MR: 142.0625
-                valid_HITS@1: 0.0
-                valid_HITS@3: 0.0
-                valid_HITS@10: 0.0417
-                valid_MRR_relations: 0.75
-                valid_MR_relations: 1.5
-                valid_HITS@1_relations: 0.5
-                valid_HITS@3_relations: 1.0
-                valid_HITS@10_relations: 1.0
+                    valid_MRR: 0.0124
+                    valid_MR: 144.625
+                    valid_HITS@1: 0.0
+                    valid_HITS@3: 0.0
+                    valid_HITS@10: 0.0208
+                    valid_MRR_relations: 0.7083
+                    valid_MR_relations: 1.5833
+                    valid_HITS@1_relations: 0.4167
+                    valid_HITS@3_relations: 1.0
+                    valid_HITS@10_relations: 1.0
             Test:
-                test_MRR: 0.0123
-                test_MR: 154.7083
-                test_HITS@1: 0.0
-                test_HITS@3: 0.0
-                test_HITS@10: 0.0417
-                test_MRR_relations: 0.7083
-                test_MR_relations: 1.5833
-                test_HITS@1_relations: 0.4167
-                test_HITS@3_relations: 1.0
-                test_HITS@10_relations: 1.0
+                    test_MRR: 0.0157
+                    test_MR: 149.9583
+                    test_HITS@1: 0.0
+                    test_HITS@3: 0.0
+                    test_HITS@10: 0.0417
+                    test_MRR_relations: 0.75
+                    test_MR_relations: 1.5
+                    test_HITS@1_relations: 0.5
+                    test_HITS@3_relations: 1.0
+                    test_HITS@10_relations: 1.0
 
     """
 
     def __init__(
         self, models, datasets, lr, alpha_kl, alpha_adv, negative_sampling_size, batch_size_entity,
-        batch_size_relation, n_random_entities, n_random_relations, device='cuda', seed=None
+        batch_size_relation, n_random_entities, n_random_relations, update_distillation_every=500,
+        device='cuda', seed=None,
     ):
 
         self.alpha_kl = alpha_kl
@@ -176,6 +176,7 @@ class KdmkbModel:
         self.batch_size_relation = batch_size_relation
         self.n_random_entities = n_random_entities
         self.n_random_relations = n_random_relations
+        self.update_distillation_every = update_distillation_every
         self.device = device
         self.seed = seed
         self._rng = np.random.RandomState(  # pylint: disable=no-member
@@ -210,16 +211,10 @@ class KdmkbModel:
 
                 if id_dataset_teacher != id_dataset_student:
 
-                    if isinstance(models[id_dataset_teacher], TransE):
-                        # Sampling for TransE is based on faiss and is faster.
-                        sampling_method = TopKSamplingTransE
-                    else:
-                        sampling_method = TopKSampling
-
                     self.distillation[
                         f'{id_dataset_teacher}_{id_dataset_student}'
                     ] = self._init_distillation(
-                        sampling_method=sampling_method,
+                        sampling_method=FastTopKSampling,
                         teacher=models[id_dataset_teacher],
                         dataset_teacher=dataset_teacher,
                         dataset_student=dataset_student,
@@ -271,6 +266,7 @@ class KdmkbModel:
             student_relations=dataset_student.relations,
             sampling=sampling_method(**{
                 'teacher': teacher,
+                'dataset_teacher': dataset_teacher,
                 'teacher_relations': dataset_teacher.relations,
                 'teacher_entities': dataset_teacher.entities,
                 'student_entities': dataset_student.entities,
@@ -364,30 +360,6 @@ class KdmkbModel:
 
             self.metrics[id_dataset].update(loss_models[id_dataset].item())
 
-        # Update distillation when using faiss trees.
-        for id_dataset_teacher, dataset_teacher in datasets.items():
-
-            for id_dataset_student, dataset_student in datasets.items():
-
-                if id_dataset_teacher != id_dataset_student:
-
-                    if isinstance(models[id_dataset_teacher], TransE):
-
-                        self.distillation[
-                            f'{id_dataset_teacher}_{id_dataset_student}'
-                        ] = self._init_distillation(
-                            sampling_method=TopKSamplingTransE,
-                            teacher=models[id_dataset_teacher],
-                            dataset_teacher=dataset_teacher,
-                            dataset_student=dataset_student,
-                            batch_size_entity=self.batch_size_entity[id_dataset_teacher],
-                            batch_size_relation=self.batch_size_relation[id_dataset_teacher],
-                            n_random_entities=self.n_random_entities[id_dataset_teacher],
-                            n_random_relations=self.n_random_relations[id_dataset_teacher],
-                            seed=self.seed,
-                            device=self.device,
-                        )
-
         return self.metrics
 
     def learn(self, models, datasets, max_step, eval_every=2000,
@@ -424,6 +396,30 @@ class KdmkbModel:
                     [f'{model}: {loss}' for model, loss in metrics.items()]
                 )
             )
+
+            # Update distillation when using faiss trees.
+            for id_dataset_teacher, dataset_teacher in datasets.items():
+
+                for id_dataset_student, dataset_student in datasets.items():
+
+                    if id_dataset_teacher != id_dataset_student:
+
+                        if (step + 1) % self.update_distillation_every == 0:
+
+                            self.distillation[
+                                f'{id_dataset_teacher}_{id_dataset_student}'
+                            ] = self._init_distillation(
+                                sampling_method=FastTopKSampling,
+                                teacher=models[id_dataset_teacher],
+                                dataset_teacher=dataset_teacher,
+                                dataset_student=dataset_student,
+                                batch_size_entity=self.batch_size_entity[id_dataset_teacher],
+                                batch_size_relation=self.batch_size_relation[id_dataset_teacher],
+                                n_random_entities=self.n_random_entities[id_dataset_teacher],
+                                n_random_relations=self.n_random_relations[id_dataset_teacher],
+                                seed=self.seed,
+                                device=self.device,
+                            )
 
             if (step + 1) % eval_every == 0:
 

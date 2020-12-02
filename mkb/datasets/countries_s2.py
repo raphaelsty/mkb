@@ -40,49 +40,26 @@ class CountriesS2(Dataset):
 
         >>> from mkb import datasets
 
-        >>> dataset = datasets.CountriesS2(batch_size=1, shuffle=True, seed=42)
+        >>> dataset = datasets.CountriesS2(batch_size=1, shuffle=False, seed=42)
 
         >>> dataset
         CountriesS2 dataset
             Batch size         1
             Entities           271
             Relations          2
-            Shuffle            True
+            Shuffle            False
             Train triples      1063
             Validation triples 24
             Test triples       24
 
-        >>> for data in dataset:
-        ...     print(data)
-        ...     break
-        {'sample': tensor([[229,   0, 269]]), 'weight': tensor([0.1601]), 'mode': 'head-batch'}
-
         >>> import torch
 
         >>> dataset = datasets.CountriesS2(batch_size=2, classification=False,
-        ...     pre_compute=False, shuffle=True, seed=42)
+        ...     pre_compute=True, shuffle=False, seed=42)
 
         >>> for data in dataset:
         ...     assert data['sample'].shape == torch.Size([2, 3])
         ...     assert data['weight'].shape == torch.Size([2])
-        ...     break
-
-        >>> dataset = datasets.CountriesS2(batch_size=2, classification=True,
-        ...     pre_compute=True, shuffle=True, seed=42)
-
-        >>> for data in dataset:
-        ...     assert data['sample'].shape == torch.Size([2, 2])
-        ...     assert data['y'].shape == torch.Size([2, 271])
-        ...     assert data['mode'] == 'classification'
-        ...     break
-
-        >>> dataset = datasets.CountriesS2(batch_size=2, classification=True,
-        ...     pre_compute=False, shuffle=True, seed=42)
-
-        >>> for data in dataset:
-        ...     assert data['sample'].shape == torch.Size([2, 2])
-        ...     assert data['y'].shape == torch.Size([2, 271])
-        ...     assert data['mode'] == 'classification'
         ...     break
 
 

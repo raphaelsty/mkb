@@ -41,22 +41,17 @@ class Fb15k237(Dataset):
 
         >>> from mkb import datasets
 
-        >>> dataset = datasets.Fb15k237(batch_size=1, shuffle=True, pre_compute=False, seed=42)
+        >>> dataset = datasets.Fb15k237(batch_size=1, shuffle=False, pre_compute=False, seed=42)
 
         >>> dataset
         Fb15k237 dataset
             Batch size  1
             Entities  14541
             Relations  237
-            Shuffle  True
+            Shuffle  False
             Train triples  272115
             Validation triples  17535
             Test triples  20466
-
-        >>> for data in dataset:
-        ...     print(data)
-        ...     break
-        {'sample': tensor([[5222,   24, 1165]]), 'weight': tensor([0.2887]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

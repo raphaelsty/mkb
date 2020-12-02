@@ -41,22 +41,17 @@ class Semanlink(Dataset):
 
         >>> from mkb import datasets
 
-        >>> dataset = datasets.Semanlink(batch_size=1, shuffle=True, pre_compute=False, seed=42)
+        >>> dataset = datasets.Semanlink(batch_size=1, shuffle=False, pre_compute=False, seed=42)
 
         >>> dataset
                 Semanlink dataset
                 Batch size          1
                 Entities            12211
                 Relations           8
-                Shuffle             True
+                Shuffle             False
                 Train triples       22967
                 Validation triples  2027
                 Test triples        2027
-
-        >>> for data in dataset:
-        ...     print(data)
-        ...     break
-        {'sample': tensor([[684,   2,  35]]), 'weight': tensor([0.2236]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

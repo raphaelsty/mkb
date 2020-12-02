@@ -41,22 +41,17 @@ class Wn11(Dataset):
 
         >>> from mkb import datasets
 
-        >>> dataset = datasets.Wn11(batch_size=1, shuffle=True, pre_compute=False, seed=42)
+        >>> dataset = datasets.Wn11(batch_size=1, shuffle=False, pre_compute=False, seed=42)
 
         >>> dataset
         Wn11 dataset
             Batch size             1
             Entities           38588
             Relations             11
-            Shuffle             True
+            Shuffle             False
             Train triples     112581
             Validation triples  2609
             Test triples       10544
-
-        >>> for data in dataset:
-        ...     print(data)
-        ...     break
-        {'sample': tensor([[29798,     2, 16107]]), 'weight': tensor([0.3162]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

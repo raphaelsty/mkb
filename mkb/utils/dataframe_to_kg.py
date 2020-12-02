@@ -35,7 +35,7 @@ def dataframe_to_kg(df, keys, prefix={}):
         ...    'country': 'country_',
         ... }
 
-        >>> utils.DataFrameToKG(df, keys, prefix)
+        >>> utils.dataframe_to_kg(df, keys, prefix)
         [('user_1', 'user_banque', 'banque_Societe Generale'), ('user_2', 'user_banque', 'banque_Credit Lyonnais'), ('user_3', 'user_banque', 'banque_Chinese National Bank'), ('user_4', 'user_banque', 'banque_Chinese National Bank'), ('user_5', 'user_banque', 'banque_QIWI'), ('banque_Societe Generale', 'banque_country', 'country_France'), ('banque_Credit Lyonnais', 'banque_country', 'country_France'), ('banque_Chinese National Bank', 'banque_country', 'country_China'), ('banque_QIWI', 'banque_country', 'country_Russia')]
 
     """

@@ -41,22 +41,17 @@ class Kinship(Dataset):
 
         >>> from mkb import datasets
 
-        >>> dataset = datasets.Kinship(batch_size=1, shuffle=True, pre_compute=False, seed=42)
+        >>> dataset = datasets.Kinship(batch_size=1, shuffle=False, pre_compute=False, seed=42)
 
         >>> dataset
         Kinship dataset
             Batch size         1
             Entities           104
             Relations          25
-            Shuffle            True
+            Shuffle            False
             Train triples      8548
             Validation triples 1069
             Test triples        1069
-
-        >>> for data in dataset:
-        ...     print(data)
-        ...     break
-        {'sample': tensor([[79, 18, 40]]), 'weight': tensor([0.1925]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

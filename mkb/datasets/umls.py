@@ -41,29 +41,23 @@ class Umls(Dataset):
 
         >>> from mkb import datasets
 
-        >>> dataset = datasets.Umls(batch_size=1, shuffle=True, seed=42)
+        >>> dataset = datasets.Umls(batch_size=1, shuffle=False, seed=42)
 
         >>> dataset
         Umls dataset
             Batch size         1
             Entities           135
             Relations          46
-            Shuffle            True
+            Shuffle            False
             Train triples      5216
             Validation triples 652
             Test triples       661
-
-        >>> for data in dataset:
-        ...     print(data)
-        ...     break
-        {'sample': tensor([[32,  3, 65]]), 'weight': tensor([0.1525]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.valid) * 2
         >>> assert len(dataset.classification_test['X']) == len(dataset.test) * 2
-
 
     References:
         1. [Datasets for Knowledge Graph Completion with Textual Information about Entities](https://github.com/villmow/datasets_knowledge_embedding)

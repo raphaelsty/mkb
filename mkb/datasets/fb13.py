@@ -41,22 +41,17 @@ class Fb13(Dataset):
 
         >>> from mkb import datasets
 
-        >>> dataset = datasets.Fb13(batch_size=1, shuffle=True, pre_compute=False, seed=42)
+        >>> dataset = datasets.Fb13(batch_size=1, shuffle=False, pre_compute=False, seed=42)
 
         >>> dataset
         Fb13 dataset
             Batch size          1
             Entities            75043
             Relations           13
-            Shuffle             True
+            Shuffle             False
             Train triples       316232
             Validation triples  5908
             Test triples        23733
-
-        >>> for data in dataset:
-        ...     print(data)
-        ...     break
-        {'sample': tensor([[43252, 4, 73563]]), 'weight': tensor([0.2774]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

@@ -41,22 +41,17 @@ class Yago310(Dataset):
 
         >>> from mkb import datasets
 
-        >>> dataset = datasets.Yago310(batch_size=1, shuffle=True, seed=42)
+        >>> dataset = datasets.Yago310(batch_size=1, shuffle=False, seed=42)
 
         >>> dataset
         Yago310 dataset
             Batch size         1
             Entities           123182
             Relations          37
-            Shuffle            True
+            Shuffle            False
             Train triples      1079040
             Validation triples 5000
             Test triples       5000
-
-        >>> for data in dataset:
-        ...     print(data)
-        ...     break
-        {'sample': tensor([[  7886,      0, 115154]]), 'weight': tensor([0.1302]), 'mode': 'head-batch'}
 
         >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
         >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])

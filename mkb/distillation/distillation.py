@@ -423,21 +423,24 @@ class Distillation:
             >>> from mkb import datasets
             >>> from mkb import distillation
             >>> from mkb import models
+            >>> import torch
 
-            >>> dataset = datasets.Umls(batch_size=3, shuffle=True, seed=42)
+            >>> _ = torch.manual_seed(42)
+
+            >>> dataset = datasets.Umls(batch_size=3, shuffle=False, seed=42)
 
             >>> teacher = models.RotatE(
             ...    hidden_dim = 3,
-            ...    entities   = dataset.entities,
+            ...    entities = dataset.entities,
             ...    relations = dataset.relations,
-            ...    gamma      = 6
+            ...    gamma = 6
             ... )
 
             >>> student = models.RotatE(
             ...    hidden_dim = 3,
-            ...    entities   = dataset.entities,
+            ...    entities = dataset.entities,
             ...    relations = dataset.relations,
-            ...    gamma      = 6
+            ...    gamma = 6
             ... )
 
             >>> distillation_process = distillation.Distillation(
@@ -463,7 +466,7 @@ class Distillation:
             ... )
 
             >>> loss_distillation
-            tensor(1.9474, grad_fn=<AddBackward0>)
+            tensor(1.3066, grad_fn=<AddBackward0>)
 
             >>> loss_distillation.backward()
 
@@ -511,7 +514,7 @@ class Distillation:
             ... )
 
             >>> loss_distillation
-            tensor(0.4526, grad_fn=<AddBackward0>)
+            tensor(0.5269, grad_fn=<AddBackward0>)
 
             >>> loss_distillation.backward()
 

@@ -72,44 +72,20 @@ class Dataset:
         ...    ('🦢', 'is', 'animal'),
         ... ]
 
-        >>> dataset = datasets.Dataset(train=train, test=test, batch_size=2, seed=42)
+        >>> dataset = datasets.Dataset(train=train, test=test, batch_size=2, seed=42, shuffle=False)
 
         >>> dataset
         Dataset dataset
             Batch size  2
             Entities  11
             Relations  1
-            Shuffle  True
+            Shuffle  False
             Train triples  10
             Validation triples  0
             Test triples  10
 
         >>> dataset.entities
         {'🐝': 0, '🐻': 1, '🐍': 2, '🦔': 3, '🦓': 4, '🦒': 5, '🦘': 6, '🦝': 7, '🦞': 8, '🦢': 9, 'animal': 10}
-
-
-        >>> for data in dataset:
-        ...     print(data)
-        {'sample': tensor([[ 6,  0, 10],
-            [ 5,  0, 10]]), 'weight': tensor([0.2425, 0.2425]), 'mode': 'head-batch'}
-        {'sample': tensor([[ 4,  0, 10],
-                [ 1,  0, 10]]), 'weight': tensor([0.2425, 0.2425]), 'mode': 'tail-batch'}
-        {'sample': tensor([[ 4,  0, 10],
-                [ 0,  0, 10]]), 'weight': tensor([0.2425, 0.2425]), 'mode': 'head-batch'}
-        {'sample': tensor([[ 6,  0, 10],
-                [ 9,  0, 10]]), 'weight': tensor([0.2425, 0.2425]), 'mode': 'tail-batch'}
-        {'sample': tensor([[ 8,  0, 10],
-                [ 9,  0, 10]]), 'weight': tensor([0.2425, 0.2425]), 'mode': 'head-batch'}
-        {'sample': tensor([[ 5,  0, 10],
-                [ 7,  0, 10]]), 'weight': tensor([0.2425, 0.2425]), 'mode': 'tail-batch'}
-        {'sample': tensor([[ 2,  0, 10],
-                [ 1,  0, 10]]), 'weight': tensor([0.2425, 0.2425]), 'mode': 'head-batch'}
-        {'sample': tensor([[ 8,  0, 10],
-                [ 2,  0, 10]]), 'weight': tensor([0.2425, 0.2425]), 'mode': 'tail-batch'}
-        {'sample': tensor([[ 3,  0, 10],
-                [ 7,  0, 10]]), 'weight': tensor([0.2425, 0.2425]), 'mode': 'head-batch'}
-        {'sample': tensor([[ 0,  0, 10],
-                [ 3,  0, 10]]), 'weight': tensor([0.2425, 0.2425]), 'mode': 'tail-batch'}
 
     References:
         1. [Sun, Zhiqing, et al. "Rotate: Knowledge graph embedding by relational rotation in complex space." arXiv preprint arXiv:1902.10197 (2019).](https://arxiv.org/pdf/1902.10197.pdf)
@@ -119,7 +95,7 @@ class Dataset:
 
     def __init__(
         self, train, batch_size, entities=None, relations=None, valid=None, test=None, shuffle=True,
-        classification=False, pre_compute=True, num_workers=1, seed=None, classification_valid=None,
+        classification=False, pre_compute=True, num_workers=1, seed=42, classification_valid=None,
         classification_test=None
     ):
         self.train = train
