@@ -194,6 +194,8 @@ class FastTopKSampling:
 
         self._rng = np.random.RandomState(seed)
 
+        self.device = device
+
         for data in tqdm.tqdm(dataset_teacher, position=0):
 
             if data['mode'] == 'head-batch':
@@ -201,7 +203,7 @@ class FastTopKSampling:
                 (head_distribution_teacher, relation_distribution_teacher,
                     tail_distribution_teacher, head_distribution_student,
                     relation_distribution_student, tail_distribution_student
-                 ) = distillator.get(data['sample'], teacher)
+                 ) = distillator.get(data['sample'].to(self.device), teacher)
 
                 for i, sample in enumerate(data['sample']):
 
