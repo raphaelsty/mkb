@@ -9,17 +9,26 @@
 </br>
 
 <p align="center">
-  <code>mkb</code> is a library dedicated to <b>knowledge graph embeddings.</b> The purpose of this library is to provide modular tools using PyTorch.
-mkb provides datasets, models and tools to evaluate performance.</p>
+  <code>mkb</code> is a library dedicated to <b>knowledge graph embeddings.</b> The purpose of this library is to provide modular tools using PyTorch. The mkb library is dedicated to the implementation of the article [Knowledge Base Embedding By Cooperative Knowledge Distillation](https://www.aclweb.org/anthology/2020.coling-main.489).
+
+</p>
 </br>
 
 ## 💬 Citations
 ```
-@article{Sourty-2020-Coling,
+@inproceedings{sourty-etal-2020-knowledge,
     title = "Knowledge Base Embedding By Cooperative Knowledge Distillation",
-    author = "Sourty, Raphael and Moreno, Jose G. and Tamine, Lynda and Servant, Francois-Paul", 
-    booktitle = "Proceedings of {COLING} 2020, the 28th International Conference on Computational Linguistics (to appear)",
+    author = {Sourty, Rapha{\"e}l  and
+      Moreno, Jose G.  and
+      Servant, Fran{\c{c}}ois-Paul  and
+      Tamine-Lechani, Lynda},
+    booktitle = "Proceedings of the 28th International Conference on Computational Linguistics",
+    month = dec,
     year = "2020",
+    address = "Barcelona, Spain (Online)",
+    publisher = "International Committee on Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2020.coling-main.489",
+    pages = "5579--5590",
 }
 ```
 
