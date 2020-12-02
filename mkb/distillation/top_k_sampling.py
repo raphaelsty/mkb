@@ -156,7 +156,7 @@ class FastTopKSampling:
                  batch_size_entity, batch_size_relation, n_random_entities, n_random_relations,
                  dataset_teacher, teacher, device='cpu', seed=None, **kwargs):
 
-        if isinstance(teacher, TransE):
+        if teacher.name == 'TransE':
             base_method = TopKSamplingTransE
         else:
             base_method = TopKSampling
