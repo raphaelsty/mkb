@@ -9,12 +9,13 @@
 </br>
 
 <p align="center">
-  <code>mkb</code> is a library dedicated to <b>knowledge graph embeddings.</b> The purpose of this library is to provide modular tools using PyTorch. The mkb library is dedicated to the implementation of the article [Knowledge Base Embedding By Cooperative Knowledge Distillation](https://www.aclweb.org/anthology/2020.coling-main.489).
-
+  <code>mkb</code> is a library dedicated to <b>knowledge graph embeddings.</b> The purpose of this library is to provide modular tools using PyTorch. 
 </p>
 </br>
 
 ## 💬 Citations
+[Knowledge Base Embedding By Cooperative Knowledge Distillation](https://www.aclweb.org/anthology/2020.coling-main.489.pdf)
+
 ```
 @inproceedings{sourty-etal-2020-knowledge,
     title = "Knowledge Base Embedding By Cooperative Knowledge Distillation",
