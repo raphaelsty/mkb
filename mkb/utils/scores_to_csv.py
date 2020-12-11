@@ -52,19 +52,20 @@ class ScoresToCsv:
         ...    device = 'cpu',
         ... )
 
-        >>> scores = scores_to_csv.process(models = models, datasets = datasets, step = 10)
+        >>> scores = scores_to_csv.process(models = models, datasets = datasets, step = 10,
+        ...     **{"aligned_entities": 1})
 
-        >>> scores[["valid_MR", "test_MR", "model", "hidden_dim", "id", "dataset"]]
-            valid_MR  test_MR   model  hidden_dim  id dataset
-        0   58.7186  59.1717  TransE           1   0    Umls
-        0   58.6051  58.6437  TransE           1   1    Umls
+        >>> scores[["valid_MR", "test_MR", "model", "hidden_dim", "id", "dataset", "aligned_entities"]]
+            valid_MR  test_MR   model  hidden_dim  id dataset aligned_entities
+        0   58.7186  59.1717  TransE           1   0    Umls    1
+        0   58.6051  58.6437  TransE           1   1    Umls    1
 
-        >>> scores = scores_to_csv.detail_eval(datasets=datasets)
+        >>> scores = scores_to_csv.detail_eval(datasets=datasets, **{"aligned_entities": 1})
 
         >>> scores["scores_accuracy"]
-            dataset   model id step  treshold accuracy_valid accuracy_test
-        0    Umls  TransE  1   10 -0.856527       0.506135      0.484115
-        1    Umls  TransE  0   10 -0.961645       0.516871       0.53177
+            treshold  accuracy_valid  accuracy_test  step  gamma   model  hidden_dim  id dataset  aligned_entities
+        0 -0.856527        0.506135       0.484115    10    0.0  TransE           1   1    Umls                 1
+        1 -0.961645        0.516871       0.531770    10    0.0  TransE           1   0    Umls                 1
 
 
 
@@ -268,20 +269,24 @@ class ScoresToCsv:
                 device=self.device,
             )
 
-            scores_accuracy.append(
-                pd.DataFrame.from_dict(
-                    {
-                        "dataset": dataset,
-                        "model": model.name,
-                        "id": id,
-                        "step": step,
-                        "treshold": treshold,
-                        "accuracy_valid": accuracy_valid,
-                        "accuracy_test": accuracy_test,
-                    },
-                    orient="index",
-                ).T
+            score_accuracy = self.to_dataframe(
+                {
+                    "treshold": treshold,
+                    "accuracy_valid": accuracy_valid,
+                    "accuracy_test": accuracy_test,
+                },
             )
+
+            score_accuracy = self.add_metadata(
+                model=model,
+                score=score_accuracy,
+                step=step,
+                id=id,
+                dataset=datasets[id],
+                kwargs=kwargs,
+            )
+
+            scores_accuracy.append(score_accuracy)
 
         scores = pd.concat(scores, axis="rows")
 
