@@ -10,21 +10,25 @@ from .predict import make_prediction
 from .read_csv import read_csv
 from .read_csv import read_csv_classification
 from .read_json import read_json
+from .scores_to_csv import ScoresToCsv
 from .top_k import TopK
+from .unaligne import Unaligne
 
 
 __all__ = [
-    'Bar',
-    'BarRange',
-    'dataframe_to_kg',
-    'map_embeddings',
-    'decompose',
-    'row_embeddings',
-    'export_embeddings',
-    'FetchToPredict',
-    'make_prediction',
-    'read_csv',
-    'read_csv_classification',
-    'read_json',
-    'TopK',
+    "Bar",
+    "BarRange",
+    "dataframe_to_kg",
+    "map_embeddings",
+    "decompose",
+    "row_embeddings",
+    "export_embeddings",
+    "FetchToPredict",
+    "make_prediction",
+    "read_csv",
+    "read_csv_classification",
+    "read_json",
+    "ScoresToCsv",
+    "TopK",
+    "Unaligne",
 ]
