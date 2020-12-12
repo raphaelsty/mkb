@@ -55,10 +55,20 @@ class ScoresToCsv:
         >>> scores = scores_to_csv.process(models = models, datasets = datasets, step = 10,
         ...     **{"aligned_entities": 1})
 
-        >>> scores[["valid_MR", "test_MR", "model", "hidden_dim", "id", "dataset", "aligned_entities"]]
-            valid_MR  test_MR   model  hidden_dim  id dataset aligned_entities
-        0   58.7186  59.1717  TransE           1   0    Umls    1
-        0   58.6051  58.6437  TransE           1   1    Umls    1
+        >>> scores[["valid_MR", "test_MR", "model", "hidden_dim", "id", "dataset", "aligned_entities", "step"]]
+            valid_MR  test_MR   model  hidden_dim  id dataset aligned_entities step
+        0   58.7186  59.1717  TransE           1   0    Umls    1               10
+        0   58.6051  58.6437  TransE           1   1    Umls    1               10
+
+        >>> scores = scores_to_csv.process(models = models, datasets = datasets, step = 20,
+        ...     **{"aligned_entities": 1})
+
+        >>> scores[["valid_MR", "test_MR", "model", "hidden_dim", "id", "dataset", "aligned_entities", "step"]]
+            valid_MR  test_MR   model  hidden_dim  id dataset  aligned_entities  step
+        0   58.7186  59.1717  TransE           1   0    Umls                 1    10
+        0   58.6051  58.6437  TransE           1   1    Umls                 1    10
+        0   58.7186  59.1717  TransE           1   0    Umls                 1    20
+        0   58.6051  58.6437  TransE           1   1    Umls                 1    20
 
         >>> scores = scores_to_csv.detail_eval(datasets=datasets, **{"aligned_entities": 1})
 
@@ -66,8 +76,6 @@ class ScoresToCsv:
             treshold  accuracy_valid  accuracy_test  step  gamma   model  hidden_dim  id dataset  aligned_entities
         0 -0.856527        0.506135       0.484115    10    0.0  TransE           1   1    Umls                 1
         1 -0.961645        0.516871       0.531770    10    0.0  TransE           1   0    Umls                 1
-
-
 
     """
 
@@ -90,6 +98,8 @@ class ScoresToCsv:
         self.device = device
 
         self.evaluation = {}
+
+        self.scores = []
 
         for id in models.keys():
             self.evaluation[id] = Evaluation(
@@ -139,8 +149,6 @@ class ScoresToCsv:
 
     def process(self, models, datasets, step, **kwargs):
 
-        scores = []
-
         for id in models.keys():
 
             valid_scores = self.eval(
@@ -171,16 +179,14 @@ class ScoresToCsv:
                 dataset=datasets[id],
             )
 
-            scores.append(score)
-
-        scores = pd.concat(scores, axis="rows")
+            self.scores.append(score)
 
         if self.path is not None:
-            scores.to_csv(self.path, index=False)
+            pd.concat(self.scores, axis="rows").to_csv(self.path, index=False)
 
         self.save(models=models, datasets=datasets, step=step)
 
-        return scores
+        return pd.concat(self.scores, axis="rows")
 
     def detail_eval(self, datasets, **kwargs):
         """Detailled evaluation with accuracy."""
