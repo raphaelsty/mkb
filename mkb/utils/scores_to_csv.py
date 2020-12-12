@@ -226,6 +226,8 @@ class ScoresToCsv:
 
                 model = pickle.load(model_file)
 
+            model = model.to(self.device)
+
             score = self.evaluation[id].detail_eval(
                 model=model, dataset=datasets[id].test
             )
