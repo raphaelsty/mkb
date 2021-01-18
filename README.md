@@ -55,7 +55,7 @@
 You should be able to install and use this library with any Python version above 3.6.
 
 ```sh
-$ pip install git+https://github.com/raphaelsty/mkb
+$ pip install git+https://github.com/raphaelsty/mkb@0.0.1
 ```
 
 
