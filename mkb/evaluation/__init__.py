@@ -1,6 +1,6 @@
 from .evaluation import Evaluation
-from .accuracy import find_threshold
-from .accuracy import accuracy
+from .classif import find_threshold
+from .classif import accuracy
 
 
 __all__ = [

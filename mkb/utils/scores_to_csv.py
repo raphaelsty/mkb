@@ -6,8 +6,7 @@ import pickle
 
 from pandas.core.algorithms import mode
 from ..evaluation import evaluation
-from ..evaluation import find_threshold
-from ..evaluation import accuracy
+from ..evaluation import classif
 
 
 class ScoresToCsv:
@@ -251,7 +250,7 @@ class ScoresToCsv:
 
             scores.append(score)
 
-            treshold = find_threshold(
+            treshold = classif.find_threshold(
                 model=model,
                 X=datasets[id].classification_valid["X"],
                 y=datasets[id].classification_valid["y"],
@@ -259,7 +258,7 @@ class ScoresToCsv:
                 device=self.device,
             )
 
-            accuracy_valid = accuracy(
+            accuracy_valid = classif.accuracy(
                 model=model,
                 X=datasets[id].classification_valid["X"],
                 y=datasets[id].classification_valid["y"],
@@ -268,7 +267,7 @@ class ScoresToCsv:
                 device=self.device,
             )
 
-            accuracy_test = accuracy(
+            accuracy_test = classif.accuracy(
                 model=model,
                 X=datasets[id].classification_test["X"],
                 y=datasets[id].classification_test["y"],
