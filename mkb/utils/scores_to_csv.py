@@ -5,7 +5,7 @@ import os
 import pickle
 
 from pandas.core.algorithms import mode
-from ..evaluation import Evaluation
+from ..evaluation import evaluation
 from ..evaluation import find_threshold
 from ..evaluation import accuracy
 
@@ -102,7 +102,7 @@ class ScoresToCsv:
         self.scores = []
 
         for id in models.keys():
-            self.evaluation[id] = Evaluation(
+            self.evaluation[id] = evaluation.Evaluation(
                 entities=datasets[id].entities,
                 relations=datasets[id].relations,
                 batch_size=8,
