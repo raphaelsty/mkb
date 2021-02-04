@@ -14,25 +14,27 @@ from .umls import Umls
 from .wn11 import Wn11
 from .wn18 import Wn18
 from .wn18rr import Wn18rr
+from .wn18rr_text import Wn18rrText
 from .yago310 import Yago310
 
 
 __all__ = [
-    'CountriesS1',
-    'CountriesS2',
-    'CountriesS3',
-    'Fb13',
-    'Fb15k',
-    'Fb15k237',
-    'Dataset',
-    'Kinship',
-    'Nations',
-    'Nell995',
-    'MultiKb',
-    'Semanlink',
-    'Umls',
-    'Wn11',
-    'Wn18',
-    'Wn18rr',
-    'Yago310',
+    "CountriesS1",
+    "CountriesS2",
+    "CountriesS3",
+    "Fb13",
+    "Fb15k",
+    "Fb15k237",
+    "Dataset",
+    "Kinship",
+    "Nations",
+    "Nell995",
+    "MultiKb",
+    "Semanlink",
+    "Umls",
+    "Wn11",
+    "Wn18",
+    "Wn18rr",
+    "Wn18rrText",
+    "Yago310",
 ]
