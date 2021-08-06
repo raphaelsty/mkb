@@ -276,6 +276,8 @@ plt.show()
 - `datasets.Fb13`
 - `datasets.Fb15k`
 - `datasets.Fb15k237`
+- `datasets.InferWiki16k`
+- `datasets.InferWiki64k`
 - `datasets.Kinship`
 - `datasets.Nations`
 - `datasets.Nell995`
