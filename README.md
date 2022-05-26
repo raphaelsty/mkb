@@ -13,26 +13,6 @@
 </p>
 </br>
 
-## 💬 Citations
-[Knowledge Base Embedding By Cooperative Knowledge Distillation](https://www.aclweb.org/anthology/2020.coling-main.489.pdf)
-
-```
-@inproceedings{sourty-etal-2020-knowledge,
-    title = "Knowledge Base Embedding By Cooperative Knowledge Distillation",
-    author = {Sourty, Rapha{\"e}l  and
-      Moreno, Jose G.  and
-      Servant, Fran{\c{c}}ois-Paul  and
-      Tamine-Lechani, Lynda},
-    booktitle = "Proceedings of the 28th International Conference on Computational Linguistics",
-    month = dec,
-    year = "2020",
-    address = "Barcelona, Spain (Online)",
-    publisher = "International Committee on Computational Linguistics",
-    url = "https://www.aclweb.org/anthology/2020.coling-main.489",
-    pages = "5579--5590",
-}
-```
-
 
 ## Table of contents
 
@@ -654,6 +634,26 @@ $ python setup.py install
 
 # Run tests
 $ python -m pytest
+```
+
+## 💬 Citations
+[Knowledge Base Embedding By Cooperative Knowledge Distillation](https://www.aclweb.org/anthology/2020.coling-main.489.pdf)
+
+```
+@inproceedings{sourty-etal-2020-knowledge,
+    title = "Knowledge Base Embedding By Cooperative Knowledge Distillation",
+    author = {Sourty, Rapha{\"e}l  and
+      Moreno, Jose G.  and
+      Servant, Fran{\c{c}}ois-Paul  and
+      Tamine-Lechani, Lynda},
+    booktitle = "Proceedings of the 28th International Conference on Computational Linguistics",
+    month = dec,
+    year = "2020",
+    address = "Barcelona, Spain (Online)",
+    publisher = "International Committee on Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2020.coling-main.489",
+    pages = "5579--5590",
+}
 ```
 
 ## 👍 See also
