@@ -9,10 +9,9 @@
 </br>
 
 <p align="center">
-  <code>mkb</code> is a library dedicated to <b>knowledge graph embeddings.</b> The purpose of this library is to provide modular tools using PyTorch. 
+  <code>mkb</code> is a library dedicated to <b>knowledge graph embeddings.</b> The purpose of this library is to provide modular tools using PyTorch.
 </p>
 </br>
-
 
 ## Table of contents
 
@@ -25,7 +24,7 @@
 - [🤖 Train your model](#-train-you-model)
 - [📊 Evaluation](#-evaluation)
 - [🤩 Get embeddings](#-get-embeddings)
-- [🎁 Distillation](#-distillation)
+- [🔍 Transformers](#-transformers)
 - [🧰 Development](#-development)
 - [👍 See also](#-see-also)
 - [🗒 License](#-license)
@@ -35,10 +34,8 @@
 You should be able to install and use this library with any Python version above 3.6.
 
 ```sh
-$ pip install git+https://github.com/raphaelsty/mkb@0.0.1
+pip install git+https://github.com/raphaelsty/mkb
 ```
-
-
 
 ## ⚡️ Quickstart:
 
@@ -341,7 +338,6 @@ Knowledge graph models build latent representations of nodes (entities) and rela
 - `models.RotatE`
 - `models.pRotatE`
 - `models.ComplEx`
-- `models.ConvE` # A notebook will come soon to train ConvE.
 
 **Initialize a model:**
 
@@ -538,7 +534,6 @@ relation
 1_M       1.0  1.0    1.0    1.0     1.0  0.5000  2.0    0.0    1.0     1.0
 M_1       0.0  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0
 M_M       0.0  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0
-
 ```
 
 #### ➡️ Relation prediction:
@@ -567,7 +562,6 @@ evaluation.find_threshold(
     y = dataset.classification_valid['y'],
     batch_size = 10,
 )
-
 ```
 
 Best threshold found from triplet classification valid set and associated accuracy:
@@ -614,9 +608,121 @@ model.embeddings['relations']
 
 ```
 
-## 🎁 Distillation
+## 🔍 Transformers
 
-The module `mkb.distillation` provides tools for distilling knowledge of knowledge graph embeddings models. Dedicated notebook will soon be available.
+MKB provides an implementation of the paper [Inductive Entity Representations from Text via Link Prediction](https://arxiv.org/abs/2010.03496). It allows to train transformers to build embeddings of the entities of a knowledge graph under the link prediction objective. After fine-tuning the transformer on the link prediction task, we can use it to build an entity search engine. It can also perform tasks related to the completion of knowledge graphs. Finally, we can use it for any downstream task such as classification.
+
+Using a transformer instead of embeddings has many advantages, such as constructing contextualized latent representations of entities. In addition, this model can encode entities that it has never seen with the textual description of the entity. The learning time is much longer than a classical TransE model, but the model converges with fewer epochs.
+
+MKB provides two classes dedicated to fine-tune both Sentence Transformers and vanilla Transformers.
+
+- models.SentenceTransformer: Dedicated to Sentence Transformer models.
+- models.Transformer: Dedicated to traditional Transformer models.
+
+Here is how to fine-tune a sentence transformer under the link prediction objective:
+
+```python
+from mkb import losses, evaluation, datasets, text, models
+from transformers import AutoTokenizer, AutoModel
+import torch
+
+_ = torch.manual_seed(42)
+
+train = [
+    ("jaguar", "cousin", "cat"),
+    ("tiger", "cousin", "cat"),
+    ("dog", "cousin", "wolf"),
+    ("dog", "angry_against", "cat"),
+    ("wolf", "angry_against", "jaguar"),
+]
+
+valid = [
+    ("cat", "cousin", "jaguar"),
+    ("cat", "cousin", "tiger"),
+    ("dog", "angry_against", "tiger"),
+]
+
+test = [
+    ("wolf", "angry_against", "tiger"),
+    ("wolf", "angry_against", "cat"),
+]
+
+dataset = datasets.Dataset(
+    batch_size = 5,
+    train = train,
+    valid = valid,
+    test = test,
+    seed = 42,
+    shuffle=True,
+)
+
+device = "cpu"
+
+model = models.SentenceTransformer(
+    model = AutoModel.from_pretrained("sentence-transformers/all-mpnet-base-v2"),
+    tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-mpnet-base-v2"),
+    entities = dataset.entities,
+    relations = dataset.relations,
+    gamma = 9,
+    device = device,
+)
+
+model = model.to(device)
+
+optimizer = torch.optim.Adam(
+    filter(lambda p: p.requires_grad, model.parameters()),
+    lr = 0.000005,
+)
+
+# Link prediction evaluation for Transformers
+evaluation = evaluation.TransformerEvaluation(
+    entities = dataset.entities,
+    relations = dataset.relations,
+    true_triples = dataset.train + dataset.valid + dataset.test,
+    batch_size = 2,
+    device = device,
+)
+
+model = text.learn(
+    model = model,
+    dataset = dataset,
+    evaluation = evaluation,
+    optimizer = optimizer,
+    loss = losses.Adversarial(alpha=0.5),
+    negative_sampling_size = 5,
+    epochs = 1,
+    eval_every = 5,
+    early_stopping_rounds = 3,
+    device = device,
+)
+
+# Saving the Sentence Transformer model:
+model.model.save_pretrained("model")
+model.tokenizer.save_pretrained("model")
+```
+
+After training a Sentence Transformer on the link prediction task using MKB and saving the model, we can load the trained model using the `sentence_transformers` library.
+
+```python
+from sentence_transformers import SentenceTransformer
+model = SentenceTransformer("model", device="cpu")
+```
+
+Here is how to fine-tune a Transformer under the link prediction objective:
+
+```python
+    from mkb import losses, evaluation, datasets, text, models
+    from transformers import AutoTokenizer, AutoModel
+
+model = models.Transformer(
+    model = AutoModel.from_pretrained("bert-base-uncased"),
+    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased"),
+    entities = dataset.entities,
+    relations = dataset.relations,
+    gamma = 9,
+    device = device,
+)
+```
 
 ## 🧰 Development
 

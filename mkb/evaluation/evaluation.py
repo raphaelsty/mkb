@@ -1,16 +1,14 @@
-from creme import stats
+import collections
 
 import pandas as pd
-
-from torch.utils import data
 import torch
-
-import collections
+from river import stats
+from torch.utils import data
 
 from ..datasets import base
 from ..utils import Bar
 
-__all__ = ['Evaluation']
+__all__ = ["Evaluation"]
 
 
 class Evaluation:
@@ -123,11 +121,10 @@ class Evaluation:
         >>> validation.detail_eval(model=model, dataset=test, threshold=1.5)
                 head                               tail                             metadata
                 MRR   MR HITS@1 HITS@3 HITS@10     MRR   MR HITS@1 HITS@3 HITS@10 frequency
-        relation
-        1_1       0.0000  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0       0.0
-        1_M       0.0000  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0       0.0
-        M_1       0.0000  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0       0.0
-        M_M       0.6667  2.0    0.5    1.0     1.0  0.4167  2.5    0.0    1.0     1.0       1.0
+        1_1  0.0000  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0       0.0
+        1_M  0.0000  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0       0.0
+        M_1  0.0000  0.0    0.0    0.0     0.0  0.0000  0.0    0.0    0.0     0.0       0.0
+        M_M  0.6667  2.0    0.5    1.0     1.0  0.4167  2.5    0.0    1.0     1.0       1.0
 
         >>> validation.types_relations(model = model, dataset=test, threshold=1.5)
         {'r0': 'M_M', 'r1': 'M_M'}
@@ -137,7 +134,9 @@ class Evaluation:
 
     """
 
-    def __init__(self, entities, relations, batch_size, true_triples=[], device='cpu', num_workers=1):
+    def __init__(
+        self, entities, relations, batch_size, true_triples=[], device="cpu", num_workers=1
+    ):
         self.entities = entities
         self.relations = relations
         self.true_triples = true_triples
@@ -147,54 +146,62 @@ class Evaluation:
 
     def _get_test_loader(self, triples, mode):
         test_dataset = base.TestDataset(
-            triples=triples, true_triples=self.true_triples, entities=self.entities,
-            relations=self.relations, mode=mode)
+            triples=triples,
+            true_triples=self.true_triples,
+            entities=self.entities,
+            relations=self.relations,
+            mode=mode,
+        )
 
         return data.DataLoader(
-            dataset=test_dataset, batch_size=self.batch_size, num_workers=self.num_workers,
-            collate_fn=base.TestDataset.collate_fn)
+            dataset=test_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            collate_fn=base.TestDataset.collate_fn,
+        )
 
     def get_entity_stream(self, dataset):
         """Get stream dedicated to link prediction."""
-        head_loader = self._get_test_loader(triples=dataset, mode='head-batch')
-        tail_loader = self._get_test_loader(triples=dataset, mode='tail-batch')
+        head_loader = self._get_test_loader(triples=dataset, mode="head-batch")
+        tail_loader = self._get_test_loader(triples=dataset, mode="tail-batch")
         return [head_loader, tail_loader]
 
     def get_relation_stream(self, dataset):
         """Get stream dedicated to relation prediction."""
         test_dataset = base.TestDatasetRelation(
-            triples=dataset, true_triples=self.true_triples, entities=self.entities,
-            relations=self.relations)
+            triples=dataset,
+            true_triples=self.true_triples,
+            entities=self.entities,
+            relations=self.relations,
+        )
 
         return data.DataLoader(
-            dataset=test_dataset, batch_size=self.batch_size, num_workers=self.num_workers,
-            collate_fn=base.TestDatasetRelation.collate_fn)
+            dataset=test_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            collate_fn=base.TestDatasetRelation.collate_fn,
+        )
 
     def eval(self, model, dataset):
         """Evaluate selected model with the metrics: MRR, MR, HITS@1, HITS@3, HITS@10"""
-        metrics = collections.OrderedDict({
-            metric: stats.Mean()
-            for metric in ['MRR', 'MR', 'HITS@1', 'HITS@3', 'HITS@10']
-        })
+        metrics = collections.OrderedDict(
+            {metric: stats.Mean() for metric in ["MRR", "MR", "HITS@1", "HITS@3", "HITS@10"]}
+        )
 
         with torch.no_grad():
 
             for test_set in self.get_entity_stream(dataset):
 
                 metrics = self.compute_score(
-                    model=model,
-                    test_set=test_set,
-                    metrics=metrics,
-                    device=self.device
+                    model=model, test_set=test_set, metrics=metrics, device=self.device
                 )
 
         return {name: round(metric.get(), 4) for name, metric in metrics.items()}
 
     def eval_relations(self, model, dataset):
-        metrics = collections.OrderedDict({
-            f'{metric}': stats.Mean()
-            for metric in ['MRR', 'MR', 'HITS@1', 'HITS@3', 'HITS@10']
-        })
+        metrics = collections.OrderedDict(
+            {f"{metric}": stats.Mean() for metric in ["MRR", "MR", "HITS@1", "HITS@3", "HITS@10"]}
+        )
 
         with torch.no_grad():
 
@@ -202,10 +209,10 @@ class Evaluation:
                 model=model,
                 test_set=self.get_relation_stream(dataset),
                 metrics=metrics,
-                device=self.device
+                device=self.device,
             )
 
-        return {f'{name}_relations': round(metric.get(), 4) for name, metric in metrics.items()}
+        return {f"{name}_relations": round(metric.get(), 4) for name, metric in metrics.items()}
 
     @classmethod
     def compute_score(cls, model, test_set, metrics, device):
@@ -216,24 +223,20 @@ class Evaluation:
             training = True
 
         bar = Bar(dataset=test_set, update_every=1)
-        bar.set_description('Evaluation')
+        bar.set_description("Evaluation")
 
         for data in bar:
 
-            sample = data['sample'].to(device)
-            negative_sample = data['negative_sample'].to(device)
-            filter_bias = data['filter_bias'].to(device)
-            mode = data['mode']
+            sample = data["sample"].to(device)
+            negative_sample = data["negative_sample"].to(device)
+            filter_bias = data["filter_bias"].to(device)
+            mode = data["mode"]
 
-            if mode == 'head-batch' or mode == 'tail-batch':
+            if mode == "head-batch" or mode == "tail-batch":
 
-                score = model(
-                    sample=sample,
-                    negative_sample=negative_sample,
-                    mode=mode
-                )
+                score = model(sample=sample, negative_sample=negative_sample, mode=mode)
 
-            elif mode == 'relation-batch':
+            elif mode == "relation-batch":
 
                 score = model(negative_sample)
 
@@ -241,13 +244,13 @@ class Evaluation:
 
             argsort = torch.argsort(score, dim=1, descending=True)
 
-            if mode == 'head-batch':
+            if mode == "head-batch":
                 positive_arg = sample[:, 0]
 
-            if mode == 'relation-batch':
+            if mode == "relation-batch":
                 positive_arg = sample[:, 1]
 
-            elif mode == 'tail-batch':
+            elif mode == "tail-batch":
                 positive_arg = sample[:, 2]
 
             batch_size = sample.size(0)
@@ -260,18 +263,15 @@ class Evaluation:
                 ranking = 1 + ranking.item()
 
                 # ranking + 1 is the true ranking used in evaluation metrics
-                metrics['MRR'].update(1.0/ranking)
+                metrics["MRR"].update(1.0 / ranking)
 
-                metrics['MR'].update(ranking)
+                metrics["MR"].update(ranking)
 
-                metrics['HITS@1'].update(
-                    1.0 if ranking <= 1 else 0.0)
+                metrics["HITS@1"].update(1.0 if ranking <= 1 else 0.0)
 
-                metrics['HITS@3'].update(
-                    1.0 if ranking <= 3 else 0.0)
+                metrics["HITS@3"].update(1.0 if ranking <= 3 else 0.0)
 
-                metrics['HITS@10'].update(
-                    1.0 if ranking <= 10 else 0.0)
+                metrics["HITS@10"].update(1.0 if ranking <= 10 else 0.0)
 
         if training:
             model = model.train()
@@ -287,14 +287,14 @@ class Evaluation:
             training = True
 
         bar = Bar(dataset=test_set, update_every=1)
-        bar.set_description('Evaluation')
+        bar.set_description("Evaluation")
 
         for data in bar:
 
-            sample = data['sample'].to(device)
-            negative_sample = data['negative_sample'].to(device)
-            filter_bias = data['filter_bias'].to(device)
-            mode = data['mode']
+            sample = data["sample"].to(device)
+            negative_sample = data["negative_sample"].to(device)
+            filter_bias = data["filter_bias"].to(device)
+            mode = data["mode"]
 
             score = model(
                 sample=sample,
@@ -306,10 +306,10 @@ class Evaluation:
 
             argsort = torch.argsort(score, dim=1, descending=True)
 
-            if mode == 'head-batch':
+            if mode == "head-batch":
                 positive_arg = sample[:, 0]
 
-            elif mode == 'tail-batch':
+            elif mode == "tail-batch":
                 positive_arg = sample[:, 2]
 
             batch_size = sample.size(0)
@@ -321,23 +321,18 @@ class Evaluation:
 
                 ranking = 1 + ranking.item()
 
-                type_relation = types_relations[
-                    sample[:, 1][i].item()
-                ]
+                type_relation = types_relations[sample[:, 1][i].item()]
 
                 # ranking + 1 is the true ranking used in evaluation metrics
-                metrics[mode][type_relation]['MRR'].update(1.0/ranking)
+                metrics[mode][type_relation]["MRR"].update(1.0 / ranking)
 
-                metrics[mode][type_relation]['MR'].update(ranking)
+                metrics[mode][type_relation]["MR"].update(ranking)
 
-                metrics[mode][type_relation]['HITS@1'].update(
-                    1.0 if ranking <= 1 else 0.0)
+                metrics[mode][type_relation]["HITS@1"].update(1.0 if ranking <= 1 else 0.0)
 
-                metrics[mode][type_relation]['HITS@3'].update(
-                    1.0 if ranking <= 3 else 0.0)
+                metrics[mode][type_relation]["HITS@3"].update(1.0 if ranking <= 3 else 0.0)
 
-                metrics[mode][type_relation]['HITS@10'].update(
-                    1.0 if ranking <= 10 else 0.0)
+                metrics[mode][type_relation]["HITS@10"].update(1.0 if ranking <= 10 else 0.0)
 
         if training:
             model = model.train()
@@ -351,33 +346,41 @@ class Evaluation:
         """
         stat_df = pd.DataFrame(self.true_triples)
 
-        stat_df.columns = ['head', 'relation', 'tail']
+        stat_df.columns = ["head", "relation", "tail"]
 
-        mean_head = stat_df[['head', 'relation', 'tail']].groupby(
-            ['tail', 'relation']).count().groupby('relation').mean()
+        mean_head = (
+            stat_df[["head", "relation", "tail"]]
+            .groupby(["tail", "relation"])
+            .count()
+            .groupby("relation")
+            .mean()
+        )
 
-        mean_tail = stat_df[['head', 'relation', 'tail']].groupby(
-            ['head', 'relation']).count().groupby('relation').mean()
+        mean_tail = (
+            stat_df[["head", "relation", "tail"]]
+            .groupby(["head", "relation"])
+            .count()
+            .groupby("relation")
+            .mean()
+        )
 
-        mean_relations = pd.concat(
-            [mean_head, mean_tail], axis='columns').reset_index()
+        mean_relations = pd.concat([mean_head, mean_tail], axis="columns").reset_index()
 
-        mean_relations['head'] = mean_relations['head'].apply(
-            lambda x: '1' if x <= threshold else 'M')
+        mean_relations["head"] = mean_relations["head"].apply(
+            lambda x: "1" if x <= threshold else "M"
+        )
 
-        mean_relations['tail'] = mean_relations['tail'].apply(
-            lambda x: '1' if x <= threshold else 'M')
+        mean_relations["tail"] = mean_relations["tail"].apply(
+            lambda x: "1" if x <= threshold else "M"
+        )
 
-        mean_relations['type'] = mean_relations['head'] + \
-            '_' + mean_relations['tail']
+        mean_relations["type"] = mean_relations["head"] + "_" + mean_relations["tail"]
 
-        mapping_type_relations = mean_relations.to_dict()['type']
+        mapping_type_relations = mean_relations.to_dict()["type"]
 
         relations_id = {value: key for key, value in self.relations.items()}
 
-        return {
-            relations_id[key]: value for key, value in mapping_type_relations.items()
-        }
+        return {relations_id[key]: value for key, value in mapping_type_relations.items()}
 
     def detail_eval(self, model, dataset, threshold=1.5):
         """
@@ -389,30 +392,29 @@ class Evaluation:
 
         """
         mapping_type_relations = self.types_relations(
-            model=model,
-            dataset=dataset,
-            threshold=threshold
+            model=model, dataset=dataset, threshold=threshold
         )
 
         mapping_type_relations = {
             self.relations[key]: value for key, value in mapping_type_relations.items()
         }
 
-        types_relations = ['1_1', '1_M', 'M_1', 'M_M']
+        types_relations = ["1_1", "1_M", "M_1", "M_M"]
 
-        metrics = collections.OrderedDict({
-            'head-batch': collections.OrderedDict({}),
-            'tail-batch': collections.OrderedDict({})
-        })
+        metrics = collections.OrderedDict(
+            {"head-batch": collections.OrderedDict({}), "tail-batch": collections.OrderedDict({})}
+        )
 
-        for mode in ['head-batch', 'tail-batch']:
+        for mode in ["head-batch", "tail-batch"]:
 
             for type_relation in types_relations:
 
-                metrics[mode][type_relation] = collections.OrderedDict({
-                    f'{metric}': stats.Mean()
-                    for metric in ['MRR', 'MR', 'HITS@1', 'HITS@3', 'HITS@10']
-                })
+                metrics[mode][type_relation] = collections.OrderedDict(
+                    {
+                        f"{metric}": stats.Mean()
+                        for metric in ["MRR", "MR", "HITS@1", "HITS@3", "HITS@10"]
+                    }
+                )
 
         with torch.no_grad():
 
@@ -423,25 +425,26 @@ class Evaluation:
                     test_set=test_set,
                     metrics=metrics,
                     types_relations=mapping_type_relations,
-                    device=self.device
+                    device=self.device,
                 )
 
-        for mode in ['head-batch', 'tail-batch']:
+        for mode in ["head-batch", "tail-batch"]:
             for type_relation in types_relations:
-                for metric in ['MRR', 'MR', 'HITS@1', 'HITS@3', 'HITS@10']:
+                for metric in ["MRR", "MR", "HITS@1", "HITS@3", "HITS@10"]:
                     metrics[mode][type_relation][metric] = round(
-                        metrics[mode][type_relation][metric].get(), 4)
+                        metrics[mode][type_relation][metric].get(), 4
+                    )
 
         results = pd.DataFrame(metrics)
 
-        head = pd.DataFrame(results['head-batch'].values.tolist())
-        tail = pd.DataFrame(results['tail-batch'].values.tolist())
+        head = pd.DataFrame(results["head-batch"].values.tolist())
+        tail = pd.DataFrame(results["tail-batch"].values.tolist())
 
         head.columns = pd.MultiIndex.from_product([["head"], head.columns])
         tail.columns = pd.MultiIndex.from_product([["tail"], tail.columns])
-        results = pd.concat([head, tail], axis='columns')
-        results = results.set_index(pd.Series(['1_1', '1_M', 'M_1', 'M_M']))
-        results.index.name = 'relation'
+        results = pd.concat([head, tail], axis="columns")
+        results = results.set_index(pd.Series(["1_1", "1_M", "M_1", "M_M"]))
+        results.index.name = "relation"
 
         # Add frequency of each type of relation:
         frequency = collections.OrderedDict()
@@ -452,16 +455,10 @@ class Evaluation:
         for type_relation in types_relations:
             frequency[type_relation] /= len(mapping_type_relations)
 
-        frequency = pd.DataFrame.from_dict(
-            frequency,
-            orient='index',
-            columns=['frequency']
-        )
+        frequency = pd.DataFrame.from_dict(frequency, orient="index", columns=["frequency"])
 
-        frequency.columns = pd.MultiIndex.from_product(
-            [["metadata"], frequency.columns]
-        )
+        frequency.columns = pd.MultiIndex.from_product([["metadata"], frequency.columns])
 
-        results = pd.concat([results, frequency], axis='columns')
+        results = pd.concat([results, frequency], axis="columns")
 
         return results

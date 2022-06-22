@@ -1,9 +1,31 @@
 import numpy as np
-
 import torch
 
+__all__ = ["NegativeSampling"]
 
-__all__ = ['NegativeSampling']
+
+def positive_triples(triples):
+    """Build a dictionary to filter out existing triples from fakes ones."""
+    true_head = {}
+    true_tail = {}
+
+    for head, relation, tail in triples:
+
+        if (head, relation) not in true_tail:
+            true_tail[(head, relation)] = []
+        true_tail[(head, relation)].append(tail)
+
+        if (relation, tail) not in true_head:
+            true_head[(relation, tail)] = []
+        true_head[(relation, tail)].append(head)
+
+    for relation, tail in true_head:  # pylint: disable=E1141
+        true_head[(relation, tail)] = np.array(list(set(true_head[(relation, tail)])))
+
+    for head, relation in true_tail:  # pylint: disable=E1141
+        true_tail[(head, relation)] = np.array(list(set(true_tail[(head, relation)])))
+
+    return true_head, true_tail
 
 
 class NegativeSampling:
@@ -109,13 +131,13 @@ class NegativeSampling:
     """
 
     def __init__(self, size, train_triples, entities, relations, seed=42):
-        """ Generate negative samples.
+        """Generate negative samples.
 
-            size (int): Batch size of the negative samples generated.
-            train_triples (list[(int, int, int)]): Set of positive triples.
-            entities (dict | list): Set of entities.
-            relations (dict | list): Set of relations.
-            seed (int): Random state.
+        size (int): Batch size of the negative samples generated.
+        train_triples (list[(int, int, int)]): Set of positive triples.
+        entities (dict | list): Set of entities.
+        relations (dict | list): Set of relations.
+        seed (int): Random state.
 
         """
         self.size = size
@@ -124,19 +146,13 @@ class NegativeSampling:
 
         self.n_relation = len(relations)
 
-        self.true_head, self.true_tail = self.get_true_head_and_tail(
-            train_triples)
+        self.true_head, self.true_tail = positive_triples(train_triples)
 
         self._rng = np.random.RandomState(seed)  # pylint: disable=no-member
 
     @classmethod
     def _filter_negative_sample(cls, negative_sample, record):
-        mask = np.in1d(
-            negative_sample,
-            record,
-            assume_unique=True,
-            invert=True
-        )
+        mask = np.in1d(negative_sample, record, assume_unique=True, invert=True)
         return negative_sample[mask]
 
     def generate(self, sample, mode):
@@ -147,10 +163,7 @@ class NegativeSampling:
         """
         samples = []
 
-        negative_entities = self._rng.randint(
-            self.n_entity,
-            size=self.size * 2
-        )
+        negative_entities = self._rng.randint(self.n_entity, size=self.size * 2)
 
         for head, relation, tail in sample:
 
@@ -162,14 +175,14 @@ class NegativeSampling:
 
             while size < self.size:
 
-                if mode == 'head-batch':
+                if mode == "head-batch":
 
                     negative_entities_filtered = self._filter_negative_sample(
                         negative_sample=negative_entities,
                         record=self.true_head[(relation, tail)],
                     )
 
-                elif mode == 'tail-batch':
+                elif mode == "tail-batch":
 
                     negative_entities_filtered = self._filter_negative_sample(
                         negative_sample=negative_entities,
@@ -179,40 +192,10 @@ class NegativeSampling:
                 size += negative_entities_filtered.size
                 negative_entities_sample.append(negative_entities_filtered)
 
-            negative_entities_sample = np.concatenate(
-                negative_entities_sample
-            )[:self.size]
+            negative_entities_sample = np.concatenate(negative_entities_sample)[: self.size]
 
-            negative_entities_sample = torch.LongTensor(
-                negative_entities_sample
-            )
+            negative_entities_sample = torch.LongTensor(negative_entities_sample)
 
             samples.append(negative_entities_sample)
 
         return torch.stack(samples, dim=0).long()
-
-    @ staticmethod
-    def get_true_head_and_tail(triples):
-        """Build a dictionary to filter out existing triples from fakes ones."""
-        true_head = {}
-        true_tail = {}
-
-        for head, relation, tail in triples:
-
-            if (head, relation) not in true_tail:
-                true_tail[(head, relation)] = []
-            true_tail[(head, relation)].append(tail)
-
-            if (relation, tail) not in true_head:
-                true_head[(relation, tail)] = []
-            true_head[(relation, tail)].append(head)
-
-        for relation, tail in true_head:  # pylint: disable=E1141
-            true_head[(relation, tail)] = np.array(
-                list(set(true_head[(relation, tail)])))
-
-        for head, relation in true_tail:  # pylint: disable=E1141
-            true_tail[(head, relation)] = np.array(
-                list(set(true_tail[(head, relation)])))
-
-        return true_head, true_tail

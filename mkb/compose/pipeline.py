@@ -1,16 +1,10 @@
-
-import torch
-
-from creme import stats
-
 import collections
 
-from ..losses import Adversarial
-from ..losses import BCEWithLogitsLoss
+from river import stats
+
 from ..utils import Bar
 
-
-___all___ = ['Pipeline']
+___all___ = ["Pipeline"]
 
 
 class Pipeline:
@@ -186,7 +180,7 @@ class Pipeline:
 
     """
 
-    def __init__(self, epochs, eval_every=2000, early_stopping_rounds=3, device='cpu'):
+    def __init__(self, epochs, eval_every=2000, early_stopping_rounds=3, device="cpu"):
         self.epochs = epochs
         self.eval_every = eval_every
         self.early_stopping_rounds = early_stopping_rounds
@@ -211,20 +205,20 @@ class Pipeline:
 
             for data in bar:
 
-                sample = data['sample'].to(self.device)
-                mode = data['mode']
+                sample = data["sample"].to(self.device)
+                mode = data["mode"]
 
                 score = model(sample)
 
-                if mode == 'classification':
+                if mode == "classification":
 
-                    y = data['y'].to(self.device)
+                    y = data["y"].to(self.device)
 
                     error = loss(score, y)
 
                 else:
 
-                    weight = data['weight'].to(self.device)
+                    weight = data["weight"].to(self.device)
 
                     negative_sample = sampling.generate(
                         sample=sample,
@@ -234,9 +228,7 @@ class Pipeline:
                     negative_sample = negative_sample.to(self.device)
 
                     negative_score = model(
-                        sample=sample,
-                        negative_sample=negative_sample,
-                        mode=mode
+                        sample=sample, negative_sample=negative_sample, mode=mode
                     )
 
                     error = loss(score, negative_score, weight)
@@ -249,107 +241,87 @@ class Pipeline:
 
                 self.metric_loss.update(error.item())
 
-                bar.set_description(
-                    f'Epoch: {epoch}, loss: {self.metric_loss.get():4f}')
+                bar.set_description(f"Epoch: {epoch}, loss: {self.metric_loss.get():4f}")
 
             if evaluation is not None:
 
                 if (epoch + 1) % self.eval_every == 0:
 
-                    print(f'\n Epoch: {epoch}.')
+                    print(f"\n Epoch: {epoch}.")
 
                     if dataset.valid:
 
-                        self.valid_scores = evaluation.eval(
-                            model=model, dataset=dataset.valid)
+                        self.valid_scores = evaluation.eval(model=model, dataset=dataset.valid)
 
-                        self.valid_scores.update(evaluation.eval_relations(
-                            model=model, dataset=dataset.valid))
-
-                        self.print_metrics(
-                            description='Validation:',
-                            metrics=self.valid_scores
+                        self.valid_scores.update(
+                            evaluation.eval_relations(model=model, dataset=dataset.valid)
                         )
+
+                        self.print_metrics(description="Validation:", metrics=self.valid_scores)
 
                     if dataset.test:
 
-                        self.test_scores = evaluation.eval(
-                            model=model, dataset=dataset.test)
+                        self.test_scores = evaluation.eval(model=model, dataset=dataset.test)
 
-                        self.test_scores.update(evaluation.eval_relations(
-                            model=model, dataset=dataset.test))
-
-                        self.print_metrics(
-                            description='Test:',
-                            metrics=self.test_scores
+                        self.test_scores.update(
+                            evaluation.eval_relations(model=model, dataset=dataset.test)
                         )
 
-                        if (self.history_test['HITS@3'] > self.test_scores['HITS@3'] and
-                                self.history_test['HITS@1'] > self.test_scores['HITS@1']):
+                        self.print_metrics(description="Test:", metrics=self.test_scores)
+
+                        if (
+                            self.history_test["HITS@3"] > self.test_scores["HITS@3"]
+                            and self.history_test["HITS@1"] > self.test_scores["HITS@1"]
+                        ):
                             self.round_without_improvement_test += 1
                         else:
                             self.round_without_improvement_test = 0
                             self.history_test = self.test_scores
                     else:
-                        if (self.history_valid['HITS@3'] > self.valid_scores['HITS@3'] and
-                                self.history_valid['HITS@1'] > self.valid_scores['HITS@1']):
+                        if (
+                            self.history_valid["HITS@3"] > self.valid_scores["HITS@3"]
+                            and self.history_valid["HITS@1"] > self.valid_scores["HITS@1"]
+                        ):
                             self.round_without_improvement_valid += 1
                         else:
                             self.round_without_improvement_valid = 0
                             self.history_valid = self.valid_scores
 
-                    if (self.round_without_improvement_valid == self.early_stopping_rounds or
-                            self.round_without_improvement_test == self.early_stopping_rounds):
+                    if (
+                        self.round_without_improvement_valid == self.early_stopping_rounds
+                        or self.round_without_improvement_test == self.early_stopping_rounds
+                    ):
 
-                        print(
-                            f'\n Early stopping at epoch {epoch}.')
+                        print(f"\n Early stopping at epoch {epoch}.")
 
-                        self.print_metrics(
-                            description='Validation:',
-                            metrics=self.valid_scores
-                        )
+                        self.print_metrics(description="Validation:", metrics=self.valid_scores)
 
-                        self.print_metrics(
-                            description='Test:',
-                            metrics=self.test_scores
-                        )
+                        self.print_metrics(description="Test:", metrics=self.test_scores)
 
                         return self
 
-        print(f'\n Epoch: {epoch}. \n')
+        print(f"\n Epoch: {epoch}. \n")
 
         if dataset.valid:
 
-            self.valid_scores = evaluation.eval(
-                model=model, dataset=dataset.valid)
+            self.valid_scores = evaluation.eval(model=model, dataset=dataset.valid)
 
-            self.valid_scores.update(
-                evaluation.eval_relations(model=model, dataset=dataset.valid)
-            )
+            self.valid_scores.update(evaluation.eval_relations(model=model, dataset=dataset.valid))
 
-            self.print_metrics(
-                description='Validation:',
-                metrics=self.valid_scores
-            )
+            self.print_metrics(description="Validation:", metrics=self.valid_scores)
 
         if dataset.test:
 
-            self.test_scores = evaluation.eval(
-                model=model, dataset=dataset.test)
+            self.test_scores = evaluation.eval(model=model, dataset=dataset.test)
 
-            self.test_scores.update(
-                evaluation.eval_relations(model=model, dataset=dataset.test)
-            )
+            self.test_scores.update(evaluation.eval_relations(model=model, dataset=dataset.test))
 
-            self.print_metrics(
-                description='Test:',
-                metrics=self.test_scores
-            )
+            self.print_metrics(description="Test:", metrics=self.test_scores)
 
         return self
 
     @classmethod
     def print_metrics(cls, description, metrics):
-        print(f'\t {description}')
+        print(f"\t {description}")
         for metric, value in metrics.items():
-            print(f'\t\t {metric}: {value}')
+            print(f"\t\t {metric}: {value}")

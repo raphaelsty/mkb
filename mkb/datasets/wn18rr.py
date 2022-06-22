@@ -1,11 +1,7 @@
-import os
 import pathlib
 
+from ..utils import read_csv, read_csv_classification, read_json
 from .dataset import Dataset
-
-from ..utils import read_csv
-from ..utils import read_csv_classification
-from ..utils import read_json
 
 __all__ = ['Wn18rr']
 

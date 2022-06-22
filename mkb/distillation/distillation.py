@@ -1,14 +1,11 @@
-import torch
-
 import collections
 import copy
 
+import torch
+
 from .. import losses
 
-
-__all__ = [
-    'Distillation'
-]
+__all__ = ["Distillation"]
 
 
 class Distillation:
@@ -217,8 +214,15 @@ class Distillation:
 
     """
 
-    def __init__(self, teacher_entities, student_entities, teacher_relations, student_relations,
-                 sampling, device='cpu'):
+    def __init__(
+        self,
+        teacher_entities,
+        student_entities,
+        teacher_relations,
+        student_relations,
+        sampling,
+        device="cpu",
+    ):
         self.teacher_entities = teacher_entities
         self.student_entities = student_entities
         self.teacher_relations = teacher_relations
@@ -227,23 +231,28 @@ class Distillation:
         self.device = device
 
         # Common entities and relations pre-processing:
-        self.mapping_entities = collections.OrderedDict({
-            i: self.student_entities[e] for e, i in self.teacher_entities.items()
-            if e in self.student_entities
-        })
+        self.mapping_entities = collections.OrderedDict(
+            {
+                i: self.student_entities[e]
+                for e, i in self.teacher_entities.items()
+                if e in self.student_entities
+            }
+        )
 
-        self.mapping_relations = collections.OrderedDict({
-            i: self.student_relations[e] for e, i in self.teacher_relations.items()
-            if e in self.student_relations
-        })
+        self.mapping_relations = collections.OrderedDict(
+            {
+                i: self.student_relations[e]
+                for e, i in self.teacher_relations.items()
+                if e in self.student_relations
+            }
+        )
 
     def available(self, head, relation, tail):
         """
         Define which type of distillation is available.
         """
         head_available, relation_available, tail_available = False, False, False
-        distillation_available = {'head': False,
-                                  'relation': False, 'tail': False}
+        distillation_available = {"head": False, "relation": False, "tail": False}
 
         if head in self.mapping_entities:
             head_available = True
@@ -260,21 +269,21 @@ class Distillation:
 
             if head_available and relation_available and tail_available:
 
-                distillation_available['head'] = True
-                distillation_available['relation'] = True
-                distillation_available['tail'] = True
+                distillation_available["head"] = True
+                distillation_available["relation"] = True
+                distillation_available["tail"] = True
 
         # If the sampling is unsupervised, we allow distillation on part of the triplet:
         else:
 
             if head_available and relation_available:
-                distillation_available['tail'] = True
+                distillation_available["tail"] = True
 
             if relation_available and tail_available:
-                distillation_available['head'] = True
+                distillation_available["head"] = True
 
             if head_available and tail_available:
-                distillation_available['relation'] = True
+                distillation_available["relation"] = True
 
         return distillation_available
 
@@ -285,8 +294,14 @@ class Distillation:
         x[:, :, 2] = tail
         return x
 
-    def get_distillation_sample_head(self, head_distribution_teacher, head_distribution_student,
-                                     head_teacher, relation_teacher, tail_teacher):
+    def get_distillation_sample_head(
+        self,
+        head_distribution_teacher,
+        head_distribution_student,
+        head_teacher,
+        relation_teacher,
+        tail_teacher,
+    ):
         # Teacher
         entity_distribution_teacher = copy.deepcopy(head_distribution_teacher)
 
@@ -298,7 +313,7 @@ class Distillation:
             head=entity_distribution_teacher,
             relation=relation_teacher,
             tail=tail_teacher,
-            batch_size=self.sampling.batch_size_entity
+            batch_size=self.sampling.batch_size_entity,
         )
 
         relation_student = self.mapping_relations[relation_teacher]
@@ -315,18 +330,23 @@ class Distillation:
             head=entity_distribution_student,
             relation=relation_student,
             tail=tail_student,
-            batch_size=self.sampling.batch_size_entity
+            batch_size=self.sampling.batch_size_entity,
         )
 
         return tensor_head_teacher, tensor_head_student
 
-    def get_distillation_sample_relation(self, relation_distribution_teacher,
-                                         relation_distribution_student, head_teacher, relation_teacher, tail_teacher):
+    def get_distillation_sample_relation(
+        self,
+        relation_distribution_teacher,
+        relation_distribution_student,
+        head_teacher,
+        relation_teacher,
+        tail_teacher,
+    ):
         batch_size = relation_distribution_teacher.shape[0]
 
         # Teacher
-        relation_distribution_teacher_copy = copy.deepcopy(
-            relation_distribution_teacher)
+        relation_distribution_teacher_copy = copy.deepcopy(relation_distribution_teacher)
 
         # Supervised samplers always include the ground truth:
         if self.sampling.supervised:
@@ -336,15 +356,14 @@ class Distillation:
             head=head_teacher,
             relation=relation_distribution_teacher_copy,
             tail=tail_teacher,
-            batch_size=self.sampling.batch_size_relation
+            batch_size=self.sampling.batch_size_relation,
         )
 
         # Student
         head_student = self.mapping_entities[head_teacher]
         tail_student = self.mapping_entities[tail_teacher]
 
-        relation_distribution_student_copy = copy.deepcopy(
-            relation_distribution_student)
+        relation_distribution_student_copy = copy.deepcopy(relation_distribution_student)
 
         # Supervised samplers always include the ground truth:
         if self.sampling.supervised:
@@ -355,13 +374,19 @@ class Distillation:
             head=head_student,
             relation=relation_distribution_student_copy,
             tail=tail_student,
-            batch_size=self.sampling.batch_size_relation
+            batch_size=self.sampling.batch_size_relation,
         )
 
         return tensor_relation_teacher, tensor_relation_student
 
-    def get_distillation_sample_tail(self, tail_distribution_teacher, tail_distribution_student,
-                                     head_teacher, relation_teacher, tail_teacher):
+    def get_distillation_sample_tail(
+        self,
+        tail_distribution_teacher,
+        tail_distribution_student,
+        head_teacher,
+        relation_teacher,
+        tail_teacher,
+    ):
         # Teacher
         entity_distribution_teacher = copy.deepcopy(tail_distribution_teacher)
 
@@ -373,7 +398,7 @@ class Distillation:
             head=head_teacher,
             relation=relation_teacher,
             tail=entity_distribution_teacher,
-            batch_size=self.sampling.batch_size_entity
+            batch_size=self.sampling.batch_size_entity,
         )
 
         # Student
@@ -391,7 +416,7 @@ class Distillation:
             head=head_student,
             relation=relation_student,
             tail=entity_distribution_student,
-            batch_size=self.sampling.batch_size_entity
+            batch_size=self.sampling.batch_size_entity,
         )
 
         return tensor_tail_teacher, tensor_tail_student
@@ -403,12 +428,14 @@ class Distillation:
     def stack_entity(self, batch, device):
         """Convert a list of sample to 3 dimensionnal torch tensor."""
         return self._stack_sample(
-            batch=batch, batch_size=self.sampling.batch_size_entity, device=device)
+            batch=batch, batch_size=self.sampling.batch_size_entity, device=device
+        )
 
     def stack_relations(self, batch, device):
         """Convert a list of sample to 3 dimensionnal tensor"""
         return self._stack_sample(
-            batch=batch, batch_size=self.sampling.batch_size_relation, device=device)
+            batch=batch, batch_size=self.sampling.batch_size_relation, device=device
+        )
 
     def distill(self, teacher, student, sample):
         """Apply distillation between a teacher and a student from a batch of positive sample.
@@ -528,57 +555,70 @@ class Distillation:
         batch_tail_teacher = []
         batch_tail_student = []
 
-        (head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
-            head_distribution_student, relation_distribution_student, tail_distribution_student
-         ) = self.sampling.get(**{
-             'sample': sample,
-             'mapping_entities': self.mapping_entities,
-             'mapping_relations': self.mapping_relations,
-             'positive_sample_size': sample.shape[0],
-             'teacher': teacher,
-         })
+        (
+            head_distribution_teacher,
+            relation_distribution_teacher,
+            tail_distribution_teacher,
+            head_distribution_student,
+            relation_distribution_student,
+            tail_distribution_student,
+        ) = self.sampling.get(
+            **{
+                "sample": sample,
+                "mapping_entities": self.mapping_entities,
+                "mapping_relations": self.mapping_relations,
+                "positive_sample_size": sample.shape[0],
+                "teacher": teacher,
+            }
+        )
 
         for i, (head, relation, tail) in enumerate(sample):
 
             head, relation, tail = head.item(), relation.item(), tail.item()
 
-            distillation_available = self.available(
-                head=head, relation=relation, tail=tail)
+            distillation_available = self.available(head=head, relation=relation, tail=tail)
 
-            if distillation_available['head']:
+            if distillation_available["head"]:
 
                 tensor_head_teacher, tensor_head_student = self.get_distillation_sample_head(
-                    head_distribution_teacher=head_distribution_teacher[i].unsqueeze(
-                        dim=0),
-                    head_distribution_student=head_distribution_student[i].unsqueeze(
-                        dim=0),
-                    head_teacher=head, relation_teacher=relation, tail_teacher=tail
+                    head_distribution_teacher=head_distribution_teacher[i].unsqueeze(dim=0),
+                    head_distribution_student=head_distribution_student[i].unsqueeze(dim=0),
+                    head_teacher=head,
+                    relation_teacher=relation,
+                    tail_teacher=tail,
                 )
 
                 batch_head_teacher.append(tensor_head_teacher)
                 batch_head_student.append(tensor_head_student)
 
-            if distillation_available['relation']:
+            if distillation_available["relation"]:
 
-                tensor_relation_teacher, tensor_relation_student = self.get_distillation_sample_relation(
+                (
+                    tensor_relation_teacher,
+                    tensor_relation_student,
+                ) = self.get_distillation_sample_relation(
                     relation_distribution_teacher=relation_distribution_teacher[i].unsqueeze(
-                        dim=0),
+                        dim=0
+                    ),
                     relation_distribution_student=relation_distribution_student[i].unsqueeze(
-                        dim=0),
-                    head_teacher=head, relation_teacher=relation, tail_teacher=tail
+                        dim=0
+                    ),
+                    head_teacher=head,
+                    relation_teacher=relation,
+                    tail_teacher=tail,
                 )
 
                 batch_relation_teacher.append(tensor_relation_teacher)
                 batch_relation_student.append(tensor_relation_student)
 
-            if distillation_available['tail']:
+            if distillation_available["tail"]:
 
                 tensor_tail_teacher, tensor_tail_student = self.get_distillation_sample_tail(
-                    tail_distribution_teacher=tail_distribution_teacher[i].unsqueeze(
-                        dim=0),
-                    tail_distribution_student=tail_distribution_student[i].unsqueeze(
-                        dim=0),
-                    head_teacher=head, relation_teacher=relation, tail_teacher=tail
+                    tail_distribution_teacher=tail_distribution_teacher[i].unsqueeze(dim=0),
+                    tail_distribution_student=tail_distribution_student[i].unsqueeze(dim=0),
+                    head_teacher=head,
+                    relation_teacher=relation,
+                    tail_teacher=tail,
                 )
 
                 batch_tail_teacher.append(tensor_tail_teacher)
@@ -590,53 +630,48 @@ class Distillation:
         # shared in student and teacher kgs.
         if batch_head_teacher:
 
-            teacher_head_tensor = self.stack_entity(
-                batch_head_teacher, device=self.device)
-            student_head_tensor = self.stack_entity(
-                batch_head_student, device=self.device)
+            teacher_head_tensor = self.stack_entity(batch_head_teacher, device=self.device)
+            student_head_tensor = self.stack_entity(batch_head_student, device=self.device)
             # Disable gradients for teacher:
             with torch.no_grad():
                 scores_head_teacher = teacher(teacher_head_tensor)
 
             # Distillation loss of heads
             loss_student += losses.KlDivergence()(
-                teacher_score=scores_head_teacher,
-                student_score=student(student_head_tensor)
+                teacher_score=scores_head_teacher, student_score=student(student_head_tensor)
             )
 
         # Compute loss dedicated to relations if any heads or tails from the input sample are shared
         # in student and teacher kgs.
         if batch_relation_teacher:
             teacher_relation_tensor = self.stack_relations(
-                batch_relation_teacher, device=self.device)
+                batch_relation_teacher, device=self.device
+            )
             student_relation_tensor = self.stack_relations(
-                batch_relation_student, device=self.device)
+                batch_relation_student, device=self.device
+            )
             # Disable gradients for teacher:
             with torch.no_grad():
-                scores_relation_teacher = teacher(
-                    teacher_relation_tensor)
+                scores_relation_teacher = teacher(teacher_relation_tensor)
 
             # Distillation loss of relations.
             loss_student += losses.KlDivergence()(
                 teacher_score=scores_relation_teacher,
-                student_score=student(student_relation_tensor)
+                student_score=student(student_relation_tensor),
             )
 
         # Compute loss dedicated to tails if any heads or relations from the input sample are shared
         #  in student and teachers kgs.
         if batch_tail_teacher:
-            teacher_tail_tensor = self.stack_entity(
-                batch_tail_teacher, device=self.device)
-            student_tail_tensor = self.stack_entity(
-                batch_tail_student, device=self.device)
+            teacher_tail_tensor = self.stack_entity(batch_tail_teacher, device=self.device)
+            student_tail_tensor = self.stack_entity(batch_tail_student, device=self.device)
             # Disable gradients for teacher:
             with torch.no_grad():
                 scores_tail_teacher = teacher(teacher_tail_tensor)
 
             # Distillation loss of tails.
             loss_student += losses.KlDivergence()(
-                teacher_score=scores_tail_teacher,
-                student_score=student(student_tail_tensor)
+                teacher_score=scores_tail_teacher, student_score=student(student_tail_tensor)
             )
 
         return loss_student

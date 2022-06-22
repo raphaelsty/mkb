@@ -1,7 +1,8 @@
 torch >= 1.4.0
-creme >= 0.5.1
+river >= 0.11.1
 numpy >= 1.18.1
 faiss-cpu >= 1.5.3
 tqdm  >= 4.36.1
 pandas >= 1.0.5
 scikit-learn >= 0.23.2
+transformers >= 4.16.0

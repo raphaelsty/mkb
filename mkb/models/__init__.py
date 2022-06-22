@@ -1,16 +1,21 @@
-from .conve import ConvE
+from .base import TextBaseModel
 from .complex import ComplEx
 from .distmult import DistMult
+from .dpr import DPR
 from .protate import pRotatE
 from .rotate import RotatE
+from .sentence_transformer import SentenceTransformer
 from .transe import TransE
-
+from .transformer import Transformer
 
 __all__ = [
-    'ConvE',
-    'ComplEx',
-    'DistMult',
-    'pRotatE',
-    'RotatE',
-    'TransE',
+    "ComplEx",
+    "DistMult",
+    "DPR",
+    "pRotatE",
+    "RotatE",
+    "SentenceTransformer",
+    "TransE",
+    "Transformer",
+    "TextBaseModel",
 ]

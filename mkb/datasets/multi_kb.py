@@ -1,11 +1,11 @@
-from .dataset import Dataset
+import copy
+import random
 
 import numpy as np
-import random
-import copy
 
+from .dataset import Dataset
 
-__all__ = ['MultiKb']
+__all__ = ["MultiKb"]
 
 
 class MultiKb(Dataset):
@@ -59,7 +59,7 @@ class MultiKb(Dataset):
 
     """
 
-    def __init__(self, dataset, id_set, n_part, aligned_entities=1.):
+    def __init__(self, dataset, id_set, n_part, aligned_entities=1.0):
         if not isinstance(id_set, list):
             id_set = [id_set]
         self.id_set = id_set
@@ -69,20 +69,14 @@ class MultiKb(Dataset):
         self.dataset_name = dataset.name
 
         train, self.excluded_triples = self.split_train(
-            train=dataset.train,
-            n_part=n_part,
-            id_set=id_set,
-            seed=dataset.seed
+            train=dataset.train, n_part=n_part, id_set=id_set, seed=dataset.seed
         )
 
         super().__init__(
             train=train,
             valid=dataset.valid,
             test=dataset.test,
-            entities=self.corrupt_entities(
-                entities=dataset.entities,
-                seed=dataset.seed
-            ),
+            entities=self.corrupt_entities(entities=dataset.entities, seed=dataset.seed),
             relations=dataset.relations,
             batch_size=dataset.batch_size,
             shuffle=dataset.shuffle,
@@ -107,11 +101,13 @@ class MultiKb(Dataset):
 
     @property
     def name(self):
-        return f'{self.dataset_name}_{self.id_set}_{self.n_part}_{round(self.aligned_entities * 100)}'
+        return (
+            f"{self.dataset_name}_{self.id_set}_{self.n_part}_{round(self.aligned_entities * 100)}"
+        )
 
     @property
     def _repr_title(self):
-        return f'{self.name} dataset'
+        return f"{self.name} dataset"
 
     @property
     def _repr_content(self):
@@ -119,16 +115,16 @@ class MultiKb(Dataset):
         This property can be overriden in order to modify the output of the __repr__ method.
         """
         return {
-            'Batch size': f'{self.batch_size}',
-            'Entities': f'{self.n_entity}',
-            'Relations': f'{self.n_relation}',
-            'Shuffle': f'{self.shuffle}',
-            'Train triples': f'{len(self.train) if self.train else 0}',
-            'Validation triples': f'{len(self.valid) if self.valid else 0}',
-            'Test triples': f'{len(self.test) if self.test else 0}',
-            f'{self.dataset_name} cutted in': f'{self.n_part}',
-            f'{self.dataset_name} set': f'{self.id_set}',
-            'Aligned entities': f'{self.aligned_entities * 100}%'
+            "Batch size": f"{self.batch_size}",
+            "Entities": f"{self.n_entity}",
+            "Relations": f"{self.n_relation}",
+            "Shuffle": f"{self.shuffle}",
+            "Train triples": f"{len(self.train) if self.train else 0}",
+            "Validation triples": f"{len(self.valid) if self.valid else 0}",
+            "Test triples": f"{len(self.test) if self.test else 0}",
+            f"{self.dataset_name} cutted in": f"{self.n_part}",
+            f"{self.dataset_name} set": f"{self.id_set}",
+            "Aligned entities": f"{self.aligned_entities * 100}%",
         }
 
     @classmethod
@@ -161,17 +157,12 @@ class MultiKb(Dataset):
         n_entities = len(entities)
         n_entities_to_corrupt = round(n_entities * (1 - self.aligned_entities))
         rng = np.random.RandomState(seed)
-        entities_id_corrupt = rng.choice(
-            range(n_entities),
-            n_entities_to_corrupt,
-            replace=False
-        )
+        entities_id_corrupt = rng.choice(range(n_entities), n_entities_to_corrupt, replace=False)
 
         e_prime = {value: key for key, value in entities.items()}
         for id_e in entities_id_corrupt:
             e = e_prime[id_e]
             entities.pop(e)
-            entities[f'{e}_{self.id_set}_{self.n_part}'] = id_e
-        entities = {k: v for k, v in sorted(
-            entities.items(), key=lambda item: item[1])}
+            entities[f"{e}_{self.id_set}_{self.n_part}"] = id_e
+        entities = {k: v for k, v in sorted(entities.items(), key=lambda item: item[1])}
         return entities

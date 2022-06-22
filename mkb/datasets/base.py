@@ -1,19 +1,17 @@
 import collections
 
 import numpy as np
-
 import torch
-
 from torch.utils.data import Dataset
 
-
-__all__ = ['TestDataset', 'TestDatasetRelation', 'TrainDataset']
+__all__ = ["TestDataset", "TestDatasetRelation", "TrainDataset"]
 
 
 class TrainDataset(Dataset):
     """Train dataset loader.
 
-    Parameters:
+    Parameters
+    ----------
         triples (list): Training set.
         entities (dict): Index of entities.
         relations (dict): Index of relations.
@@ -43,19 +41,18 @@ class TrainDataset(Dataset):
         self.pre_compute = pre_compute
         self._rng = np.random.RandomState(seed)  # pylint: disable=no-member
 
-        if self.pre_compute and mode == 'classification':
+        if self.pre_compute and mode == "classification":
 
             self.triples, self.targets = self._pre_compute_classification(
-                triples=triples, n_entity=self.n_entity)
+                triples=triples, n_entity=self.n_entity
+            )
 
-        elif self.pre_compute == True and mode != 'classification':
+        elif self.pre_compute == True and mode != "classification":
 
-            self.triples, self.weights = self._pre_compute(
-                triples=triples)
+            self.triples, self.weights = self._pre_compute(triples=triples)
 
-        elif not self.pre_compute and mode == 'classification':
-            self.triples, self.targets = self._light_test_classification(
-                triples=triples)
+        elif not self.pre_compute and mode == "classification":
+            self.triples, self.targets = self._light_test_classification(triples=triples)
         else:
             self.count = self.get_frequencies(triples)
             self.triples = triples
@@ -66,13 +63,13 @@ class TrainDataset(Dataset):
         return self.len
 
     def __getitem__(self, idx):
-        if self.mode == 'classification' and self.pre_compute:
+        if self.mode == "classification" and self.pre_compute:
             return self.triples[idx], self.targets[idx], self.mode
 
         elif self.pre_compute:
             return self.triples[idx], self.weights[idx], self.mode
 
-        elif self.mode == 'classification' and not self.pre_compute:
+        elif self.mode == "classification" and not self.pre_compute:
             target = torch.zeros(self.n_entity)
             for t in self.targets[idx]:
                 target[t] = 1
@@ -80,26 +77,25 @@ class TrainDataset(Dataset):
 
         elif not self.pre_compute:
             h, r, t = self.triples[idx]
-            weight = torch.sqrt(
-                1 / torch.Tensor([self.count[(h, r)] + self.count[(t, -r-1)]]))
+            weight = torch.sqrt(1 / torch.Tensor([self.count[(h, r)] + self.count[(t, -r - 1)]]))
             return torch.LongTensor((h, r, t)), weight, self.mode
 
-    @ staticmethod
+    @staticmethod
     def collate_fn(data):
         """Reshape output data when calling train dataset loader."""
         return {
-            'sample': torch.stack([_[0] for _ in data], dim=0),
-            'weight': torch.cat([_[1] for _ in data], dim=0),
-            'mode': data[0][2]
+            "sample": torch.stack([_[0] for _ in data], dim=0),
+            "weight": torch.cat([_[1] for _ in data], dim=0),
+            "mode": data[0][2],
         }
 
-    @ staticmethod
+    @staticmethod
     def collate_fn_classification(data):
         """Reshape output data when calling train dataset loader."""
         return {
-            'sample': torch.stack([_[0] for _ in data], dim=0),
-            'y': torch.stack([_[1] for _ in data], dim=0),
-            'mode': data[0][2]
+            "sample": torch.stack([_[0] for _ in data], dim=0),
+            "y": torch.stack([_[1] for _ in data], dim=0),
+            "mode": data[0][2],
         }
 
     @staticmethod
@@ -107,7 +103,7 @@ class TrainDataset(Dataset):
         count = collections.defaultdict(lambda: start)
         for h, r, t in triples:
             count[(h, r)] += 1
-            count[(t, -r-1)] += 1
+            count[(t, -r - 1)] += 1
         return count
 
     @classmethod
@@ -118,8 +114,7 @@ class TrainDataset(Dataset):
         weights = {}
 
         for idx, (h, r, t) in enumerate(triples):
-            weights[idx] = torch.sqrt(1 / torch.Tensor(
-                [count[(h, r)] + count[(t, -r-1)]]))
+            weights[idx] = torch.sqrt(1 / torch.Tensor([count[(h, r)] + count[(t, -r - 1)]]))
 
             train[idx] = torch.LongTensor((h, r, t))
 
@@ -127,8 +122,7 @@ class TrainDataset(Dataset):
 
     @classmethod
     def _light_test_classification(cls, triples):
-        set_head_relation = collections.defaultdict(
-            lambda: collections.defaultdict(list))
+        set_head_relation = collections.defaultdict(lambda: collections.defaultdict(list))
 
         for h, r, t in triples:
             set_head_relation[h][r].append(t)
@@ -147,14 +141,12 @@ class TrainDataset(Dataset):
 
     @classmethod
     def _pre_compute_classification(cls, triples, n_entity):
-        set_head_relation = collections.defaultdict(
-            lambda: collections.defaultdict(list))
+        set_head_relation = collections.defaultdict(lambda: collections.defaultdict(list))
 
         for h, r, t in triples:
             set_head_relation[h][r].append(t)
 
-        targets = collections.defaultdict(
-            lambda: torch.zeros(n_entity))
+        targets = collections.defaultdict(lambda: torch.zeros(n_entity))
 
         train = {}
         idx = 0
@@ -162,7 +154,7 @@ class TrainDataset(Dataset):
             for r, hrt in hr.items():
                 for t in hrt:
                     train[idx] = torch.LongTensor((h, r))
-                    targets[idx][t] = 1.
+                    targets[idx][t] = 1.0
                 idx += 1
 
         return train, targets
@@ -171,21 +163,23 @@ class TrainDataset(Dataset):
 class TestDataset(Dataset):
     """Test dataset loader dedicated to link prediction.
 
-    Parameters:
-        triples (list): Testing set.
-        true_triples (list): Triples to filter when validating the model.
-        entities (dict): Index of entities.
-        relations (dict): Index of relations.
-        mode (str): head-batch or tail-batch.
+    Parameters
+    ----------
+    triples
+        Testing set.
+    true_triples
+        Triples to filter when validating the model.
+    entities
+        Index of entities.
+    relations
+        Index of relations.
+    mode
+        head-batch or tail-batch.
 
-    Attributes:
-        n_entity (int): Number of entities.
-        n_relation (int): Number of relations.
-        len (int): Number of training triplets.
-
-    References:
-        1. [Sun, Zhiqing, et al. "Rotate: Knowledge graph embedding by relational rotation in complex space." arXiv preprint arXiv:1902.10197 (2019).](https://arxiv.org/pdf/1902.10197.pdf)
-        2. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
+    References
+    ----------
+    1. [Sun, Zhiqing, et al. "Rotate: Knowledge graph embedding by relational rotation in complex space." arXiv preprint arXiv:1902.10197 (2019).](https://arxiv.org/pdf/1902.10197.pdf)
+    2. [Knowledge Graph Embedding](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
     """
 
     def __init__(self, triples, true_triples, entities, relations, mode):
@@ -202,17 +196,39 @@ class TestDataset(Dataset):
     def __getitem__(self, idx):
         head, relation, tail = self.triples[idx]
 
-        if self.mode == 'head-batch':
+        tmp = []
 
-            tmp = [(0, rand_head) if (rand_head, relation, tail) not in self.true_triples
-                   else (-1, head) for rand_head in range(self.n_entity)]
-            tmp[head] = (0, head)
+        if self.mode == "head-batch":
 
-        elif self.mode == 'tail-batch':
+            for rand_head in range(self.n_entity):
 
-            tmp = [(0, rand_tail) if (head, relation, rand_tail) not in self.true_triples
-                   else (-1, tail) for rand_tail in range(self.n_entity)]
-            tmp[tail] = (0, tail)
+                # Candidate answer:
+                if (rand_head, relation, tail) not in self.true_triples:
+                    tmp.append((0, rand_head))
+
+                # Actual target
+                elif rand_head == head:
+                    tmp.append((0, head))
+
+                # Actual true triple that we filter out:
+                else:
+                    tmp.append((-1e5, head))
+
+        elif self.mode == "tail-batch":
+
+            for rand_tail in range(self.n_entity):
+
+                # Candidate answer:
+                if (head, relation, rand_tail) not in self.true_triples:
+                    tmp.append((0, rand_tail))
+
+                # Actual target
+                elif rand_tail == tail:
+                    tmp.append((0, tail))
+
+                # Actual true triple that we filter out:
+                else:
+                    tmp.append((-1e5, tail))
 
         tmp = torch.LongTensor(tmp)
 
@@ -224,14 +240,14 @@ class TestDataset(Dataset):
 
         return sample, negative_sample, filter_bias, self.mode
 
-    @ staticmethod
+    @staticmethod
     def collate_fn(data):
         """Reshape output data when calling train dataset loader."""
         return {
-            'sample': torch.stack([_[0] for _ in data], dim=0),
-            'negative_sample': torch.stack([_[1] for _ in data], dim=0),
-            'filter_bias': torch.stack([_[2] for _ in data], dim=0),
-            'mode': data[0][3],
+            "sample": torch.stack([_[0] for _ in data], dim=0),
+            "negative_sample": torch.stack([_[1] for _ in data], dim=0),
+            "filter_bias": torch.stack([_[2] for _ in data], dim=0),
+            "mode": data[0][3],
         }
 
 
@@ -262,7 +278,7 @@ class TestDatasetRelation(TestDataset):
             true_triples=true_triples,
             entities=entities,
             relations=relations,
-            mode='relation-batch'
+            mode="relation-batch",
         )
 
     def __getitem__(self, idx):
@@ -273,17 +289,17 @@ class TestDatasetRelation(TestDataset):
         tensor_head = torch.tensor([head] * self.n_relation)
         tensor_tail = torch.tensor([tail] * self.n_relation)
 
-        tmp = torch.LongTensor([
-            (0, random) if (head, random, tail) not in self.true_triples
-            else (-1, relation)
-            for random in range(self.n_relation)
-        ])
+        tmp = torch.LongTensor(
+            [
+                (0, random) if (head, random, tail) not in self.true_triples else (-1, relation)
+                for random in range(self.n_relation)
+            ]
+        )
 
         tensor_relation = tmp[:, 1]
         filter_bias = tmp[:, 0]
         filter_bias[relation] = 0
 
-        negative_sample = torch.stack(
-            [tensor_head, tensor_relation, tensor_tail], dim=- 1)
+        negative_sample = torch.stack([tensor_head, tensor_relation, tensor_tail], dim=-1)
 
         return sample, negative_sample, filter_bias, self.mode

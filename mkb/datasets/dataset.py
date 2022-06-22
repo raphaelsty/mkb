@@ -1,13 +1,11 @@
-from torch.utils import data
-import torch
-
-from .base import TrainDataset
-from .base import TestDataset
-
 import copy
 
+import torch
+from torch.utils import data
 
-__all__ = ['Dataset']
+from .base import TestDataset, TrainDataset
+
+__all__ = ["Dataset"]
 
 
 class Dataset:
@@ -94,9 +92,20 @@ class Dataset:
     """
 
     def __init__(
-        self, train, batch_size, entities=None, relations=None, valid=None, test=None, shuffle=True,
-        classification=False, pre_compute=True, num_workers=1, seed=42, classification_valid=None,
-        classification_test=None
+        self,
+        train,
+        batch_size,
+        entities=None,
+        relations=None,
+        valid=None,
+        test=None,
+        shuffle=True,
+        classification=False,
+        pre_compute=True,
+        num_workers=1,
+        seed=42,
+        classification_valid=None,
+        classification_test=None,
     ):
         self.train = train
         self.valid = valid
@@ -114,16 +123,13 @@ class Dataset:
         # Each entity and relation as an id.
         if entities is None:
             self.entities = self.mapping_entities()
-            self.train = [(self.entities[h], r, self.entities[t])
-                          for h, r, t in self.train]
+            self.train = [(self.entities[h], r, self.entities[t]) for h, r, t in self.train]
 
             if self.valid is not None:
-                self.valid = [(self.entities[h], r, self.entities[t])
-                              for h, r, t in self.valid]
+                self.valid = [(self.entities[h], r, self.entities[t]) for h, r, t in self.valid]
 
             if self.test is not None:
-                self.test = [(self.entities[h], r, self.entities[t])
-                             for h, r, t in self.test]
+                self.test = [(self.entities[h], r, self.entities[t]) for h, r, t in self.test]
         else:
             self.entities = entities
 
@@ -134,12 +140,10 @@ class Dataset:
             self.train = [(h, self.relations[r], t) for h, r, t in self.train]
 
             if self.valid is not None:
-                self.valid = [(h, self.relations[r], t)
-                              for h, r, t in self.valid]
+                self.valid = [(h, self.relations[r], t) for h, r, t in self.valid]
 
             if self.test is not None:
-                self.test = [(h, self.relations[r], t)
-                             for h, r, t in self.test]
+                self.test = [(h, self.relations[r], t) for h, r, t in self.test]
         else:
             self.relations = relations
 
@@ -150,7 +154,7 @@ class Dataset:
         # The classification mode is dedicated to ConvE model.
         if self.classification:
 
-            self.dataset = self.get_train_loader(mode='classification')
+            self.dataset = self.get_train_loader(mode="classification")
             self.len = int(len(self.dataset.dataset) / self.batch_size)
 
             # Needed for mkb to iterate over multiples datasets with single batch each time.
@@ -161,12 +165,11 @@ class Dataset:
         # to False.
         else:
             self.step = 0
-            self.dataset_head = self.get_train_loader(mode='head-batch')
-            self.dataset_tail = self.get_train_loader(mode='tail-batch')
-            self.len = int((
-                len(self.dataset_head.dataset) +
-                len(self.dataset_tail.dataset)
-            ) / self.batch_size)
+            self.dataset_head = self.get_train_loader(mode="head-batch")
+            self.dataset_tail = self.get_train_loader(mode="tail-batch")
+            self.len = int(
+                (len(self.dataset_head.dataset) + len(self.dataset_tail.dataset)) / self.batch_size
+            )
 
             # Needed for mkb to iterate over multiples datasets with single batch each time.
             # __next__ functionnality
@@ -231,7 +234,7 @@ class Dataset:
 
     @property
     def _repr_title(self):
-        return f'{self.name} dataset'
+        return f"{self.name} dataset"
 
     @property
     def _repr_content(self):
@@ -240,13 +243,13 @@ class Dataset:
         """
 
         return {
-            'Batch size': f'{self.batch_size}',
-            'Entities': f'{self.n_entity}',
-            'Relations': f'{self.n_relation}',
-            'Shuffle': f'{self.shuffle}',
-            'Train triples': f'{len(self.train) if self.train else 0}',
-            'Validation triples': f'{len(self.valid) if self.valid else 0}',
-            'Test triples': f'{len(self.test) if self.test else 0}'
+            "Batch size": f"{self.batch_size}",
+            "Entities": f"{self.n_entity}",
+            "Relations": f"{self.n_relation}",
+            "Shuffle": f"{self.shuffle}",
+            "Train triples": f"{len(self.train) if self.train else 0}",
+            "Validation triples": f"{len(self.valid) if self.valid else 0}",
+            "Test triples": f"{len(self.test) if self.test else 0}",
         }
 
     def __repr__(self):
@@ -254,12 +257,8 @@ class Dataset:
         l_len = max(map(len, self._repr_content.keys()))
         r_len = max(map(len, self._repr_content.values()))
 
-        return (
-            f'{self._repr_title}\n' +
-            '\n'.join(
-                k.rjust(l_len) + '  ' + v.ljust(r_len)
-                for k, v in self._repr_content.items()
-            )
+        return f"{self._repr_title}\n" + "\n".join(
+            k.rjust(l_len) + "  " + v.ljust(r_len) for k, v in self._repr_content.items()
         )
 
     def test_dataset(self, batch_size):
@@ -270,45 +269,67 @@ class Dataset:
 
     def test_stream(self, triples, batch_size):
         head_loader = self._get_test_loader(
-            triples=triples, batch_size=batch_size, mode='head-batch')
+            triples=triples, batch_size=batch_size, mode="head-batch"
+        )
 
         tail_loader = self._get_test_loader(
-            triples=triples, batch_size=batch_size, mode='tail-batch')
+            triples=triples, batch_size=batch_size, mode="tail-batch"
+        )
 
         return [head_loader, tail_loader]
 
     def get_train_loader(self, mode):
         """Initialize train dataset loader."""
         dataset = TrainDataset(
-            triples=self.train, entities=self.entities, relations=self.relations, mode=mode,
-            pre_compute=self.pre_compute, seed=self.seed)
+            triples=self.train,
+            entities=self.entities,
+            relations=self.relations,
+            mode=mode,
+            pre_compute=self.pre_compute,
+            seed=self.seed,
+        )
 
-        if mode == 'classification':
+        if mode == "classification":
             collate_fn = TrainDataset.collate_fn_classification
         else:
             collate_fn = TrainDataset.collate_fn
 
         return data.DataLoader(
-            dataset=dataset, batch_size=self.batch_size, shuffle=self.shuffle,
-            num_workers=self.num_workers, collate_fn=collate_fn)
+            dataset=dataset,
+            batch_size=self.batch_size,
+            shuffle=self.shuffle,
+            num_workers=self.num_workers,
+            collate_fn=collate_fn,
+        )
 
     def _get_test_loader(self, triples, batch_size, mode):
         """Initialize test dataset loader."""
         test_dataset = TestDataset(
-            triples=triples, true_triples=self.train + self.test + self.valid,
-            entities=self.entities, relations=self.relations, mode=mode)
+            triples=triples,
+            true_triples=self.train + self.test + self.valid,
+            entities=self.entities,
+            relations=self.relations,
+            mode=mode,
+        )
 
         return data.DataLoader(
-            dataset=test_dataset, batch_size=batch_size, num_workers=self.num_workers,
-            collate_fn=TestDataset.collate_fn)
+            dataset=test_dataset,
+            batch_size=batch_size,
+            num_workers=self.num_workers,
+            collate_fn=TestDataset.collate_fn,
+        )
 
     def mapping_entities(self):
         """Construct mapping entities."""
-        return {e: i for i, e in enumerate(
-            dict.fromkeys(
-                [h for h, _, _ in self.true_triples] + [t for _, _, t in self.true_triples]))}
+        return {
+            e: i
+            for i, e in enumerate(
+                dict.fromkeys(
+                    [h for h, _, _ in self.true_triples] + [t for _, _, t in self.true_triples]
+                )
+            )
+        }
 
     def mapping_relations(self):
         """Construct mapping relations."""
-        return {r: i for i, r in enumerate(
-            dict.fromkeys([r for _, r, _ in self.true_triples]))}
+        return {r: i for i, r in enumerate(dict.fromkeys([r for _, r, _ in self.true_triples]))}

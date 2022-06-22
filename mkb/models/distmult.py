@@ -1,8 +1,6 @@
-import torch
-
 from . import base
 
-__all__ = ['DistMult']
+__all__ = ["DistMult"]
 
 
 class DistMult(base.BaseModel):
@@ -53,17 +51,21 @@ class DistMult(base.BaseModel):
     """
 
     def __init__(self, hidden_dim, entities, relations, gamma):
-        super().__init__(hidden_dim=hidden_dim, relation_dim=hidden_dim, entity_dim=hidden_dim,
-                         entities=entities, relations=relations, gamma=gamma)
+        super().__init__(
+            hidden_dim=hidden_dim,
+            relation_dim=hidden_dim,
+            entity_dim=hidden_dim,
+            entities=entities,
+            relations=relations,
+            gamma=gamma,
+        )
 
     def forward(self, sample, negative_sample=None, mode=None):
         head, relation, tail, shape = self.batch(
-            sample=sample,
-            negative_sample=negative_sample,
-            mode=mode
+            sample=sample, negative_sample=negative_sample, mode=mode
         )
 
-        if mode == 'head-batch':
+        if mode == "head-batch":
             score = head * (relation * tail)
         else:
             score = (head * relation) * tail

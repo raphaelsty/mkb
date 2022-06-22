@@ -1,13 +1,9 @@
-import os
 import pathlib
 
+from ..utils import read_csv, read_json
 from .dataset import Dataset
 
-from ..utils import read_csv
-from ..utils import read_json
-
-
-__all__ = ['CountriesS2']
+__all__ = ["CountriesS2"]
 
 
 class CountriesS2(Dataset):
@@ -69,20 +65,30 @@ class CountriesS2(Dataset):
 
     """
 
-    def __init__(self, batch_size, classification=False, shuffle=True,  pre_compute=True,
-                 num_workers=1, seed=None):
+    def __init__(
+        self,
+        batch_size,
+        classification=False,
+        shuffle=True,
+        pre_compute=True,
+        num_workers=1,
+        seed=None,
+    ):
 
-        self.filename = 'countries_s2'
+        self.filename = "countries_s2"
 
         path = pathlib.Path(__file__).parent.joinpath(self.filename)
 
         super().__init__(
-            train=read_csv(file_path=f'{path}/train.csv'),
-            valid=read_csv(file_path=f'{path}/valid.csv'),
-            test=read_csv(file_path=f'{path}/test.csv'),
+            train=read_csv(file_path=f"{path}/train.csv"),
+            valid=read_csv(file_path=f"{path}/valid.csv"),
+            test=read_csv(file_path=f"{path}/test.csv"),
             classification=classification,
             pre_compute=pre_compute,
-            entities=read_json(f'{path}/entities.json'),
-            relations=read_json(f'{path}/relations.json'),
-            batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, seed=seed
+            entities=read_json(f"{path}/entities.json"),
+            relations=read_json(f"{path}/relations.json"),
+            batch_size=batch_size,
+            shuffle=shuffle,
+            num_workers=num_workers,
+            seed=seed,
         )

@@ -1,88 +1,95 @@
-import os
+import json
 import pathlib
+
+import pandas as pd
 
 from .dataset import Dataset
 
-from ..utils import read_csv
-from ..utils import read_csv_classification
-from ..utils import read_json
+__all__ = ["Semanlink"]
 
 
-__all__ = ['Semanlink']
+def read_csv(path, sep, header=None):
+    """Read a csv files of triplets and convert it to list of triplets.
+
+    Parameters
+    ----------
+        sep (str): Separator used in the csv file.
+
+    """
+    return list(
+        pd.read_csv(path, sep=sep, header=header)
+        .drop_duplicates(keep="first")
+        .itertuples(index=False, name=None)
+    )
 
 
 class Semanlink(Dataset):
     """Semanlink dataset.
 
-    Semanlink aim to iterate over the associated dataset. It provide positive samples, corresponding
-    weights and the mode (head batch / tail batch).
+    Train triplets gather entities created before 2019-06-01.
+    Valid triplets gather entities created between 2019-06-01 and 2020-06-01.
+    Test triplets gather entities created between 2020-06-01 and 2021-10-27.
 
-    Parameters:
-        batch_size (int): Size of the batch.
-        classification (bool): Must be set to True when using ConvE model to optimize BCELoss.
-        shuffle (bool): Whether to shuffle the dataset or not.
-        pre_compute (bool): Pre-compute parameters such as weights when using translationnal model
-            (TransE, DistMult, RotatE, pRotatE, ComplEx). When using ConvE, pre-compute target
-            matrix. When pre_compute is set to True, the model training is faster but it needs more
-            memory.
-        num_workers (int): Number of workers dedicated to iterate on the dataset.
-        seed (int): Random state.
+    Parameters
+    ----------
+    batch_size
+        Size of the batch.
+    pre_compute
+        Pre-compute parameters such as weights.
+    num_workers
+        Number of workers dedicated to iterate on the dataset.
+    seed
+        Random state.
 
-    Attributes:
-        train (list): Training set.
-        valid (list): Validation set.
-        test (list): Testing set.
-        entities (dict): Index of entities.
-        relations (dict): Index of relations.
-        n_entity (int): Number of entities.
-        n_relation (int): Number of relations.
-
-    Example:
-
-        >>> from mkb import datasets
-
-        >>> dataset = datasets.Semanlink(batch_size=1, shuffle=False, pre_compute=False, seed=42)
-
-        >>> dataset
-                Semanlink dataset
-                Batch size          1
-                Entities            12211
-                Relations           8
-                Shuffle             False
-                Train triples       22967
-                Validation triples  2027
-                Test triples        2027
-
-        >>> assert len(dataset.classification_valid['X']) == len(dataset.classification_valid['y'])
-        >>> assert len(dataset.classification_test['X']) == len(dataset.classification_test['y'])
-
-        >>> assert len(dataset.classification_valid['X']) == len(dataset.valid) * 2
-        >>> assert len(dataset.classification_test['X']) == len(dataset.test) * 2
-
-    References:
-        1. [Semanlink is a personal knowledge graph management system based on RDF. François Paul Servant.](http://www.semanlink.net/sl/home)
-        2. [Semanlink-KD-MKB](https://github.com/fpservant/semanlink-mkb)
+    Examples
+    --------
+    >>> from mkb import datasets
+    >>> datasets.Semanlink(batch_size=1, pre_compute=False, shuffle=True, seed=42)
+    Semanlink dataset
+        Batch size  1
+        Entities  18236
+        Relations  36
+        Shuffle  True
+        Train triples  47415
+        Validation triples  5055
+        Test triples  6213
 
     """
 
-    def __init__(self, batch_size, classification=False, shuffle=True, pre_compute=True,
-                 num_workers=1, seed=None):
+    def __init__(
+        self,
+        batch_size,
+        shuffle=True,
+        pre_compute=True,
+        num_workers=1,
+        seed=None,
+    ):
 
-        self.filename = 'semanlink'
+        self.filename = "semanlink"
 
         path = pathlib.Path(__file__).parent.joinpath(self.filename)
 
+        with open(f"{path}/labels.json", "r") as entities_labels:
+            labels = json.load(entities_labels)
+
+        train = read_csv(path=f"{path}/train.csv", sep="|")
+        valid = read_csv(path=f"{path}/valid.csv", sep="|")
+        test = read_csv(path=f"{path}/test.csv", sep="|")
+
+        exclude = ["creationDate", "creationTime", "bookmarkOf", "type"]
+
+        train = [(labels.get(h, h), r, labels.get(t, t)) for h, r, t in train if r not in exclude]
+        valid = [(labels.get(h, h), r, labels.get(t, t)) for h, r, t in valid if r not in exclude]
+        test = [(labels.get(h, h), r, labels.get(t, t)) for h, r, t in test if r not in exclude]
+
         super().__init__(
-            train=read_csv(file_path=f'{path}/train.csv'),
-            valid=read_csv(file_path=f'{path}/valid.csv'),
-            test=read_csv(file_path=f'{path}/test.csv'),
-            entities=read_json(f'{path}/entities.json'),
-            relations=read_json(f'{path}/relations.json'),
-            batch_size=batch_size, shuffle=shuffle, classification=classification,
+            train=train,
+            valid=valid,
+            test=test,
+            classification=False,
             pre_compute=pre_compute,
-            num_workers=num_workers, seed=seed,
-            classification_valid=read_csv_classification(
-                f'{path}/classification_valid.csv'),
-            classification_test=read_csv_classification(
-                f'{path}/classification_test.csv'),
+            batch_size=batch_size,
+            shuffle=shuffle,
+            num_workers=num_workers,
+            seed=seed,
         )

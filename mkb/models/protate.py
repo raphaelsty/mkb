@@ -1,10 +1,9 @@
+from math import pi
+
 import torch
-
-from . import base
-
 import torch.nn as nn
 
-from math import pi
+from . import base
 
 __all__ = ['pRotatE']
 

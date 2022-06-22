@@ -1,10 +1,10 @@
+from .classif import accuracy, find_threshold
 from .evaluation import Evaluation
-from .classif import find_threshold
-from .classif import accuracy
-
+from .transformer_evaluation import TransformerEvaluation
 
 __all__ = [
-    'Evaluation',
-    'find_treshold',
-    'accuracy',
+    "accuracy",
+    "find_threshold",
+    "Evaluation",
+    "TransformerEvaluation",
 ]

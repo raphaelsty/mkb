@@ -1,10 +1,7 @@
+import numpy as np
 import torch
 
-import numpy as np
-
-import collections
-
-__all__ = ['UniformSampling']
+__all__ = ["UniformSampling"]
 
 
 class UniformSampling:
@@ -88,49 +85,60 @@ class UniformSampling:
         return True
 
     def get(self, mapping_entities, mapping_relations, positive_sample_size, **kwargs):
-        """
-        """
+        """ """
         entity_distribution_teacher = self._rng.choice(
-            a=list(mapping_entities.keys()), size=self.batch_size_entity, replace=False)
+            a=list(mapping_entities.keys()), size=self.batch_size_entity, replace=False
+        )
 
         relation_distribution_teacher = self._rng.choice(
-            a=list(mapping_relations.keys()),  size=self.batch_size_relation, replace=False)
+            a=list(mapping_relations.keys()), size=self.batch_size_relation, replace=False
+        )
 
         entity_distribution_student = [
-            mapping_entities[entity] for entity in entity_distribution_teacher]
+            mapping_entities[entity] for entity in entity_distribution_teacher
+        ]
 
         relation_distribution_student = [
-            mapping_relations[relation] for relation in relation_distribution_teacher]
+            mapping_relations[relation] for relation in relation_distribution_teacher
+        ]
 
         entity_distribution_teacher = torch.Tensor(entity_distribution_teacher).view(
-            1, self.batch_size_entity)
+            1, self.batch_size_entity
+        )
 
         entity_distribution_student = torch.Tensor(entity_distribution_student).view(
-            1, self.batch_size_entity)
+            1, self.batch_size_entity
+        )
 
         relation_distribution_teacher = torch.Tensor(relation_distribution_teacher).view(
-            1, self.batch_size_relation)
+            1, self.batch_size_relation
+        )
 
         relation_distribution_student = torch.Tensor(relation_distribution_student).view(
-            1, self.batch_size_relation)
+            1, self.batch_size_relation
+        )
 
-        head_distribution_teacher = torch.cat(
-            positive_sample_size * [entity_distribution_teacher])
+        head_distribution_teacher = torch.cat(positive_sample_size * [entity_distribution_teacher])
 
         relation_distribution_teacher = torch.cat(
-            positive_sample_size * [relation_distribution_teacher])
+            positive_sample_size * [relation_distribution_teacher]
+        )
 
-        tail_distribution_teacher = torch.cat(
-            positive_sample_size * [entity_distribution_teacher])
+        tail_distribution_teacher = torch.cat(positive_sample_size * [entity_distribution_teacher])
 
-        head_distribution_student = torch.cat(
-            positive_sample_size * [entity_distribution_student])
+        head_distribution_student = torch.cat(positive_sample_size * [entity_distribution_student])
 
         relation_distribution_student = torch.cat(
-            positive_sample_size * [relation_distribution_student])
+            positive_sample_size * [relation_distribution_student]
+        )
 
-        tail_distribution_student = torch.cat(
-            positive_sample_size * [entity_distribution_student])
+        tail_distribution_student = torch.cat(positive_sample_size * [entity_distribution_student])
 
-        return (head_distribution_teacher, relation_distribution_teacher, tail_distribution_teacher,
-                head_distribution_student, relation_distribution_student, tail_distribution_student)
+        return (
+            head_distribution_teacher,
+            relation_distribution_teacher,
+            tail_distribution_teacher,
+            head_distribution_student,
+            relation_distribution_student,
+            tail_distribution_student,
+        )

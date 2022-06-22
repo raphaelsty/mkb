@@ -1,14 +1,9 @@
-import os
 import pathlib
 
+from ..utils import read_csv, read_csv_classification, read_json
 from .dataset import Dataset
 
-from ..utils import read_csv
-from ..utils import read_csv_classification
-from ..utils import read_json
-
-
-__all__ = ['Nations']
+__all__ = ["Nations"]
 
 
 class Nations(Dataset):
@@ -65,24 +60,32 @@ class Nations(Dataset):
 
     """
 
-    def __init__(self, batch_size, classification=False, shuffle=True, pre_compute=True,
-                 num_workers=1, seed=None):
+    def __init__(
+        self,
+        batch_size,
+        classification=False,
+        shuffle=True,
+        pre_compute=True,
+        num_workers=1,
+        seed=None,
+    ):
 
-        self.filename = 'nations'
+        self.filename = "nations"
 
         path = pathlib.Path(__file__).parent.joinpath(self.filename)
 
         super().__init__(
-            train=read_csv(file_path=f'{path}/train.csv'),
-            valid=read_csv(file_path=f'{path}/valid.csv'),
-            test=read_csv(file_path=f'{path}/test.csv'),
-            entities=read_json(f'{path}/entities.json'),
-            relations=read_json(f'{path}/relations.json'),
-            batch_size=batch_size, shuffle=shuffle, classification=classification,
+            train=read_csv(file_path=f"{path}/train.csv"),
+            valid=read_csv(file_path=f"{path}/valid.csv"),
+            test=read_csv(file_path=f"{path}/test.csv"),
+            entities=read_json(f"{path}/entities.json"),
+            relations=read_json(f"{path}/relations.json"),
+            batch_size=batch_size,
+            shuffle=shuffle,
+            classification=classification,
             pre_compute=pre_compute,
-            num_workers=num_workers, seed=seed,
-            classification_valid=read_csv_classification(
-                f'{path}/classification_valid.csv'),
-            classification_test=read_csv_classification(
-                f'{path}/classification_test.csv'),
+            num_workers=num_workers,
+            seed=seed,
+            classification_valid=read_csv_classification(f"{path}/classification_valid.csv"),
+            classification_test=read_csv_classification(f"{path}/classification_test.csv"),
         )

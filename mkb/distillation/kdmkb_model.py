@@ -1,32 +1,17 @@
-from ..datasets import Dataset
-
-from .distillation import Distillation
-
-from ..evaluation import Evaluation
-
-from ..losses import Adversarial
-from ..losses import BCEWithLogitsLoss
-
-from ..models import TransE
-
-from ..sampling import NegativeSampling
-
-from .top_k_sampling import FastTopKSampling
-
-from ..utils import BarRange
-
 import collections
 import os
 
-from creme import stats
-
-import pickle
-
-import torch
-
 import numpy as np
 import pandas as pd
+import torch
+from river import stats
 
+from ..evaluation import Evaluation
+from ..losses import Adversarial, BCEWithLogitsLoss
+from ..sampling import NegativeSampling
+from ..utils import BarRange
+from .distillation import Distillation
+from .top_k_sampling import FastTopKSampling
 
 __all__ = ["KdmkbModel"]
 
@@ -202,9 +187,7 @@ class KdmkbModel:
                 self.loss_function[id_dataset] = BCEWithLogitsLoss()
 
             else:
-                self.loss_function[id_dataset] = Adversarial(
-                    alpha=alpha_adv[id_dataset]
-                )
+                self.loss_function[id_dataset] = Adversarial(alpha=alpha_adv[id_dataset])
 
         self.optimizers = collections.OrderedDict()
         for id_dataset, learning_rate in lr.items():
@@ -229,9 +212,7 @@ class KdmkbModel:
                         dataset_teacher=dataset_teacher,
                         dataset_student=dataset_student,
                         batch_size_entity=self.batch_size_entity[id_dataset_teacher],
-                        batch_size_relation=self.batch_size_relation[
-                            id_dataset_teacher
-                        ],
+                        batch_size_relation=self.batch_size_relation[id_dataset_teacher],
                         n_random_entities=self.n_random_entities[id_dataset_teacher],
                         n_random_relations=self.n_random_relations[id_dataset_teacher],
                         seed=self.seed,
@@ -262,9 +243,7 @@ class KdmkbModel:
                 device=device,
             )
 
-        self.metrics = {
-            id_dataset: stats.RollingMean(1000) for id_dataset, _ in datasets.items()
-        }
+        self.metrics = {id_dataset: stats.RollingMean(1000) for id_dataset, _ in datasets.items()}
 
     @classmethod
     def _init_distillation(
@@ -327,9 +306,7 @@ class KdmkbModel:
                     1 - weight_kl[id_dataset]
                 )
 
-                sample = self._format_batch_distillation(
-                    rng=self._rng, sample=sample, y=y
-                )
+                sample = self._format_batch_distillation(rng=self._rng, sample=sample, y=y)
 
             else:
 
@@ -343,14 +320,11 @@ class KdmkbModel:
 
                 negative_score = models[id_dataset](sample, negative_sample, mode=mode)
 
-                loss_models[id_dataset] = (
-                    self.loss_function[id_dataset](
-                        positive_score=scores,
-                        negative_score=negative_score,
-                        weight=weight,
-                    )
-                    * (1 - weight_kl[id_dataset])
-                )
+                loss_models[id_dataset] = self.loss_function[id_dataset](
+                    positive_score=scores,
+                    negative_score=negative_score,
+                    weight=weight,
+                ) * (1 - weight_kl[id_dataset])
 
             # Store positive sample to distill it.
             samples[id_dataset] = sample
@@ -365,9 +339,7 @@ class KdmkbModel:
                 if id_dataset_teacher != id_dataset_student:
 
                     loss_models[id_dataset_student] += (
-                        self.distillation[
-                            f"{id_dataset_teacher}_{id_dataset_student}"
-                        ].distill(
+                        self.distillation[f"{id_dataset_teacher}_{id_dataset_student}"].distill(
                             teacher=models[id_dataset_teacher],
                             student=models[id_dataset_student],
                             sample=samples[id_dataset_teacher],
@@ -452,18 +424,10 @@ class KdmkbModel:
                                 teacher=models[id_dataset_teacher],
                                 dataset_teacher=dataset_teacher,
                                 dataset_student=dataset_student,
-                                batch_size_entity=self.batch_size_entity[
-                                    id_dataset_teacher
-                                ],
-                                batch_size_relation=self.batch_size_relation[
-                                    id_dataset_teacher
-                                ],
-                                n_random_entities=self.n_random_entities[
-                                    id_dataset_teacher
-                                ],
-                                n_random_relations=self.n_random_relations[
-                                    id_dataset_teacher
-                                ],
+                                batch_size_entity=self.batch_size_entity[id_dataset_teacher],
+                                batch_size_relation=self.batch_size_relation[id_dataset_teacher],
+                                n_random_entities=self.n_random_entities[id_dataset_teacher],
+                                n_random_relations=self.n_random_relations[id_dataset_teacher],
                                 seed=self.seed,
                                 device=self.device,
                             )
@@ -485,10 +449,7 @@ class KdmkbModel:
                     )
 
                     scores_valid = collections.OrderedDict(
-                        {
-                            f"valid_{metric}": score
-                            for metric, score in scores_valid.items()
-                        }
+                        {f"valid_{metric}": score for metric, score in scores_valid.items()}
                     )
 
                     scores_test = self.validation[id_dataset].eval(
@@ -502,10 +463,7 @@ class KdmkbModel:
                     )
 
                     scores_test = collections.OrderedDict(
-                        {
-                            f"test_{metric}": score
-                            for metric, score in scores_test.items()
-                        }
+                        {f"test_{metric}": score for metric, score in scores_test.items()}
                     )
 
                     models[id_dataset] = models[id_dataset].train()
@@ -538,12 +496,8 @@ class KdmkbModel:
                                             if hasattr(dataset, "aligned_entities")
                                             else None,
                                             "alpha_kl": self.alpha_kl[id_dataset],
-                                            "alpha_adv": self.loss_function[
-                                                id_dataset
-                                            ].alpha
-                                            if hasattr(
-                                                self.loss_function[id_dataset], "alpha"
-                                            )
+                                            "alpha_adv": self.loss_function[id_dataset].alpha
+                                            if hasattr(self.loss_function[id_dataset], "alpha")
                                             else None,
                                         },
                                         orient="index",
@@ -563,12 +517,8 @@ class KdmkbModel:
                                         },
                                         orient="index",
                                     ).T,
-                                    pd.DataFrame.from_dict(
-                                        scores_valid, orient="index"
-                                    ).T,
-                                    pd.DataFrame.from_dict(
-                                        scores_test, orient="index"
-                                    ).T,
+                                    pd.DataFrame.from_dict(scores_valid, orient="index").T,
+                                    pd.DataFrame.from_dict(scores_test, orient="index").T,
                                 ],
                                 axis="columns",
                             )
@@ -583,9 +533,7 @@ class KdmkbModel:
 
                         pickle_name = f"kdmkb_{dataset.name}_{id_dataset}_{models[id_dataset].name}_{step}.pickle"
 
-                        models[id_dataset].cpu().save(
-                            path=os.path.join(save_path, pickle_name)
-                        )
+                        models[id_dataset].cpu().save(path=os.path.join(save_path, pickle_name))
 
                         models[id_dataset] = models[id_dataset].to(self.device)
 

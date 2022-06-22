@@ -2,7 +2,7 @@ import torch
 
 from . import base
 
-__all__ = ['TransE']
+__all__ = ["TransE"]
 
 
 class TransE(base.BaseModel):
@@ -53,17 +53,21 @@ class TransE(base.BaseModel):
     """
 
     def __init__(self, hidden_dim, entities, relations, gamma):
-        super().__init__(hidden_dim=hidden_dim, relation_dim=hidden_dim, entity_dim=hidden_dim,
-                         entities=entities, relations=relations, gamma=gamma)
+        super().__init__(
+            hidden_dim=hidden_dim,
+            relation_dim=hidden_dim,
+            entity_dim=hidden_dim,
+            entities=entities,
+            relations=relations,
+            gamma=gamma,
+        )
 
     def forward(self, sample, negative_sample=None, mode=None):
         head, relation, tail, shape = self.batch(
-            sample=sample,
-            negative_sample=negative_sample,
-            mode=mode
+            sample=sample, negative_sample=negative_sample, mode=mode
         )
 
-        if mode == 'head-batch':
+        if mode == "head-batch":
             score = head + (relation - tail)
         else:
             score = (head + relation) - tail
@@ -73,8 +77,8 @@ class TransE(base.BaseModel):
 
     def _top_k(self, sample):
         """Method dedicated to compute the top k entities and relations for a given triplet."""
-        head, relation, tail, shape = self.batch(sample=sample)
-        embedding_head = - relation + tail
-        embedding_relation = - head + tail
+        head, relation, tail, _ = self.batch(sample=sample)
+        embedding_head = -relation + tail
+        embedding_relation = -head + tail
         embedding_tail = head + relation
         return embedding_head, embedding_relation, embedding_tail

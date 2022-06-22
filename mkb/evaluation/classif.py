@@ -1,17 +1,12 @@
-from ..utils import FetchToPredict
-from ..utils import make_prediction
-
+import numpy as np
 import torch
 
-import numpy as np
+from ..utils import make_prediction
 
-import tqdm
-
-
-__all__ = ['find_threshold', 'accuracy']
+__all__ = ["find_threshold", "accuracy"]
 
 
-def accuracy(model, X, y, threshold, batch_size, num_workers=1, device='cuda'):
+def accuracy(model, X, y, threshold, batch_size, num_workers=1, device="cuda"):
     """Find the threshold which maximize accuracy given inputs parameters.
 
     Parameters:
@@ -91,7 +86,7 @@ def accuracy(model, X, y, threshold, batch_size, num_workers=1, device='cuda'):
         )
 
 
-def find_threshold(model, X, y, batch_size, num_workers=1, device='cuda'):
+def find_threshold(model, X, y, batch_size, num_workers=1, device="cuda"):
     """Find the best treshold according to input model and dataset.
 
     >>> from sklearn import metrics
@@ -123,8 +118,7 @@ def find_threshold(model, X, y, batch_size, num_workers=1, device='cuda'):
         y_pred = y_pred.cpu().numpy()
 
     false_positive_rates, true_positive_rates, tresholds = metrics.roc_curve(
-        y_true=y,
-        y_score=y_pred
+        y_true=y, y_score=y_pred
     )
 
     return tresholds[np.argmax(true_positive_rates - false_positive_rates)]

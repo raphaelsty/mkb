@@ -1,5 +1,6 @@
-from .negative_sampling import NegativeSampling
+from .negative_sampling import NegativeSampling, positive_triples
 
 __all__ = [
-    'NegativeSampling',
+    "NegativeSampling",
+    "positive_triples",
 ]
