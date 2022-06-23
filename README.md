@@ -619,6 +619,8 @@ MKB provides two classes dedicated to fine-tune both Sentence Transformers and v
 - models.SentenceTransformer: Dedicated to Sentence Transformer models.
 - models.Transformer: Dedicated to traditional Transformer models.
 
+Under the hood, the Transformer model is trained using entity labels. Therefore, it is important to provide relevant entity labels. We initialize an embedding matrix dedicated to relationships. The negative samples are generated following the in-batch strategy.
+
 Here is how to fine-tune a sentence transformer under the link prediction objective:
 
 ```python
