@@ -338,6 +338,8 @@ Knowledge graph models build latent representations of nodes (entities) and rela
 - `models.RotatE`
 - `models.pRotatE`
 - `models.ComplEx`
+- `models.SentenceTransformer`
+- `models.Transformer`
 
 **Initialize a model:**
 
