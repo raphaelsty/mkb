@@ -713,8 +713,8 @@ model = SentenceTransformer("model", device="cpu")
 Here is how to fine-tune a Transformer under the link prediction objective:
 
 ```python
-    from mkb import losses, evaluation, datasets, text, models
-    from transformers import AutoTokenizer, AutoModel
+from mkb import losses, evaluation, datasets, text, models
+from transformers import AutoTokenizer, AutoModel
 
 model = models.Transformer(
     model = AutoModel.from_pretrained("bert-base-uncased"),
