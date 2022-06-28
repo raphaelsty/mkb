@@ -1,9 +1,9 @@
-from . import base
+from .base import BaseModel
 
 __all__ = ["DistMult"]
 
 
-class DistMult(base.BaseModel):
+class DistMult(BaseModel):
     """Dist-Mult model.
 
     Parameters:

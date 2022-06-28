@@ -1,12 +1,9 @@
 __all__ = ["ScoresToCsv"]
 
-import pandas as pd
 import os
 import pickle
 
-from pandas.core.algorithms import mode
-from ..evaluation import evaluation
-from ..evaluation import classif
+import pandas as pd
 
 
 class ScoresToCsv:
@@ -89,6 +86,9 @@ class ScoresToCsv:
         prefix=None,
         device="cuda",
     ):
+
+        from mkb.evaluation import evaluation
+
         self.path = path
         self.detail_path = detail_path
         self.accuracy_path = accuracy_path
@@ -189,6 +189,8 @@ class ScoresToCsv:
 
     def detail_eval(self, datasets, **kwargs):
         """Detailled evaluation with accuracy."""
+        from mkb.evaluation import classif
+
         scores = []
         scores_accuracy = []
 
@@ -233,9 +235,7 @@ class ScoresToCsv:
 
             model = model.to(self.device)
 
-            score = self.evaluation[id].detail_eval(
-                model=model, dataset=datasets[id].test
-            )
+            score = self.evaluation[id].detail_eval(model=model, dataset=datasets[id].test)
 
             score["type"] = "test"
 

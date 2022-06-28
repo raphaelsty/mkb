@@ -3,12 +3,12 @@ from math import pi
 import torch
 import torch.nn as nn
 
-from . import base
+from .base import BaseModel
 
-__all__ = ['pRotatE']
+__all__ = ["pRotatE"]
 
 
-class pRotatE(base.BaseModel):
+class pRotatE(BaseModel):
     """pRotatE model.
 
     Parameters:
@@ -58,27 +58,29 @@ class pRotatE(base.BaseModel):
     """
 
     def __init__(self, hidden_dim, entities, relations, gamma):
-        super().__init__(hidden_dim=hidden_dim, relation_dim=hidden_dim, entity_dim=hidden_dim,
-                         entities=entities, relations=relations, gamma=gamma)
+        super().__init__(
+            hidden_dim=hidden_dim,
+            relation_dim=hidden_dim,
+            entity_dim=hidden_dim,
+            entities=entities,
+            relations=relations,
+            gamma=gamma,
+        )
 
         self.pi = pi
 
-        self.modulus = nn.Parameter(
-            torch.Tensor([[0.5 * self.embedding_range.item()]])
-        )
+        self.modulus = nn.Parameter(torch.Tensor([[0.5 * self.embedding_range.item()]]))
 
     def forward(self, sample, negative_sample=None, mode=None):
         head, relation, tail, shape = self.batch(
-            sample=sample,
-            negative_sample=negative_sample,
-            mode=mode
+            sample=sample, negative_sample=negative_sample, mode=mode
         )
 
-        phase_head = head/(self.embedding_range.item()/self.pi)
-        phase_relation = relation/(self.embedding_range.item()/self.pi)
-        phase_tail = tail/(self.embedding_range.item()/self.pi)
+        phase_head = head / (self.embedding_range.item() / self.pi)
+        phase_relation = relation / (self.embedding_range.item() / self.pi)
+        phase_tail = tail / (self.embedding_range.item() / self.pi)
 
-        if mode == 'head-batch':
+        if mode == "head-batch":
             score = phase_head + (phase_relation - phase_tail)
         else:
             score = (phase_head + phase_relation) - phase_tail

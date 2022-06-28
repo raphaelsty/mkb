@@ -3,12 +3,12 @@ from math import pi
 import torch
 import torch.nn as nn
 
-from . import base
+from .base import BaseModel
 
 __all__ = ['RotatE']
 
 
-class RotatE(base.BaseModel):
+class RotatE(BaseModel):
     """RotatE
 
     Parameters:

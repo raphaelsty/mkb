@@ -178,43 +178,23 @@ def learn(
             if not negative[0]:
                 continue
 
-            mapping_heads = {}
-            mapping_tails = {}
+            mapping_heads, mapping_tails = {}, {}
+            e_encode = []
 
-            if model.twin:
+            for index, (h, r, t) in enumerate(triples):
+                e_encode.append(entities[h])
+                e_encode.append(entities[t])
+                mapping_heads[h] = index
+                mapping_tails[t] = index
 
-                h_encode = []
-                t_encode = []
+            embeddings = model.encoder(e_encode)
 
-                for index, (h, r, t) in enumerate(triples):
-                    h_encode.append(entities[h])
-                    t_encode.append(entities[t])
-                    mapping_heads[h] = index
-                    mapping_tails[t] = index
-
-                embeddings_h = model.encoder(h_encode, mode="head")
-                embeddings_t = model.encoder(t_encode, mode="tail")
-                heads = torch.stack([e for e in embeddings_h], dim=0).unsqueeze(1)
-                tails = torch.stack([e for e in embeddings_t], dim=0).unsqueeze(1)
-
-            else:
-
-                e_encode = []
-
-                for index, (h, r, t) in enumerate(triples):
-                    e_encode.append(entities[h])
-                    e_encode.append(entities[t])
-                    mapping_heads[h] = index
-                    mapping_tails[t] = index
-
-                embeddings = model.encoder(e_encode)
-
-                heads = torch.stack(
-                    [e for index, e in enumerate(embeddings) if index % 2 == 0], dim=0
-                ).unsqueeze(1)
-                tails = torch.stack(
-                    [e for index, e in enumerate(embeddings) if index % 2 != 0], dim=0
-                ).unsqueeze(1)
+            heads = torch.stack(
+                [e for index, e in enumerate(embeddings) if index % 2 == 0], dim=0
+            ).unsqueeze(1)
+            tails = torch.stack(
+                [e for index, e in enumerate(embeddings) if index % 2 != 0], dim=0
+            ).unsqueeze(1)
 
             relations = torch.index_select(
                 model.relation_embedding, dim=0, index=sample[:, 1]
@@ -386,26 +366,35 @@ def print_metrics(description, metrics):
 def in_batch_negative_triples(triples, negative_sampling_size, mode, true_tail={}, true_head={}):
     """Generate in batch negative triples. All input sample will have the same number of fake triples."""
     negative = []
-    for index_head, (h, r, _) in enumerate(triples):
-        fake = []
-        for index_tail, (_, _, t) in enumerate(triples):
 
-            if index_head == index_tail:
-                continue
+    if mode == "tail-batch":
 
-            if t not in true_tail[(h, r)]:
-                fake.append((h, r, t))
+        for index_head, (h, r, _) in enumerate(triples):
+            fake = []
 
-        negative.append(fake)
+            for index_tail, (_, _, t) in enumerate(triples):
 
-    for index_tail, (_, r, t) in enumerate(triples):
-        for index_head, (h, _, _) in enumerate(triples):
+                if index_head == index_tail:
+                    continue
 
-            if index_head == index_tail:
-                continue
+                if t not in true_tail[(h, r)]:
+                    fake.append((h, r, t))
 
-            if h not in true_head[(r, t)]:
-                negative[index_tail].append((h, r, t))
+            negative.append(fake)
+    else:
 
-    min_length = min(map(len, negative))
-    return [x[: min(negative_sampling_size, min_length)] for x in negative]
+        for index_tail, (_, r, t) in enumerate(triples):
+            fake = []
+
+            for index_head, (h, _, _) in enumerate(triples):
+
+                if index_head == index_tail:
+                    continue
+
+                if h not in true_head[(r, t)]:
+                    fake.append((h, r, t))
+
+            negative.append(fake)
+
+    size = min(negative_sampling_size, min(map(len, negative)))
+    return [x[:size] for x in negative]

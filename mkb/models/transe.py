@@ -1,11 +1,11 @@
 import torch
 
-from . import base
+from .base import BaseModel
 
 __all__ = ["TransE"]
 
 
-class TransE(base.BaseModel):
+class TransE(BaseModel):
     """TransE model.
 
     Parameters:

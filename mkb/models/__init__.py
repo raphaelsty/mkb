@@ -1,4 +1,4 @@
-from .base import TextBaseModel
+from .base import BaseModel, TextBaseModel
 from .complex import ComplEx
 from .distmult import DistMult
 from .dpr import DPR
@@ -9,6 +9,7 @@ from .transe import TransE
 from .transformer import Transformer
 
 __all__ = [
+    "BaseModel",
     "ComplEx",
     "DistMult",
     "DPR",

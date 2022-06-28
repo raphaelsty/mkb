@@ -350,7 +350,6 @@ class TextBaseModel(BaseModel):
         else:
 
             head, tail = self.negative_encoding(
-                sample=sample,
                 head=head,
                 tail=tail,
                 negative_sample=negative_sample,
@@ -375,7 +374,7 @@ class TextBaseModel(BaseModel):
 
         return head, relation, tail, shape
 
-    def negative_encoding(self, sample, head, tail, negative_sample, mode):
+    def negative_encoding(self, head, tail, negative_sample, mode):
 
         mode_encoder = "head" if mode == "head-batch" else "tail"
 
@@ -387,15 +386,11 @@ class TextBaseModel(BaseModel):
         )
 
         if mode == "head-batch":
-
             head = negative_sample
-
             tail = self.encoder(e=tail, mode="tail").unsqueeze(1)
 
         elif mode == "tail-batch":
-
             tail = negative_sample
-
             head = self.encoder(e=head, mode="head").unsqueeze(1)
 
         return head, tail
