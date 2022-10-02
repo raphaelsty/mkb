@@ -703,13 +703,28 @@ model = text.learn(
 # Saving the Sentence Transformer model:
 model.model.save_pretrained("model")
 model.tokenizer.save_pretrained("model")
+
+relations = {}
+for id_relation, label in model.relations.items():
+    relations[label] = model.relation_embedding[id_relation].cpu().detach().tolist()
+
+with open(f"relations.json", "w") as f:
+    json.dump(relations, f, indent=4)
 ```
 
 After training a Sentence Transformer on the link prediction task using MKB and saving the model, we can load the trained model using the `sentence_transformers` library.
 
 ```python
 from sentence_transformers import SentenceTransformer
+import json
+import numpy as np
+
+# Entity encoder
 model = SentenceTransformer("model", device="cpu")
+
+# Relations embeddings
+with open(f"relations.json", "r") as f:
+    relations = json.load(f)
 ```
 
 Here is how to fine-tune a Transformer under the link prediction objective:
