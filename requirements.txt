@@ -6,3 +6,4 @@ tqdm  >= 4.36.1
 pandas >= 1.0.5
 scikit-learn >= 0.23.2
 transformers >= 4.16.0
+sentence-transformers >= 2.2.0
